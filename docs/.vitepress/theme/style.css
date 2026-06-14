@@ -1,0 +1,80 @@
+.focus-mode-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 18px;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg);
+  box-shadow: var(--vp-shadow-2);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.focus-mode-toggle:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+}
+
+.focus-mode-toggle__icon {
+  font-size: 15px;
+}
+
+html.focus-mode .VPSidebar,
+html.focus-mode .VPDocAside,
+html.focus-mode .VPDoc .aside {
+  display: none !important;
+}
+
+html.focus-mode .VPContent.has-sidebar {
+  padding-left: 0 !important;
+}
+
+html.focus-mode .VPDoc .container {
+  display: flex !important;
+  justify-content: center !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+}
+
+html.focus-mode .VPDoc .content,
+html.focus-mode .VPDoc.has-aside .content {
+  width: 100% !important;
+  max-width: 960px !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+html.focus-mode .VPDoc .content-container,
+html.focus-mode .VPDoc.has-aside .content-container {
+  width: 100% !important;
+  max-width: 960px !important;
+  margin: 0 auto !important;
+}
+
+@media (max-width: 1024px) {
+  html.focus-mode .VPDoc .content,
+  html.focus-mode .VPDoc.has-aside .content {
+    max-width: none !important;
+    padding-right: 24px !important;
+    padding-left: 24px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .focus-mode-toggle {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .focus-mode-toggle__text {
+    display: none;
+  }
+}
