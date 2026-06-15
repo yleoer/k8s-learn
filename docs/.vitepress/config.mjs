@@ -40,7 +40,7 @@ function parseChapterDir(name) {
 }
 
 function parseLessonFile(name) {
-  const match = name.match(/^(\d+-\d+)-(.+)\.md$/)
+  const match = name.match(/^(\d+)-(.+)\.md$/)
 
   if (!match) {
     return null
@@ -66,10 +66,7 @@ function readCourseFromDocs() {
         .map((entry) => parseLessonFile(entry.name))
         .filter(Boolean)
         .sort((a, b) => {
-          const [aChapter, aLesson] = a.no.split('-').map(Number)
-          const [bChapter, bLesson] = b.no.split('-').map(Number)
-
-          return aChapter - bChapter || aLesson - bLesson
+          return Number(a.no) - Number(b.no)
         })
 
       return {
@@ -109,7 +106,7 @@ const courseChapters = course.map((chapter, index) => {
     number: Number.parseInt(num, 10),
     link: `/${dir}/`,
     items: chapter.lessons.map((lesson) => ({
-      text: `${lesson.no} ${lesson.title}`,
+      text: lesson.title,
       link: `/${dir}/${lessonPath(lesson)}`,
     })),
   }
@@ -161,7 +158,7 @@ function chapterSidebar(chapter, part) {
 
   return [
     {
-      text: `${chapter.num}. ${chapter.title}`,
+      text: chapter.title,
       link: chapter.link,
       items,
     },
