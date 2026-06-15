@@ -142,6 +142,7 @@ function partSidebar(part) {
         text: part.label,
         items: [
           ...chaptersInPart(part).flatMap((chapter) => chapter.items),
+          { text: '附录：Docker 并行使用', link: '/01-入门起步/appendix-Docker并行使用' },
           { text: '附录：环境准备执行速查', link: '/01-入门起步/appendix-环境准备执行速查' },
         ],
       },
@@ -194,6 +195,22 @@ export default defineConfig({
   description: '我的 Kubernetes 学习笔记与实践记录',
   lastUpdated: true,
   cleanUrls: true,
+  head: [
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap',
+      },
+    ],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.loli.net/css2?family=JetBrains+Mono:wght@400;500;700&display=swap',
+      },
+    ],
+  ],
   markdown: {
     config(md) {
       const fence = md.renderer.rules.fence

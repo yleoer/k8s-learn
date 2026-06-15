@@ -1,16 +1,14 @@
 # 环境准备执行速查
 
-## 所有节点：系统更新
+本页只保留关键执行顺序，适合在已经理解前文后快速回顾。首次搭建请按正文逐步执行。
+
+## 所有节点：系统与内核
 
 ```bash
 sudo apt update
 sudo apt full-upgrade -y
 sudo reboot
-```
 
-## 所有节点：内核与 swap
-
-```bash
 sudo swapoff -a
 sudo modprobe overlay
 sudo modprobe br_netfilter
@@ -21,7 +19,11 @@ sudo sysctl --system
 
 ```bash
 sudo apt install -y containerd.io
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sudo systemctl enable --now containerd
+
 sudo apt install -y kubelet kubeadm kubectl cri-tools
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
@@ -33,6 +35,7 @@ sudo kubeadm init \
   --kubernetes-version v1.36.1 \
   --image-repository registry.aliyuncs.com/google_containers \
   --pod-network-cidr 10.244.0.0/16 \
+  --service-cidr 10.96.0.0/12 \
   --cri-socket unix:///run/containerd/containerd.sock
 
 mkdir -p "$HOME/.kube"
@@ -53,7 +56,8 @@ kubectl create -f calico-custom-resources.yaml
 ```bash
 sudo kubeadm join <control-plane-ip>:6443 \
   --token <token> \
-  --discovery-token-ca-cert-hash sha256:<hash>
+  --discovery-token-ca-cert-hash sha256:<hash> \
+  --cri-socket unix:///run/containerd/containerd.sock
 ```
 
 ## 最终检查
@@ -61,4 +65,7 @@ sudo kubeadm join <control-plane-ip>:6443 \
 ```bash
 kubectl get nodes -o wide
 kubectl get pods -A -o wide
+kubectl create deployment nginx --image=nginx:latest
+kubectl expose deployment nginx --port=80 --type=NodePort
+kubectl get deploy,pod,svc -o wide
 ```

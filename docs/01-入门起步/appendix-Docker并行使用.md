@@ -1,10 +1,8 @@
 # Docker 并行使用
 
-Kubernetes v1.24 以后已经移除了内置 dockershim。当前集群运行时是 containerd，部署完成后仍然可以安装和使用 Docker Engine，但推荐把它作为独立工具使用。
+Kubernetes v1.24 以后已经移除了内置 dockershim。本阶段集群运行时是 containerd，部署完成后仍然可以安装和使用 Docker Engine，但推荐把它作为独立构建或调试工具使用。
 
-## Docker 与 Kubernetes 并行使用
-
-适用场景：
+## 适用场景
 
 - 节点已经通过 kubeadm 部署好 Kubernetes。
 - Kubernetes 使用 containerd 作为 CRI runtime。
@@ -18,7 +16,7 @@ kubectl get pods -A -o wide
 sudo systemctl status containerd --no-pager
 ```
 
-安装 Docker Engine 和插件：
+## 安装 Docker Engine
 
 ```bash
 sudo apt update
