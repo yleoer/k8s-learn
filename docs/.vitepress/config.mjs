@@ -135,31 +135,59 @@ function partActiveMatch(part) {
   return `^/(${chapterDirs.join('|')})(/|$)`
 }
 
-function partSidebar(part) {
-  if (part.flat) {
-    return [
-      {
-        text: part.label,
-        items: [
-          ...chaptersInPart(part).flatMap((chapter) => chapter.items),
-          { text: '附录：Docker 并行使用', link: '/01-入门起步/appendix-Docker并行使用' },
-          { text: '附录：环境准备执行速查', link: '/01-入门起步/appendix-环境准备执行速查' },
-        ],
-      },
-    ]
+function shortChapterTitle(title) {
+  const replacements = [
+    ['云原生基石-', ''],
+    ['云原生基座-', ''],
+    ['云原生CRI-', ''],
+    ['必知必会', ''],
+  ]
+
+  return replacements.reduce(
+    (value, [search, replacement]) => value.replace(search, replacement),
+    title,
+  )
+}
+
+function chapterSidebar(chapter, part) {
+  const items = [...chapter.items]
+
+  if (part.flat && chapter.number === 1) {
+    items.push(
+      { text: '附录：Docker 并行使用', link: '/01-入门起步/appendix-Docker并行使用' },
+      { text: '附录：环境准备执行速查', link: '/01-入门起步/appendix-环境准备执行速查' },
+    )
   }
 
   return [
     {
-      text: part.label,
-      items: chaptersInPart(part).map((chapter) => ({
-        text: `${chapter.num}. ${chapter.title}`,
-        link: chapter.link,
-        collapsed: true,
-        items: chapter.items,
-      })),
+      text: `${chapter.num}. ${chapter.title}`,
+      link: chapter.link,
+      items,
     },
   ]
+}
+
+function partNavItem(part) {
+  const chapters = chaptersInPart(part)
+  const activeMatch = partActiveMatch(part)
+
+  if (chapters.length <= 1) {
+    return {
+      text: part.text,
+      link: partLink(part),
+      activeMatch,
+    }
+  }
+
+  return {
+    text: part.text,
+    items: chapters.map((chapter) => ({
+      text: shortChapterTitle(chapter.title),
+      link: chapter.link,
+    })),
+    activeMatch,
+  }
 }
 
 const courseSidebar = {
@@ -173,19 +201,13 @@ const courseSidebar = {
     },
   ],
   ...Object.fromEntries(courseParts.flatMap((part) => {
-    const sidebar = partSidebar(part)
-
-    return chaptersInPart(part).map((chapter) => [chapter.link, sidebar])
+    return chaptersInPart(part).map((chapter) => [chapter.link, chapterSidebar(chapter, part)])
   })),
 }
 
 const courseNav = [
   { text: '首页', link: '/' },
-  ...courseParts.map((part) => ({
-    text: part.text,
-    link: partLink(part),
-    activeMatch: partActiveMatch(part),
-  })),
+  ...courseParts.map((part) => partNavItem(part)),
 ]
 
 // VitePress 配置文档：https://vitepress.dev/reference/site-config
