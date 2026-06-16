@@ -1,28 +1,37 @@
 # Dockerfile 快速入门
 
-Dockerfile 是一个文本文件，用于定义 Docker 镜像的构建步骤。它由一系列指令组成，每个指令都会参与生成镜像层或镜像元数据。
+Dockerfile 是一个纯文本文件，按行声明构建步骤，每条指令在最终镜像中对应一层或一条元数据。理解指令的作用和顺序，是写好 Dockerfile 的前提。
 
 ## 常用指令
 
-| 指令 | 作用 |
-| --- | --- |
-| `FROM` | 指定基础镜像 |
-| `RUN` | 构建阶段执行 shell 命令 |
-| `LABEL` | 添加镜像元数据 |
-| `ENV` | 设置运行时环境变量 |
-| `ADD` | 复制文件到镜像，支持自动解压本地 tar 包 |
-| `COPY` | 复制文件或目录到镜像 |
-| `WORKDIR` | 设置工作目录 |
-| `USER` | 设置运行用户 |
-| `EXPOSE` | 声明容器监听端口 |
-| `HEALTHCHECK` | 设置容器健康检查方式 |
-| `CMD` | 设置容器默认命令，可被覆盖 |
-| `ENTRYPOINT` | 设置容器入口命令 |
-| `ARG` | 设置构建参数 |
+| 指令          | 作用                                                 |
+| ------------- | ---------------------------------------------------- |
+| `FROM`        | 指定基础镜像，必须是第一条构建指令                   |
+| `RUN`         | 在构建阶段执行 shell 命令                            |
+| `LABEL`       | 添加镜像元数据（维护者、版本、源码地址等）           |
+| `ENV`         | 设置环境变量，构建阶段和运行阶段均可见               |
+| `ARG`         | 设置构建参数，仅在构建阶段可见                       |
+| `COPY`        | 复制文件或目录到镜像                                 |
+| `ADD`         | 复制文件到镜像，额外支持自动解压本地 tar 包          |
+| `WORKDIR`     | 设置后续指令的工作目录                               |
+| `USER`        | 设置运行容器时使用的用户                             |
+| `EXPOSE`      | 声明容器计划监听的端口（仅文档作用，不实际发布端口） |
+| `HEALTHCHECK` | 定义检查容器是否健康的方式                           |
+| `CMD`         | 容器启动时的默认命令，可被 `docker run` 覆盖         |
+| `ENTRYPOINT`  | 容器入口命令，`CMD` 的内容会作为它的默认参数         |
 
-`MAINTAINER` 已不推荐使用，建议用 `LABEL maintainer="..."` 替代。
+> `MAINTAINER` 已废弃，改用 `LABEL maintainer="..."`。
 
-## 第一个 Dockerfile
+## 第一个镜像
+
+从最简单的 Dockerfile 开始——复制静态文件到 nginx 镜像并暴露端口。
+
+先准备一个静态文件目录，确保构建上下文中存在 `COPY` 指令要复制的源路径：
+
+```bash
+mkdir -p html
+echo '<h1>Hello nginx</h1>' > html/index.html
+```
 
 ```dockerfile
 FROM nginx:alpine
@@ -41,17 +50,20 @@ docker build -t nginx:demo .
 
 ```text
 $ docker build -t nginx:demo .
-[+] Building 0.6s (7/7) FINISHED
- => [internal] load build definition from Dockerfile
- => => transferring dockerfile: 120B
- => [internal] load .dockerignore
- => [internal] load metadata for docker.io/library/nginx:alpine
- => [1/2] FROM docker.io/library/nginx:alpine
- => [internal] load build context
- => => transferring context: 156B
- => [2/2] COPY ./html /usr/share/nginx/html
- => exporting to image
- => => naming to docker.io/library/nginx:demo
+[+] Building 2.1s (7/7) FINISHED                                                                                                  docker:default
+ => [internal] load build definition from Dockerfile                                                                                        0.0s
+ => => transferring dockerfile: 99B                                                                                                         0.0s
+ => [internal] load metadata for docker.io/library/nginx:alpine                                                                             2.0s
+ => [internal] load .dockerignore                                                                                                           0.0s
+ => => transferring context: 2B                                                                                                             0.0s
+ => [internal] load build context                                                                                                           0.0s
+ => => transferring context: 91B                                                                                                            0.0s
+ => CACHED [1/2] FROM docker.io/library/nginx:alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a                0.0s
+ => [2/2] COPY ./html /usr/share/nginx/html                                                                                                 0.0s
+ => exporting to image                                                                                                                      0.0s
+ => => exporting layers                                                                                                                     0.0s
+ => => writing image sha256:3486854ac0df3e78395139b93bde38b4bc46124c57b0638f0a849b713df4538e                                                0.0s
+ => => naming to docker.io/library/nginx:demo                                                                                               0.0s
 ```
 
 </details>
@@ -63,21 +75,25 @@ docker run -d --name nginx-demo -p 8080:80 nginx:demo
 curl http://127.0.0.1:8080
 ```
 
+每条 `docker build` 执行时，Docker 会将 Dockerfile 所在目录作为构建上下文（build context）发送给 daemon。这个目录下的所有文件默认都会包含在上下文中，因此需要 `.dockerignore` 排除无关内容（详见第 4 节）。
+
 ## FROM：选择基础镜像
 
-`FROM` 必须是 Dockerfile 的第一条有效构建指令。它决定镜像的系统环境、包管理器、默认 shell 和基础文件系统。
+`FROM` 决定镜像的系统环境、包管理器、默认 shell 和基础文件系统。
 
 ```dockerfile
 FROM alpine:3.20
 ```
 
-建议：
+选型建议：
 
-- 使用明确 tag，避免依赖 `latest`。
-- 优先选择官方镜像或可信镜像。
-- 生产镜像尽量选择体积小、维护活跃的基础镜像。
+- 使用明确 tag，避免依赖 `latest` 作为生产版本。
+- 优先选择官方镜像或维护活跃、来源可信的镜像。
+- 在体积和兼容性之间权衡：Alpine 约 7 MB 但使用 musl libc；Debian Slim 约 80 MB 但兼容性更好。
 
 ## RUN：执行构建命令
+
+`RUN` 在构建阶段执行命令，常用于安装依赖、创建用户、下载文件等操作。
 
 ```dockerfile
 FROM alpine:3.20
@@ -94,13 +110,20 @@ docker run -it --rm alpine:user cat /etc/passwd
 
 ## 构建缓存与指令顺序
 
-Docker 构建时会按指令顺序使用缓存。某一层发生变化后，后续层缓存通常都会失效。
+Docker 按指令顺序逐层构建并使用缓存：当某一层发生变化（如源文件内容变更），该层及其后续所有层都会重新构建。因此指令顺序直接影响构建效率。
 
-适合放前面的内容：变化少的系统依赖安装、基础工具、用户创建。
+**放在前面**（变更频率低，可充分利用缓存）：
 
-适合放后面的内容：应用代码、频繁变化的配置、构建产物。
+- 系统依赖安装（`apt-get install`、`apk add`）
+- 基础工具和用户创建
 
-多个 `RUN` 会产生更多层。安装软件时合并命令并清理缓存：
+**放在后面**（变更频率高）：
+
+- 应用源码 `COPY`
+- 频繁变化的配置文件
+- 构建产物
+
+合并多个 `RUN` 到同一层，并在同一条命令中清理缓存，避免将无用文件留进镜像：
 
 ```dockerfile
 RUN apt-get update \
@@ -110,7 +133,7 @@ RUN apt-get update \
 
 ## LABEL：镜像元数据
 
-`LABEL` 用来给镜像添加元数据，例如维护者、版本、源码地址、构建时间等。
+`LABEL` 用来给镜像添加结构化元数据，例如维护者、版本、源码地址、构建时间等，便于仓库、扫描工具和平台识别。
 
 ```dockerfile
 FROM alpine:3.20
@@ -123,7 +146,7 @@ docker build -t alpine:label .
 docker inspect alpine:label | grep Labels -A 20
 ```
 
-推荐的 OCI 标准标签：
+推荐使用 OCI 标准标签，与 Harbor、GitHub Container Registry 等平台兼容：
 
 ```dockerfile
 LABEL maintainer="platform@example.com"
@@ -135,21 +158,21 @@ LABEL org.opencontainers.image.description="Demo application image"
 
 ## HEALTHCHECK：容器健康检查
 
-`HEALTHCHECK` 告诉 Docker 如何检查容器是否健康。没有它时 Docker 只能判断进程是否存活，无法知道应用是否正常响应。
+`HEALTHCHECK` 告诉 Docker 如何判断容器是否正常运行。没有它时 Docker 只能判断进程是否存活，无法感知应用是否已经挂起、超时或返回错误。
 
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD curl -f http://127.0.0.1:80/healthz || exit 1
 ```
 
-| 参数 | 含义 | 默认值 |
-| --- | --- | --- |
-| `--interval` | 检查间隔 | 30s |
-| `--timeout` | 单次检查超时 | 30s |
-| `--retries` | 连续失败次数阈值 | 3 |
-| `--start-period` | 容器启动后等待时间 | 0s |
+| 参数             | 含义                             | 默认值 |
+| ---------------- | -------------------------------- | ------ |
+| `--interval`     | 每次检查的间隔时间               | 30s    |
+| `--timeout`      | 单次检查的超时时间               | 30s    |
+| `--retries`      | 连续失败多少次后判定为 unhealthy | 3      |
+| `--start-period` | 容器启动后等待多久再开始检查     | 0s     |
 
-在 `docker ps` 中可以看到健康状态：
+健康状态会显示在 `docker ps` 的 `STATUS` 列：
 
 ```bash
 $ docker ps
@@ -157,26 +180,14 @@ CONTAINER ID   IMAGE         STATUS                    PORTS
 a1b2c3d4e5f6   app:v1.0.0    Up 10 minutes (healthy)   0.0.0.0:8080->8080/tcp
 ```
 
-Kubernetes 中的 Pod 健康检查（liveness / readiness / startup probe）与 Docker HEALTHCHECK 的思路一致，但 Kubernetes 不会自动读取镜像里的 `HEALTHCHECK` 并转换成探针。部署到 Kubernetes 时，仍然需要在 Pod 或 Deployment 中显式配置 `livenessProbe`、`readinessProbe` 或 `startupProbe`。
+Kubernetes 不会自动读取 Docker 镜像中的 `HEALTHCHECK` 指令转换为 Pod 探针。部署到 Kubernetes 时，仍需在 Pod spec 中显式配置 `livenessProbe`、`readinessProbe` 或 `startupProbe`。但 `HEALTHCHECK` 在 Docker Compose 和本地开发调试中仍然有效。
 
 ## 编写原则
 
-- 优先选择明确版本的基础镜像。
-- 指令顺序要考虑缓存复用。
-- 不把密码、token 等敏感信息写进镜像。
-- 一个镜像只负责一个主要进程。
-- 构建产物尽量小、依赖尽量少。
-- 为生产镜像添加 HEALTHCHECK。
-
-## 生产镜像安全检查
-
-| 检查项 | 建议 |
-| --- | --- |
-| 基础镜像 | 使用官方或可信来源，固定版本 tag，定期升级补丁 |
-| 运行用户 | 默认使用非 root 用户，只给应用必要目录写权限 |
-| 构建上下文 | 使用 `.dockerignore` 排除 `.git`、日志、缓存、测试产物和本地配置 |
-| 敏感信息 | 不把密码、Token、私钥、kubeconfig 写入镜像层 |
-| 依赖安装 | 安装后清理包管理器缓存，减少无关工具 |
-| 健康检查 | Docker 单机可使用 `HEALTHCHECK`，Kubernetes 中显式配置 probes |
-| 日志输出 | 输出到 stdout/stderr，便于 Docker、containerd 和 Kubernetes 收集 |
-| 漏洞治理 | 发布前使用 Harbor、Trivy 等工具扫描镜像漏洞 |
+- 固定基础镜像版本，不依赖 `latest`。
+- 变更少的内容放前面，充分发挥缓存复用。
+- 敏感信息（密码、Token、私钥）不进镜像层——通过挂载、环境变量或 Secret 注入。
+- 一个容器只运行一个主要进程，便于管理、监控和排障。
+- 为生产镜像添加 `HEALTHCHECK`，优先使用非 root 用户。
+- 构建完成后用 `docker scout` 或 Harbor / Trivy 扫描已知漏洞。
+- 日志一律输出到 stdout/stderr，由容器运行时统一收集。
