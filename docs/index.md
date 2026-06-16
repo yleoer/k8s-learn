@@ -2,18 +2,18 @@
 layout: home
 
 hero:
-  name: Kubernetes 学习记录
-  text: Docker · Kubernetes
-  tagline: Kubernetes 系统学习的笔记
+  name: Kubernetes 学习笔记
+  text: 从容器基础到集群实践
+  tagline: 记录 Docker、容器运行时与 Kubernetes 的系统学习过程
 
 features:
   - icon: 🚀
     title: 一 · 入门起步
-    details: 从环境规划、系统初始化到 kubeadm、Calico 和测试应用，完成第一个 K8s 集群。
+    details: 完成环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico 网络和集群验证。
     link: /01-入门起步/
   - icon: 📦
     title: 二 · 容器基石
-    details: 容器基础、镜像制作与仓库、Containerd（CRI）、K8s 设计思想与初体验。
+    details: 梳理容器运行模型、Docker 架构、镜像管理、容器排障、数据持久化和服务部署流程。
     link: /02-容器基础/
   - icon: ⚙️
     title: 三 · K8s 核心资源

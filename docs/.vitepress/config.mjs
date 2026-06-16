@@ -230,11 +230,19 @@ const courseNav = [
 // VitePress 配置文档：https://vitepress.dev/reference/site-config
 export default defineConfig({
   lang: 'zh-CN',
-  title: 'K8s 学习记录',
-  description: '我的 Kubernetes 学习笔记与实践记录',
+  title: 'Kubernetes 学习笔记',
+  description: '从容器基础到 Kubernetes 集群实践的系统学习笔记',
   lastUpdated: true,
   cleanUrls: true,
   head: [
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/favicon.svg',
+      },
+    ],
     [
       'link',
       {
@@ -292,7 +300,7 @@ export default defineConfig({
     lastUpdatedText: '最后更新',
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com' },
+      { icon: 'github', link: 'https://github.com/yleoer/k8s-learn' },
     ],
   },
 })
