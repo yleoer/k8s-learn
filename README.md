@@ -1,13 +1,13 @@
-# K8s 学习记录
+# Kubernetes 学习笔记
 
-基于 VitePress 搭建的 Kubernetes 全栈学习文档站，涵盖从容器基础到企业级落地的完整云原生知识体系。
+基于 VitePress 搭建的 Kubernetes 系统学习文档站，记录 Docker、容器运行时与 Kubernetes 从基础环境到集群实践的学习过程。
 
 ## 本地开发
 
 ```bash
-npm install        # 首次安装依赖
-npm run docs:dev   # 启动开发服务器（http://localhost:5173）
-npm run docs:build # 构建静态站点
+npm install          # 首次安装依赖
+npm run docs:dev     # 启动开发服务器（http://localhost:5173）
+npm run docs:build   # 构建静态站点
 npm run docs:preview # 预览构建产物
 ```
 
@@ -15,8 +15,8 @@ npm run docs:preview # 预览构建产物
 
 | 阶段 | 章节范围 | 内容 |
 | --- | --- | --- |
-| 一 · 入门起步 | 01 | 环境规划、系统初始化、kubeadm 部署、Calico、集群验证 |
-| 二 · 容器基石 | 02 ~ 09 | 容器基础、Dockerfile 镜像制作、镜像仓库 Harbor、Containerd CRI、K8s 设计思想、K8s 初体验 |
+| 一 · 入门起步 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico 网络和集群验证 |
+| 二 · 容器基石 | 02 ~ 05 | 容器运行模型、Docker 架构、镜像管理、镜像制作、镜像仓库和容器运行时 |
 | 三 · K8s 核心资源 | 10 ~ 17 | Pod 入门与实战、Deployment 无状态调度、StatefulSet 有状态调度、Service 东西流量、Ingress 南北流量、ConfigMap/Secret 配置管理、存储管理、Job/CronJob 任务管理 |
 | 四 · 综合实战 | 18 ~ 19 | SpringCloud 项目迁移至 K8s、云原生架构升级（去中心化） |
 | 五 · 调度与资源治理 | 20 ~ 25 | 亲和力调度、污点与容忍、ResourceQuota、LimitRange、QoS、RBAC 权限管理 |
@@ -31,6 +31,8 @@ npm run docs:preview # 预览构建产物
 ```
 docs/
 ├── index.md                          # 首页（VitePress home 布局）
+├── public/
+│   └── favicon.svg                   # 站点图标
 ├── .vitepress/
 │   ├── config.mjs                    # 站点配置（自动生成导航与侧边栏）
 │   └── theme/
@@ -48,10 +50,11 @@ docs/
 
 - **章节目录**：`{两位编号}-{中文标题}`，如 `10-K8s核心单元-Pod入门与实战/`
 - **课时文件**：`{课时号}-{中文标题}.md`，如 `5-Pod资源分配limits和requests细节.md`
-- **章节入口**：每个目录下的 `index.md`，包含阶段介绍、任务列表和目录表格
+- **章节入口**：每个目录下的 `index.md`，包含章节说明、涵盖内容和目录表格
+- **附录文件**：`appendix-{中文标题}.md`，会在侧边栏中显示为“附录：{中文标题}”
 
 ## 技术栈
 
 - **[VitePress](https://vitepress.dev/)** — 静态站点生成
 - **[Mermaid](https://mermaid.js.org/)** — 架构图与流程图渲染
-- **自定义导航生成** — 根据 `docs/` 目录结构自动生成顶部导航和侧边栏
+- **自动导航生成** — 根据 `docs/` 目录结构生成顶部导航和侧边栏
