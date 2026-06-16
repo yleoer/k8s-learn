@@ -53,6 +53,20 @@ function parseLessonFile(name) {
   }
 }
 
+function parseAppendixFile(name) {
+  const match = name.match(/^appendix-(.+)\.md$/)
+
+  if (!match) {
+    return null
+  }
+
+  return {
+    text: `附录：${match[1]}`,
+    linkName: `appendix-${match[1]}`,
+    order: name,
+  }
+}
+
 function readCourseFromDocs() {
   return readdirSync(docsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -68,10 +82,16 @@ function readCourseFromDocs() {
         .sort((a, b) => {
           return Number(a.no) - Number(b.no)
         })
+      const appendixes = readdirSync(chapterDir, { withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => parseAppendixFile(entry.name))
+        .filter(Boolean)
+        .sort((a, b) => (a.order > b.order ? 1 : -1))
 
       return {
         ...chapter,
         lessons,
+        appendixes,
       }
     })
 }
@@ -105,10 +125,16 @@ const courseChapters = course.map((chapter, index) => {
     num,
     number: Number.parseInt(num, 10),
     link: `/${dir}/`,
-    items: chapter.lessons.map((lesson) => ({
-      text: lesson.title,
-      link: `/${dir}/${lessonPath(lesson)}`,
-    })),
+    items: [
+      ...chapter.lessons.map((lesson) => ({
+        text: lesson.title,
+        link: `/${dir}/${lessonPath(lesson)}`,
+      })),
+      ...chapter.appendixes.map((appendix) => ({
+        text: appendix.text,
+        link: `/${dir}/${appendix.linkName}`,
+      })),
+    ],
   }
 })
 
@@ -149,13 +175,6 @@ function shortChapterTitle(title) {
 
 function chapterSidebar(chapter, part) {
   const items = [...chapter.items]
-
-  if (part.flat && chapter.number === 1) {
-    items.push(
-      { text: '附录：Docker 并行使用', link: '/01-入门起步/appendix-Docker并行使用' },
-      { text: '附录：环境准备执行速查', link: '/01-入门起步/appendix-环境准备执行速查' },
-    )
-  }
 
   return [
     {
