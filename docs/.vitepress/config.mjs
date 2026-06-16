@@ -84,8 +84,8 @@ function escapeRegExp(value) {
 
 const courseParts = [
   { text: '入门起步', label: '一 · 入门起步', from: 1, to: 1, flat: true },
-  { text: '容器基石', label: '二 · 容器基石', from: 2, to: 9 },
-  { text: 'K8s 核心', label: '三 · K8s 核心资源', from: 10, to: 17 },
+  { text: '容器基石', label: '二 · 容器基石', from: 2, to: 5 },
+  { text: 'K8s 核心', label: '三 · K8s 核心资源', from: 8, to: 17 },
   { text: '综合实战', label: '四 · 综合实战', from: 18, to: 19 },
   { text: '调度治理', label: '五 · 调度与资源治理', from: 20, to: 25 },
   { text: '工程弹性', label: '六 · 工程化与弹性', from: 26, to: 28 },
@@ -138,6 +138,7 @@ function shortChapterTitle(title) {
     ['云原生基座-', ''],
     ['云原生CRI-', ''],
     ['必知必会', ''],
+    ['Containerd', ''],
   ]
 
   return replacements.reduce(
