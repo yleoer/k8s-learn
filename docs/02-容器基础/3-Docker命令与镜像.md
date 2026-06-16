@@ -1,8 +1,12 @@
 # Docker 命令与镜像
 
-安装 Docker 后，先用 `docker version` 和 `docker info` 确认客户端、服务端、运行时和系统配置，再学习镜像的搜索、拉取、查看、打标签、删除、导出和导入。
+镜像是容器交付的核心对象。本节围绕 Docker 环境检查、镜像搜索、拉取、查看、标签管理、删除、导入导出和磁盘占用分析展开，形成一套完整的镜像管理基础流程。
 
-## 基础检查命令
+后续学习 Dockerfile、Kubernetes Pod 和镜像仓库时，都会频繁使用这些命令。镜像命令的关键不在于记住所有参数，而在于理解每个命令改变了哪个对象、影响范围有多大，以及如何验证结果。
+
+## 基础检查
+
+开始操作镜像前，先确认 Docker 处于可用状态：
 
 ```bash
 docker version
@@ -11,25 +15,29 @@ docker ps
 docker images
 ```
 
-`docker version` 重点关注：
+`docker version` 重点关注以下字段：
 
-- Client Version：客户端版本。
-- Server Version：Docker Engine 服务端版本。
-- containerd：底层 containerd 版本。
-- runc：底层 OCI runtime 版本。
-- OS/Arch：系统和 CPU 架构。
+| 字段 | 说明 |
+| --- | --- |
+| `Client Version` | Docker 客户端版本 |
+| `Server Version` | Docker Engine 服务端版本 |
+| `containerd` | 底层 containerd 版本 |
+| `runc` | 底层 OCI runtime 版本 |
+| `OS/Arch` | 操作系统与 CPU 架构 |
 
-`docker info` 重点关注：
+`docker info` 重点关注以下字段：
 
-- Containers：容器数量。
-- Images：镜像数量。
-- Storage Driver：存储驱动。
-- Logging Driver：日志驱动。
-- Cgroup Driver：建议使用 `systemd`。
-- Docker Root Dir：Docker 数据目录，默认 `/var/lib/docker`。
-- Registry Mirrors：镜像加速地址。
+| 字段 | 说明 |
+| --- | --- |
+| `Containers` | 当前容器数量 |
+| `Images` | 本地镜像数量 |
+| `Storage Driver` | 镜像与容器层使用的存储驱动 |
+| `Logging Driver` | 日志驱动类型 |
+| `Cgroup Driver` | cgroup 驱动类型，Kubernetes 节点上通常建议使用 `systemd` |
+| `Docker Root Dir` | Docker 数据目录，Linux 默认通常为 `/var/lib/docker` |
+| `Registry Mirrors` | 镜像加速器地址 |
 
-如果 Docker 命令无法连接 daemon，优先检查：
+如果 Docker 命令无法连接 Daemon，优先检查服务状态与日志：
 
 ```bash
 sudo systemctl status docker --no-pager
@@ -37,6 +45,8 @@ sudo journalctl -u docker -xe --no-pager
 ```
 
 ## 搜索镜像
+
+搜索 Redis 镜像：
 
 ```bash
 docker search redis
@@ -51,72 +61,107 @@ bitnami/redis          Bitnami Redis Docker Image                      300
 redis/redis-stack      Redis Stack with JSON, Search, Timeseries…      250
 ```
 
-`OFFICIAL [OK]` 表示官方镜像。生产环境优先选择维护活跃、来源可信、版本明确的镜像。
+`OFFICIAL [OK]` 表示该镜像为 Docker 官方维护镜像。生产环境选择镜像时，应优先考虑来源可信、维护活跃、版本标签清晰、漏洞扫描结果可接受的镜像。
 
-## 下载镜像
+搜索命令适合初步发现镜像，但不能代替镜像选型。正式使用前，应查看镜像说明、支持架构、版本策略、环境变量、数据目录和启动方式。
+
+## 拉取镜像
+
+拉取明确版本的镜像：
 
 ```bash
 docker pull redis:8-alpine
 docker pull nginx:1.27-alpine
 ```
 
-不建议生产环境只写：
+不指定 tag 时默认使用 `latest`：
 
 ```bash
 docker pull nginx
 ```
 
-因为它等价于拉取 `nginx:latest`，部署结果可能随着上游标签变化而变化。
+这通常等价于：
+
+```bash
+docker pull nginx:latest
+```
+
+`latest` 不等于最新稳定版本，也不适合作为生产发布依据。对于课程实验可以偶尔使用 `latest`，但生产部署、故障回滚和发布记录中应使用明确版本标签，必要时记录镜像 digest。
 
 ## 查看本地镜像
+
+查看本地镜像列表：
 
 ```bash
 docker images
 docker image ls
 ```
 
-示例输出：
+传统 Docker Engine 输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。较新的 Docker Desktop，尤其是启用 containerd image store 后，可能显示为如下格式：
 
 ```text
-REPOSITORY   TAG          IMAGE ID       CREATED       SIZE
-redis        8-alpine     a1b2c3d4e5f6   2 days ago    35MB
-nginx        1.27-alpine  b2c3d4e5f6g7   5 days ago    45MB
-alpine       3.20         c3d4e5f6g7h8   2 weeks ago   7.4MB
+IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
+centos:user          94ce4d5dd91f        204MB             0B
+hello-world:latest   e2ac70e7319a       10.1kB             0B
+nginx:1.27-alpine    6769dc3a703c       48.2MB             0B
+nginx:latest         936fef290c8f        161MB             0B    U
+redis:8-alpine       3a02d38405dc        114MB             0B
 ```
 
-常看字段：
+字段含义如下：
 
 | 字段 | 说明 |
 | --- | --- |
-| `REPOSITORY` | 镜像仓库名 |
-| `TAG` | 镜像标签 |
-| `IMAGE ID` | 镜像 ID |
-| `CREATED` | 创建时间 |
-| `SIZE` | 镜像大小 |
+| `IMAGE` | 镜像名称和标签 |
+| `ID` | 镜像短 ID，用于快速识别镜像对象 |
+| `DISK USAGE` | 镜像在本机占用的磁盘空间 |
+| `CONTENT SIZE` | containerd content store 中内容对象的大小，某些情况下可能显示为 `0B` |
+| `EXTRA` | 附加状态标记，`U` 表示镜像正在被容器使用或引用 |
 
-## 更改镜像 tag
+如果希望获得更稳定、便于脚本处理的输出，可以使用 `--format`：
+
+```bash
+docker image ls --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}'
+```
+
+查看镜像详细信息：
+
+```bash
+docker image inspect nginx:1.27-alpine
+docker history nginx:1.27-alpine
+```
+
+`docker image inspect` 适合查看镜像架构、入口命令、环境变量、工作目录和 RepoDigest；`docker history` 适合观察镜像层构成，辅助分析镜像体积。
+
+## 管理镜像标签
+
+为镜像增加新标签：
 
 ```bash
 docker tag redis:8-alpine redis:local
 docker images | grep redis
 ```
 
-打 tag 不会复制镜像内容，只是给同一个镜像 ID 增加一个引用。
+`docker tag` 不会复制镜像内容，只是为同一个镜像 ID 增加新的引用。删除其中一个标签时，通常只会移除该引用，不会立即删除底层镜像层。
 
-推送到私有仓库前也常需要重新打 tag：
+推送到私有仓库前，通常需要按目标仓库地址重新打标签：
 
 ```bash
 docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
 ```
 
+镜像标签建议包含明确语义，例如应用版本、基础系统、构建时间或 Git 提交号。避免在生产部署中使用含义模糊、会频繁移动的标签。
+
 ## 删除镜像
+
+删除镜像标签或镜像对象：
 
 ```bash
 docker rmi redis:local
 docker rmi redis:8-alpine
 ```
 
-如果一个镜像还有其它 tag 引用，删除时通常只会 `Untagged`。当所有引用都删除且没有容器使用时，镜像层才会真正 `Deleted`。
+如果一个镜像仍有其他标签引用，删除时通常只会显示 `Untagged`，底层镜像层不会被删除。只有当所有标签引用都被移除，并且没有容器继续引用该镜像时，Docker 才能真正释放相关镜像层。
 
 查看悬空镜像：
 
@@ -128,28 +173,31 @@ docker images -f dangling=true
 
 ```bash
 docker image prune
-docker image prune -f
+docker image prune -f   # 跳过确认提示
 ```
 
-删除所有当前没有被容器使用的镜像要更谨慎：
+清理所有未被容器使用的镜像（操作范围更大，执行前应确认）：
 
 ```bash
 docker image prune -a
 ```
 
-## 导出和导入镜像
+`docker image prune -a` 范围较大，可能删除以后还会使用的镜像，导致下一次启动服务时重新拉取。生产主机执行前，应先使用 `docker system df -v` 查看对象占用和引用关系。
+
+## 导出与导入镜像
+
+导出镜像：
 
 ```bash
 docker save -o nginx.alpine.tar nginx:1.27-alpine
+```
+
+导入镜像：
+
+```bash
 docker load -i nginx.alpine.tar
 ```
 
-`docker save/load` 保留镜像层和 tag，适合离线迁移镜像。
+`docker save` 与 `docker load` 会保留镜像层和标签信息，适合在离线环境、内网环境或受限网络中传输镜像。它们操作的是镜像，不是容器运行状态。
 
-## 本节回顾
-
-- `docker version` 看客户端、服务端、containerd、runc 版本。
-- `docker info` 看存储、日志、cgroup、数据目录和镜像加速配置。
-- 镜像管理围绕 search、pull、images、tag、rmi、save、load 展开。
-- 生产环境优先使用明确版本 tag，并选择可信镜像来源。
-
+如果需要导出容器文件系统快照，可以使用 `docker export` 和 `docker import`，但这类方式不会完整保留镜像历史、标签和元数据，不适合作为标准镜像交付方式。

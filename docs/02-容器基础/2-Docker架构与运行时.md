@@ -1,20 +1,24 @@
 # Docker 架构与运行时
 
-Docker 是一个开源容器引擎，可以把应用以及依赖项打包成可移植镜像，并运行在支持容器的环境中。学习 Docker 时，不能只记命令，还要理解命令背后的组件链路。
+Docker 是一个面向开发、构建和运行容器的工具体系。学习 Docker 不应只停留在命令层面，还需要理解 Docker Client、Docker Daemon、containerd、runc 和 Linux 内核之间的调用关系。
+
+这一层知识会直接影响后续对 Kubernetes 运行时的理解。Kubernetes 不再通过内置 dockershim 直接对接 Docker Engine，但 Docker 构建出的 OCI 镜像仍然可以被 containerd、CRI-O 等 CRI 运行时正常拉取和运行。
 
 ## Docker 核心组件
 
-| 组件 | 作用 |
+| 组件 | 职责 |
 | --- | --- |
-| Docker Client | Docker 客户端，用于执行 `docker` 命令 |
-| Docker Daemon | Docker 守护进程，负责构建镜像、运行容器、管理网络和存储 |
-| Docker Image | 镜像，相当于一个模板，可以用来启动容器 |
-| Docker Container | 容器，由镜像启动，容器内运行应用程序 |
-| Docker Registry | 镜像仓库，用于存储和分发镜像 |
-| containerd | 底层容器运行时，管理镜像、容器、快照和生命周期 |
-| runc | OCI runtime，负责创建真正的 Linux 容器进程 |
+| Docker Client | 执行 `docker` 命令，并将请求发送给 Docker Daemon |
+| Docker Daemon | 负责镜像构建、镜像管理、容器运行、网络和存储管理 |
+| Docker Image | 应用运行环境的只读模板，用于创建容器 |
+| Docker Container | 由镜像创建的运行实例，内部运行应用进程 |
+| Docker Registry | 存储和分发镜像的远程服务 |
+| containerd | 管理镜像拉取、快照、容器生命周期和运行时任务 |
+| runc | OCI 标准运行时，负责创建真正的容器进程 |
 
-## Docker 架构图
+Docker Daemon 是 Docker Engine 的核心服务。用户通过 `docker` 命令与 Daemon 通信，Daemon 再调用更底层的 containerd 和 runc 完成容器创建。
+
+## 架构调用链路
 
 ```mermaid
 flowchart LR
@@ -30,23 +34,26 @@ flowchart LR
   daemon <--> registry["Registry\nDocker Hub / Harbor"]
 ```
 
-以 `docker run nginx` 为例：
+以 `docker run nginx:1.27-alpine` 为例，调用过程可以拆分为以下步骤：
 
-1. Docker Client 把请求发给 Docker Daemon。
-2. Docker Daemon 检查本地是否有 `nginx` 镜像。
-3. 如果没有镜像，就从 Registry 拉取。
-4. Docker Daemon 调用 containerd 管理容器生命周期。
-5. containerd 通过 runc 创建真正的 Linux 容器进程。
+1. Docker Client 将运行请求发送给 Docker Daemon。
+2. Docker Daemon 检查本地是否存在目标镜像。
+3. 如果镜像不存在，Docker Daemon 从 Registry 拉取镜像。
+4. Docker Daemon 准备网络、挂载、日志、资源限制等配置。
+5. Docker Daemon 调用 containerd 管理容器生命周期。
+6. containerd 调用 runc，由 runc 使用 Linux namespaces 与 cgroups 创建容器进程。
 
-## 观察 Docker 环境
+理解这条链路后，排查问题时可以按层定位：命令无法连接通常是 Client 到 Daemon 的问题；镜像拉取失败通常与 Registry、网络或认证有关；容器启动失败则可能出现在镜像入口命令、挂载、权限或运行时层。
 
-查看客户端与服务端版本：
+## 查看运行环境
+
+查看 Docker 客户端和服务端版本：
 
 ```bash
 docker version
 ```
 
-重点关注输出中的 `Client` 和 `Server`。如果只有客户端信息，通常说明 Docker Daemon 没有启动，或者当前用户没有访问 Docker Socket 的权限。
+输出通常分为 `Client` 和 `Server` 两部分。若只有客户端信息，通常说明 Docker Daemon 未启动，或当前用户没有访问 Docker Socket 的权限。
 
 查看 Docker 运行环境：
 
@@ -54,18 +61,18 @@ docker version
 docker info
 ```
 
-常见关注项：
+常见关注字段如下：
 
 | 字段 | 含义 |
 | --- | --- |
 | `Server Version` | Docker Engine 版本 |
 | `Storage Driver` | 镜像和容器层使用的存储驱动，Linux 常见为 `overlay2` |
 | `Logging Driver` | 日志驱动，默认常见为 `json-file` |
-| `Cgroup Driver` | cgroup 驱动，Kubernetes 节点上通常关注是否与 kubelet 一致 |
-| `Docker Root Dir` | Docker 本地数据目录，默认常见为 `/var/lib/docker` |
+| `Cgroup Driver` | cgroup 驱动，Kubernetes 节点上应与 kubelet 保持一致 |
+| `Docker Root Dir` | Docker 本地数据目录，Linux 默认通常为 `/var/lib/docker` |
 | `Registry Mirrors` | 镜像加速器配置 |
 
-查看 Docker 管理的对象：
+查看 Docker 当前管理的对象：
 
 ```bash
 docker image ls
@@ -74,100 +81,82 @@ docker network ls
 docker volume ls
 ```
 
+这些对象分别对应镜像、容器、网络和数据卷。后续排查时，很多问题都可以通过这些对象之间的关联关系定位。
+
 ## Docker 与 Kubernetes 的关系
 
-Kubernetes 在 v1.24 后不再使用内置 dockershim，而是直接通过 CRI 对接 containerd、CRI-O 等容器运行时。
-
-这并不表示 Docker 镜像不能在 Kubernetes 中使用。Docker 构建出来的镜像符合 OCI 镜像规范，只要推送到镜像仓库，containerd、CRI-O 等运行时都可以拉取并运行。
+Kubernetes 从 v1.24 起移除了内置 dockershim。移除的是 kubelet 内部用于适配 Docker Engine 的特殊代码，并不是移除对 Docker 镜像的支持。
 
 ```mermaid
 flowchart TB
-  kubelet["Kubernetes kubelet"] --> cri["CRI"]
-  cri --> containerd["containerd"]
+  kubelet["kubelet"] --> cri["CRI"]
+  cri --> containerd["containerd / CRI-O"]
   containerd --> runc["runc"]
   runc --> kernel["Linux Kernel"]
 
   cli["Docker CLI"] --> daemon["Docker Daemon"]
-  daemon --> containerd
+  daemon --> dockerContainerd["containerd"]
 ```
 
-两者底层都可能使用 containerd 和 runc，但管理入口和命名空间不同。
+Docker 构建出的镜像符合 OCI 镜像规范，推送到镜像仓库后，Kubernetes 使用的 containerd 或 CRI-O 可以正常拉取并运行。也就是说，本地仍然可以使用 Docker 构建、测试和推送镜像，而 Kubernetes 节点可以使用 containerd 作为运行时。
 
-| 场景 | 常用入口 | 说明 |
+| 场景 | 常用工具 | 说明 |
 | --- | --- | --- |
-| 本地构建和运行容器 | `docker` | 面向开发和镜像制作，体验友好 |
-| Kubernetes 管理 Pod | `kubectl` | 面向集群对象，不直接关心底层容器进程 |
-| Kubernetes 节点排查容器 | `crictl` | 通过 CRI 查询 kubelet 使用的运行时 |
-| containerd 底层排查 | `ctr` | 更底层，输出不如 `crictl` 贴近 Kubernetes |
+| 本地构建和运行容器 | `docker` | 面向开发、调试和镜像制作 |
+| 管理 Kubernetes 对象 | `kubectl` | 面向 Pod、Deployment、Service 等集群资源 |
+| 排查 Kubernetes 节点容器 | `crictl` | 通过 CRI 查询 kubelet 使用的运行时 |
+| 排查 containerd 底层对象 | `ctr` | 接近底层，适合定位 containerd 视角问题 |
 
-## 为什么还要学 Docker
+## Kubernetes 节点排查视角
 
-即使 Kubernetes 不再直接使用 Docker，Docker 仍然重要：
+在 Kubernetes 节点上排查 Pod 时，不应默认使用 `docker ps`。原因是 Docker Daemon 管理的容器和 kubelet 通过 CRI 管理的容器并不一定在同一管理入口中。
 
-- Docker 依旧是镜像构建和产品交付的常用工具。
-- Docker 依旧是本地开发和测试的首选工具之一。
-- Docker 镜像符合 OCI 标准，依旧可以被 Kubernetes 使用。
-- 很多企业仍然用 Docker 或 Docker Compose 运行非 K8s 服务。
-
-## 排查视角
-
-Kubernetes Pod 不建议用 `docker ps` 排查。原因是 Kubernetes 使用的 containerd 命名空间通常是 `k8s.io`，Docker CLI 默认只能看到 Docker Daemon 自己管理的容器。
-
-排查 Pod 时优先使用：
+对于使用 containerd 的 Kubernetes 节点，Pod 通常位于 containerd 的 `k8s.io` 命名空间。排查时应优先使用：
 
 ```bash
 kubectl get pods -A
 sudo crictl ps -a
+sudo crictl pods
 sudo ctr -n k8s.io containers ls
 ```
 
-查看 kubelet 当前使用的运行时端点：
+查看 kubelet 使用的运行时端点：
 
 ```bash
 sudo crictl info | grep -E 'runtimeName|runtimeVersion'
 ps -ef | grep kubelet | grep container-runtime-endpoint
 ```
 
-如果 `crictl` 提示没有配置运行时端点，可以创建：
+如果 `crictl` 提示未配置运行时端点，应参考第 01 章创建 `/etc/crictl.yaml`，并确认 endpoint 指向当前节点实际使用的 containerd Socket。
 
-```bash
-sudo tee /etc/crictl.yaml >/dev/null <<'EOF'
-runtime-endpoint: unix:///run/containerd/containerd.sock
-image-endpoint: unix:///run/containerd/containerd.sock
-timeout: 10
-debug: false
-EOF
-```
+## Docker Socket 与权限
 
-## 常见问题
+Docker Client 通常通过 `/var/run/docker.sock` 与 Docker Daemon 通信。能够访问该 Socket 的用户，实际上可以让 Docker Daemon 以较高权限在宿主机上创建容器、挂载目录或访问主机资源。
 
-如果执行 `docker ps` 提示无法连接：
-
-```text
-Cannot connect to the Docker daemon at unix:///var/run/docker.sock
-```
-
-通常检查：
-
-```bash
-sudo systemctl status docker
-sudo systemctl start docker
-ls -l /var/run/docker.sock
-```
-
-普通用户执行 Docker 命令如果提示权限不足，可以加入 `docker` 组：
+因此，加入 `docker` 组并不是普通的低风险授权：
 
 ```bash
 sudo usermod -aG docker "$USER"
 newgrp docker
 ```
 
-加入 `docker` 组等价于给用户较高的主机控制权限，生产环境要谨慎授权。
+生产环境中应谨慎授予 Docker Socket 访问权限，避免在业务容器中挂载 `/var/run/docker.sock`。如果必须让自动化系统构建镜像，应优先使用隔离的构建节点、专用账号和最小权限策略。
 
-## 本节回顾
+## 常见问题
 
-- Docker Client 只负责发起请求，真正管理镜像和容器的是 Docker Daemon。
-- Docker Daemon 会继续调用 containerd 和 runc 创建容器进程。
-- Kubernetes 不再依赖内置 dockershim，但仍然可以运行 Docker 构建的 OCI 镜像。
-- 排查 Kubernetes 节点容器时优先使用 `kubectl` 和 `crictl`。
+执行 `docker ps` 时出现以下错误：
 
+```text
+Cannot connect to the Docker daemon at unix:///var/run/docker.sock
+```
+
+可按顺序检查 Docker 服务状态、Socket 权限和当前用户组：
+
+```bash
+sudo systemctl status docker --no-pager
+sudo systemctl start docker
+ls -l /var/run/docker.sock
+id
+```
+
+如果 Docker 服务正常但普通用户无权限，可临时使用 `sudo docker ps` 验证问题是否与权限有关。确认后再决定是否将用户加入 `docker` 组。
