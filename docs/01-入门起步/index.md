@@ -1,27 +1,16 @@
 ﻿# 入门起步
 
-本阶段从零准备一套可运行、可验证、便于反复练习的 Kubernetes 实验集群。先把 kubeadm、containerd、Calico 和基础排障链路跑通，为后续 Pod、Service、Ingress、存储、调度和可观测性章节打基础。本阶段的任务是：
+本阶段的目标是从零搭建一套可运行、可验证、便于反复练习的 Kubernetes 实验集群。通过依次完成系统初始化、组件安装、集群引导与网络配置等环节，将 kubeadm、containerd、Calico 及基础排障链路全部打通，为后续 Pod、Service、Ingress、存储、调度与可观测性等章节奠定稳固基础。
 
-- 明确节点角色、版本、网段和镜像源等关键约定。
-- 在 Ubuntu 24.04 上完成 Kubernetes 节点的系统初始化。
-- 安装并配置 containerd、kubelet、kubeadm、kubectl 和 crictl。
-- 使用 kubeadm 初始化 control-plane，并让 worker 节点加入集群。
-- 安装 Calico 网络插件，使节点和 Pod 进入可用状态。
-- 部署一个测试应用，验证调度、Pod 网络和 NodePort 访问链路。
-- 使用常用命令定位 kubelet、containerd、CNI、镜像拉取等基础问题。
+本阶段具体涵盖以下内容：
 
-## 执行节点矩阵
-
-| 阶段 | 执行位置 | 说明 |
-| --- | --- | --- |
-| 环境规划 | 本地记录即可 | 先确定版本、节点 IP、主机名、Pod 网段和 Service 网段 |
-| 基础环境准备 | 所有节点 | 系统更新、时间同步、swap、内核模块、sysctl 都要保持一致 |
-| containerd 与 Kubernetes 组件安装 | 所有节点 | control-plane 和 worker 都需要 containerd、kubelet、kubeadm，kubectl 建议也安装 |
-| `kubeadm init` | 仅第一个 control-plane | 当前实验环境是 `master`，不要在 worker 节点执行 |
-| 配置 kubectl | control-plane | 使用 `/etc/kubernetes/admin.conf` 管理集群 |
-| 安装 Calico | control-plane | CNI 安装完成后节点才会从 `NotReady` 变为 `Ready` |
-| `kubeadm join` | worker 节点 | 使用 `kubeadm init` 输出的 join 命令加入集群 |
-| 验证与排障 | 主要在 control-plane，必要时登录各节点 | 先看 `kubectl get pods -A`，再到对应节点查 kubelet/containerd 日志 |
+- 明确节点角色、版本选型、网络地址规划及镜像源等关键约定，形成统一的环境基准。
+- 在 Ubuntu 24.04 上完成 Kubernetes 节点的系统预配置，包括内核参数、网络转发及 swap 禁用等前置条件。
+- 安装并配置 containerd、kubelet、kubeadm、kubectl 与 crictl，确保容器运行时与集群管理工具就绪。
+- 使用 kubeadm 初始化 control-plane 节点，并将 worker 节点接入集群，完成基本拓扑构建。
+- 部署 Calico 网络插件，使全部节点与 Pod 进入 Ready 状态，建立跨节点通信能力。
+- 部署测试应用，对调度流程、Pod 间网络连通性及 NodePort 访问链路进行端到端验证。
+- 掌握针对 kubelet、containerd、CNI、镜像拉取等常见故障场景的定位思路与排查命令。
 
 ## 目录
 
@@ -32,5 +21,5 @@
 | [运行时与组件安装](./3-运行时与组件安装) | 安装 containerd、配置镜像加速、安装 kubeadm 相关组件 |
 | [集群初始化与网络插件](./4-集群初始化与网络插件) | 初始化 control-plane、安装 Calico、加入 worker 节点 |
 | [验证集群与常见排障](./5-验证集群与常见排障) | 部署测试应用并掌握第一轮排障命令 |
-| [Docker 并行使用](./appendix-Docker并行使用) | 在 containerd 集群节点上额外使用 Docker |
-| [环境准备执行速查](./appendix-环境准备执行速查) | 按执行顺序快速回顾关键命令 |
+| [附录：Docker 并行使用](./appendix-Docker并行使用) | 在 containerd 集群节点上额外使用 Docker |
+| [附录：环境准备执行速查](./appendix-环境准备执行速查) | 按执行顺序快速回顾关键命令 |
