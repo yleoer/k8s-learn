@@ -32,7 +32,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 ```bash
 sudo kubeadm init \
-  --kubernetes-version v1.36.1 \
+  --kubernetes-version v1.36.2 \
   --image-repository registry.aliyuncs.com/google_containers \
   --pod-network-cidr 10.244.0.0/16 \
   --service-cidr 10.96.0.0/12 \
@@ -65,7 +65,7 @@ sudo kubeadm join <control-plane-ip>:6443 \
 ```bash
 kubectl get nodes -o wide
 kubectl get pods -A -o wide
-kubectl create deployment nginx --image=nginx:latest
+kubectl create deployment nginx --image=nginx:1.27
 kubectl expose deployment nginx --port=80 --type=NodePort
 kubectl get deploy,pod,svc -o wide
 ```

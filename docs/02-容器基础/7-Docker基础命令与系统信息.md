@@ -8,6 +8,30 @@
 docker version
 ```
 
+<details>
+<summary>docker version 示例</summary>
+
+```text
+Client: Docker Engine - Community
+ Version:           28.0.0
+ API version:       1.48
+ Go version:        go1.23.6
+ OS/Arch:           linux/amd64
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          28.0.0
+  API version:      1.48 (minimum version 1.24)
+  Go version:       go1.23.6
+  OS/Arch:          linux/amd64
+  containerd:
+   Version:          v2.2.4
+  runc:
+   Version:          1.3.0
+```
+
+</details>
+
 重点关注：
 
 - Client Version：客户端版本
@@ -21,6 +45,23 @@ docker version
 ```bash
 docker info
 ```
+
+<details>
+<summary>docker info 示例（关键字段）</summary>
+
+```text
+Client: Docker Engine - Community
+ Server Version: 28.0.0
+ Storage Driver: overlay2
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Logging Driver: json-file
+ Docker Root Dir: /var/lib/docker
+ Registry Mirrors:
+  https://docker.1ms.run/
+```
+
+</details>
 
 重点关注：
 

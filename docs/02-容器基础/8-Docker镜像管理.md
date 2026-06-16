@@ -8,7 +8,20 @@
 docker search redis
 ```
 
-输出中的 `OFFICIAL [OK]` 表示官方镜像。生产环境优先选择维护活跃、来源可信、版本明确的镜像。
+<details>
+<summary>docker search 示例</summary>
+
+```text
+$ docker search redis
+NAME                   DESCRIPTION                                      STARS     OFFICIAL
+redis                  Redis is an open source key-value store that…   14000     [OK]
+bitnami/redis          Bitnami Redis Docker Image                      300
+redis/redis-stack      Redis Stack with JSON, Search, Timeseries…      250
+```
+
+</details>
+
+`OFFICIAL [OK]` 表示官方镜像。生产环境优先选择维护活跃、来源可信、版本明确的镜像。
 
 ## 下载镜像
 
@@ -21,6 +34,19 @@ docker pull redis:8-alpine
 ```bash
 docker images
 ```
+
+<details>
+<summary>docker images 示例</summary>
+
+```text
+$ docker images
+REPOSITORY   TAG          IMAGE ID       CREATED       SIZE
+redis        8-alpine     a1b2c3d4e5f6   2 days ago    35MB
+nginx        1.27-alpine  b2c3d4e5f6g7   5 days ago    45MB
+alpine       3.20         c3d4e5f6g7h8   2 weeks ago   7.4MB
+```
+
+</details>
 
 ## 更改镜像 tag
 

@@ -10,6 +10,19 @@
 - 部署一个测试应用，验证调度、Pod 网络和 NodePort 访问链路。
 - 使用常用命令定位 kubelet、containerd、CNI、镜像拉取等基础问题。
 
+## 执行节点矩阵
+
+| 阶段 | 执行位置 | 说明 |
+| --- | --- | --- |
+| 环境规划 | 本地记录即可 | 先确定版本、节点 IP、主机名、Pod 网段和 Service 网段 |
+| 基础环境准备 | 所有节点 | 系统更新、时间同步、swap、内核模块、sysctl 都要保持一致 |
+| containerd 与 Kubernetes 组件安装 | 所有节点 | control-plane 和 worker 都需要 containerd、kubelet、kubeadm，kubectl 建议也安装 |
+| `kubeadm init` | 仅第一个 control-plane | 当前实验环境是 `master`，不要在 worker 节点执行 |
+| 配置 kubectl | control-plane | 使用 `/etc/kubernetes/admin.conf` 管理集群 |
+| 安装 Calico | control-plane | CNI 安装完成后节点才会从 `NotReady` 变为 `Ready` |
+| `kubeadm join` | worker 节点 | 使用 `kubeadm init` 输出的 join 命令加入集群 |
+| 验证与排障 | 主要在 control-plane，必要时登录各节点 | 先看 `kubectl get pods -A`，再到对应节点查 kubelet/containerd 日志 |
+
 ## 目录
 
 | 文档 | 内容 |
