@@ -32,7 +32,7 @@ frontend/
 
 ### .dockerignore
 
-```dockerignore
+```.dockerignore
 .git
 node_modules
 *.log
