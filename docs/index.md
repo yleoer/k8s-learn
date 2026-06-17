@@ -17,8 +17,8 @@ features:
     link: /02-容器基础/
   - icon: ⚙️
     title: 三 · K8s 核心资源
-    details: Pod、无状态/有状态调度、Service、Ingress、ConfigMap、存储、Job。
-    link: /10-K8s核心单元-Pod入门与实战/
+    details: Kubernetes 设计思想、初体验、Pod、无状态/有状态调度、Service、Ingress、ConfigMap、存储、Job。
+    link: /06-K8s设计思想/
   - icon: 🧩
     title: 四 · 综合实战
     details: 把 SpringCloud 项目迁移到 K8s，并做云原生架构升级。

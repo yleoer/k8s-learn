@@ -17,7 +17,7 @@ npm run docs:preview # 预览构建产物
 | --- | --- | --- |
 | 一 · 入门起步 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico 网络和集群验证 |
 | 二 · 容器基石 | 02 ~ 05 | 容器运行模型、Docker 架构、镜像管理、镜像制作、镜像仓库和容器运行时 |
-| 三 · K8s 核心资源 | 10 ~ 17 | Pod 入门与实战、Deployment 无状态调度、StatefulSet 有状态调度、Service 东西流量、Ingress 南北流量、ConfigMap/Secret 配置管理、存储管理、Job/CronJob 任务管理 |
+| 三 · K8s 核心资源 | 06 ~ 17 | Kubernetes 设计思想、K8s 初体验、Pod 入门与实战、Deployment 无状态调度、StatefulSet 有状态调度、Service 东西流量、Ingress 南北流量、ConfigMap/Secret 配置管理、存储管理、Job/CronJob 任务管理 |
 | 四 · 综合实战 | 18 ~ 19 | SpringCloud 项目迁移至 K8s、云原生架构升级（去中心化） |
 | 五 · 调度与资源治理 | 20 ~ 25 | 亲和力调度、污点与容忍、ResourceQuota、LimitRange、QoS、RBAC 权限管理 |
 | 六 · 工程化与弹性 | 26 ~ 28 | Helm 包管理、Operator 扩展、KEDA 弹性伸缩 |
