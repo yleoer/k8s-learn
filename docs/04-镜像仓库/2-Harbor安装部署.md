@@ -1,25 +1,28 @@
 # Harbor 安装部署
 
-Harbor 是企业中常用的私有镜像仓库，适合部署在内网，用于统一管理业务镜像、基础镜像和 Helm Chart 等制品。
+Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本章以 Harbor v2.14 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。
 
-官网：<https://goharbor.io>
+## 环境要求
 
-## 环境准备
+| 项目 | 最低配置 | 建议配置 |
+| --- | --- | --- |
+| CPU | 2 核 | 4 核及以上 |
+| 内存 | 4 GiB | 8 GiB 及以上 |
+| 磁盘 | 40 GiB | 160 GiB 及以上，数据目录独立挂载 |
+| Docker Engine | 20.10 以上 | 使用发行版官方或 Docker 官方稳定版本 |
+| Docker Compose | 2.3 以上 | 使用 `docker compose` 插件形式 |
 
-- Linux 服务器（建议 4 核 / 8 GiB 内存 / 100 GiB 以上磁盘）。
-- Docker 和 Docker Compose 已安装。
-- 服务器主机名和 IP 稳定。
-- 内网 DNS 或 `/etc/hosts` 已配置 Harbor 地址解析。
+服务器主机名和 IP 应保持稳定，内网 DNS 或 `/etc/hosts` 需要提前配置 Harbor 域名的正向解析。若使用 HTTPS，还需要准备与 `hostname` 匹配的证书和私钥。
 
 ## 下载安装包
 
-从 [Harbor Releases](https://github.com/goharbor/harbor/releases) 下载离线安装包：
+从 [Harbor Releases](https://github.com/goharbor/harbor/releases) 获取离线安装包：
 
 ```bash
 wget https://github.com/goharbor/harbor/releases/download/v2.14.0/harbor-offline-installer-v2.14.0.tgz
 ```
 
-离线包包含运行所需的全部镜像，适合内网环境。
+离线安装包包含 Harbor 运行所需的组件镜像，适合无法直接访问外网镜像仓库的内网环境。实际部署时可根据官方发布页选择同一大版本中的最新补丁版本。
 
 ## 解压并导入镜像
 
@@ -29,14 +32,18 @@ cd harbor
 docker load -i harbor.v2.14.0.tar.gz
 ```
 
+`docker load` 会将 Harbor 各组件镜像加载到本地 Docker，后续安装脚本可直接使用本地镜像生成并启动服务。
+
 ## 修改配置文件
+
+复制配置模板并编辑：
 
 ```bash
 cp harbor.yml.tmpl harbor.yml
 vim harbor.yml
 ```
 
-重点字段：
+核心字段示例：
 
 ```yaml
 hostname: harbor.example.com
@@ -46,73 +53,110 @@ harbor_admin_password: Harbor12345
 data_volume: /data/harbor
 ```
 
-| 字段 | 说明 |
-| --- | --- |
-| `hostname` | Harbor 访问地址，域名或 IP |
-| `harbor_admin_password` | 管理员 `admin` 的密码，安装前修改 |
-| `data_volume` | 数据存储目录 |
-| `http.port` | HTTP 端口，默认 80 |
-| `https` | HTTPS 证书配置，生产环境建议配置 |
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `hostname` | 是 | Harbor 对外访问地址，必须使用客户端可访问的域名或 IP，不应使用 `127.0.0.1` 或 `localhost` |
+| `harbor_admin_password` | 是 | 管理员 `admin` 的初始密码，安装完成后应立即修改 |
+| `data_volume` | 是 | 镜像数据、数据库和任务数据的存储目录，建议使用独立磁盘 |
+| `http.port` | 否 | HTTP 访问端口，默认 `80` |
+| `https` | 否 | HTTPS 证书配置，生产环境建议启用 |
 
-如果不配置 HTTPS，需要注释掉 `https` 相关段落，只保留 HTTP。
+## HTTP 与 HTTPS
 
-## HTTPS 证书（简要）
+测试环境可以注释 `https` 段，只保留 HTTP 访问。此时所有需要访问 Harbor 的 Docker、containerd 或 Kubernetes 节点都必须配置对该仓库的非安全访问或信任规则。
 
-生产环境建议使用权威 CA 证书或 Let's Encrypt：
+生产环境应配置权威 CA 证书或内部统一签发的受信任证书：
 
 ```yaml
 https:
   port: 443
-  certificate: /etc/harbor/certs/harbor.example.com.crt
-  private_key: /etc/harbor/certs/harbor.example.com.key
+  certificate: /etc/ssl/certs/harbor.example.com.crt
+  private_key: /etc/ssl/private/harbor.example.com.key
 ```
 
-测试环境可用自签证书，但客户端不能只靠“忽略错误”长期运行。推荐做法是：
+自签证书也可以使用，但每个客户端节点都需要额外导入 CA 或配置跳过校验。集群规模扩大后，统一证书信任链比逐台配置 `insecure-registry` 更易维护。
 
-| 场景 | 推荐方式 |
-| --- | --- |
-| 生产环境 | 使用企业 CA、权威 CA 或 Let's Encrypt 证书 |
-| 内网自签 HTTPS | 将自签 CA 证书导入 Docker、containerd 和操作系统信任链 |
-| 临时 HTTP 测试 | 明确配置 insecure registry，仅用于实验或封闭环境 |
+## 非 root 用户安装
 
-如果 Harbor 使用 HTTPS 自签证书，建议把 CA 证书分发到所有需要拉取镜像的节点。Docker 客户端可放到：
+非 root 用户执行 `install.sh` 时，`prepare` 脚本会通过 `docker run --rm -v` 生成 `common/` 目录下的配置文件。该步骤在容器内以 root 身份写入文件，可能导致宿主机上的普通用户无法读取 `common/config/registryctl/env` 等文件，进而使 Docker Compose 启动失败。
+
+处理方式是在 `prepare` 文件中，找到生成配置的 `docker run --rm -v` 命令，并在该命令后追加权限修正逻辑：
 
 ```bash
-sudo mkdir -p /etc/docker/certs.d/harbor.example.com
-sudo cp ca.crt /etc/docker/certs.d/harbor.example.com/ca.crt
-sudo systemctl restart docker
+sudo chown -R $USER:$USER $harbor_prepare_path
+find $harbor_prepare_path -type f -exec chmod 0755 {} \;
+sudo chmod 777 $data_path
 ```
 
-containerd 客户端可放到：
+修改后的片段示例如下，实际位置以 `prepare` 文件中的 `docker run --rm -v` 命令为准：
 
 ```bash
-sudo mkdir -p /etc/containerd/certs.d/harbor.example.com
-sudo cp ca.crt /etc/containerd/certs.d/harbor.example.com/ca.crt
-sudo systemctl restart containerd
+docker run --rm -v $harbor_prepare_path:/input \
+  -v $prepare_base_dir:/compose_location \
+  -v $config_dir:/config \
+  goharbor/prepare:$version prepare $@
+
+sudo chown -R $USER:$USER $harbor_prepare_path
+find $harbor_prepare_path -type f -exec chmod 0755 {} \;
+sudo chmod 777 $data_path
 ```
 
-只有在 Harbor 明确使用 HTTP，或临时测试自签证书且无法下发 CA 时，才使用后续章节的 insecure 配置。
+其中，`harbor_prepare_path` 是 Harbor 安装目录下由 `prepare` 使用的配置生成目录，`data_path` 对应 `harbor.yml` 中的 `data_volume`。追加后重新执行：
+
+```bash
+./prepare
+./install.sh
+```
 
 ## 安装并启动
 
 ```bash
 mkdir -p /data/harbor
+
+# 生成配置并检查语法
 ./prepare
+
+# 安装并启动所有组件
 ./install.sh
 ```
 
-安装完成后，Harbor 通过 Docker Compose 启动以下组件：
+<details>
+<summary>./install.sh 示例输出（末尾）</summary>
+
+```text
+✔ ----Harbor has been installed and started successfully.----
+```
+
+</details>
+
+安装失败时可优先检查以下项目：
+
+- `docker compose` 命令是否存在，版本是否满足要求
+- 80、443 等端口是否已被其他服务占用
+- `/data/harbor` 所在分区是否具备足够空间
+- `hostname` 是否能从客户端和服务器本机正确解析
+
+端口占用可通过以下命令确认：
+
+```bash
+ss -lntp | grep -E ':80|:443'
+```
+
+## Harbor 组件一览
+
+安装完成后，Harbor 通过 Docker Compose 管理以下主要容器：
 
 | 组件 | 作用 |
 | --- | --- |
-| `nginx` | 反向代理，Harbor 入口 |
-| `harbor-core` | 核心 API |
-| `harbor-db` | PostgreSQL 数据库 |
-| `harbor-jobservice` | 异步任务（复制、 GC） |
-| `harbor-portal` | Web 控制台 |
-| `registry` | 镜像分发服务 |
-| `redis` | 缓存和会话 |
-| `trivy-adapter` | 镜像漏洞扫描（可选） |
+| `nginx` | 反向代理，作为 Harbor 的统一入口 |
+| `harbor-core` | 核心 API，处理 Web 请求、认证和项目逻辑 |
+| `harbor-db` | PostgreSQL 数据库，存储项目、用户、策略和任务数据 |
+| `harbor-jobservice` | 异步任务执行器，负责复制、垃圾回收、扫描等任务 |
+| `harbor-portal` | Web 控制台前端 |
+| `registry` | Registry 服务，负责镜像层和清单的存储与分发 |
+| `registryctl` | Registry 控制组件，辅助配置和管理 Registry |
+| `redis` | 会话缓存和任务队列 |
+| `trivy-adapter` | 漏洞扫描适配器，启用 Trivy 时出现 |
 
 ## 查看运行状态
 
@@ -138,24 +182,26 @@ registryctl         running
 
 </details>
 
+主要组件均为 `running` 时，表示服务已正常启动。若某个组件反复重启，可通过 `docker compose logs <service>` 查看对应日志。
+
 ## 登录 Web 控制台
 
-浏览器访问 `http://harbor.example.com`，默认账号：
+浏览器访问 `http://harbor.example.com` 或实际配置的 HTTPS 地址，使用安装时配置的管理员账号登录：
 
 ```text
-admin / Harbor12345
+用户名：admin
+密码：  Harbor12345
 ```
 
-如果安装前修改了 `harbor_admin_password`，以修改后的密码为准。
+首次登录后应立即进入 **系统管理 → 用户管理** 修改 `admin` 密码，并根据业务边界创建项目和用户。
 
-## 启停与卸载
+## 启停管理
 
 ```bash
-docker compose stop      # 停止
-docker compose up -d     # 启动
-docker compose down -v   # 卸载（删除容器和卷）
+docker compose stop          # 停止所有组件，保留数据和配置
+docker compose up -d         # 重新启动
+docker compose down          # 停止并删除容器，保留持久化数据
+docker compose down -v       # 停止并删除容器和数据卷，谨慎使用
 ```
 
-::: danger 卸载风险
-`docker compose down -v` 会删除 Compose 管理的卷。执行前至少确认已经备份 `harbor.yml`、数据库和 `/data/harbor`。生产环境不要把它当作普通重启命令使用。
-:::
+日常维护通常使用 `docker compose stop` 和 `docker compose up -d`。`docker compose down -v` 会删除 Compose 管理的数据卷，只应在明确需要彻底清理测试环境时使用。

@@ -1,89 +1,104 @@
 # Harbor 运维管理
 
-镜像仓库使用一段时间后会积累大量历史镜像。只删除标签不一定释放磁盘空间，需结合保留策略和垃圾回收处理。多机房场景还需配置镜像复制同步。
+镜像仓库上线后，镜像层、标签、扫描结果和复制任务会持续积累，磁盘空间与后台任务需要纳入日常运维。本章围绕镜像清理、标签保留策略、垃圾回收、复制同步、磁盘监控和备份展开。
 
 ## 镜像清理
 
 ### 手动删除
 
-Web 控制台：**项目 → 镜像仓库 → 选择镜像 → 删除指定 tag**。
+Web 控制台路径：**项目 → 镜像仓库 → 选择镜像 → 删除**。
 
-删除前确认该镜像没有被 Kubernetes、发布系统或回滚流程继续使用。
+删除前应确认镜像没有被以下场景引用：
+
+- Kubernetes 集群中正在运行的 Deployment、StatefulSet 或 DaemonSet
+- 回滚流程依赖的历史版本
+- 其他 Harbor 实例的复制规则来源
+- 审计、合规或问题排查仍需保留的发布版本
+
+手动删除适合少量错误镜像或临时镜像处理，不适合作为长期清理手段。
 
 ### 标签保留策略
 
-按项目配置自动清理规则，例如：
-
-```text
-保留最近 10 个镜像标签
-保留所有 v 开头的正式版本
-清理 30 天前的临时构建镜像（dev-*、test-*）
-```
+Harbor 支持按项目配置标签保留策略，根据规则保留需要的版本，其余标签可被清理。
 
 配置路径：**项目 → 策略 → 标签保留策略 → 添加规则**。
 
-## 垃圾回收（GC）
+示例策略：
 
-删除标签后，底层 blob 数据不会立即释放，需执行垃圾回收。
-
-Web 控制台：**系统管理 → 垃圾回收 → 立即执行**。
-
-也可配置定时 GC：
-
-```bash
-# 在 harbor.yml 中配置
-gc:
-  schedule: "0 0 2 * * *"    # 每天凌晨 2 点
+```text
+规则 1：保留最近 10 个推送的镜像
+规则 2：保留所有匹配 v* 的正式版本标签
+规则 3：清理 30 天前推送的 dev-* 和 test-* 标签
 ```
 
-### GC 注意事项
+保留策略应先在非生产项目中验证，确认不会删除仍在使用的标签后，再应用到生产项目。对于正式发布标签，建议配合不可变标签规则或发布审批流程，避免被误删或覆盖。
 
-- GC 执行期间 Harbor 进入只读模式，镜像推送和删除会暂停。
-- 建议安排在业务低峰期执行。
-- 数据量大时 GC 可能耗时较长。
+## 垃圾回收
 
-## 磁盘检查
+删除标签或制品后，镜像底层 blob 数据不会立即释放。Harbor 需要通过垃圾回收清理不再被任何清单引用的 blob，才能真正回收文件系统空间。
+
+Web 控制台路径：**系统管理 → 清理 → 垃圾回收**。
+
+常用操作包括：
+
+- **DRY RUN**：预演垃圾回收，估算可清理对象和空间，不删除数据
+- **GC Now**：立即执行垃圾回收
+- **Schedule**：设置按小时、每天、每周或自定义 cron 周期执行
+- **History**：查看历史任务状态和日志
+
+Harbor 为避免影响正在上传的制品，会保留最近上传窗口内的层文件，不会立即清理刚上传的内容。垃圾回收期间仍可继续推送、拉取和删除镜像，但大规模清理会增加 Registry 和存储压力，建议安排在业务低峰期执行。
+
+## 磁盘监控
+
+Harbor 数据目录应纳入系统监控和容量巡检：
 
 ```bash
 du -sh /data/harbor
 df -h
 ```
 
-Harbor 数据目录建议单独挂载磁盘，便于扩容和监控。重点关注 `/data/harbor/registry` 目录的占用。
+重点关注以下目录：
+
+| 路径 | 说明 |
+| --- | --- |
+| `/data/harbor/registry` | 实际镜像层和清单数据，增长最快 |
+| `/data/harbor/database` | PostgreSQL 数据目录，保存项目、用户、策略和任务信息 |
+| `/data/harbor/job_logs` | 后台任务日志，复制、扫描和垃圾回收任务较多时会增长 |
+| `/data/harbor/trivy-adapter` | Trivy 漏洞库和扫描缓存，启用扫描后需要关注 |
+
+建议为 `/data/harbor` 使用独立磁盘或独立逻辑卷，并设置告警阈值。例如，磁盘使用率超过 80% 时发出告警，超过 90% 时停止非必要推送并优先执行清理。
 
 ## 镜像复制
 
-镜像复制用于在不同 Harbor 实例之间同步镜像，典型场景：
+镜像复制用于在多个 Harbor 实例或外部 Registry 之间同步镜像，常见场景如下：
 
-| 场景 | 说明 |
-| --- | --- |
-| 测试 → 生产 | 验证通过后同步指定版本到生产 Harbor |
-| 总部 → 分支机房 | 减少跨地域拉取镜像的网络延迟 |
-| 外网 → 内网 | 将 Docker Hub 镜像同步到内网 Harbor |
-| 多集群共享 | 每个集群从就近 Harbor 拉取 |
+| 场景 | 方向 | 说明 |
+| --- | --- | --- |
+| 测试到生产 | 推送 | 测试验证通过后同步正式版本到生产 Harbor |
+| 总部到分支机构 | 推送 | 各机房从本地 Harbor 拉取，减少跨地域带宽 |
+| Docker Hub 到内网 | 拉取 | 将常用公共镜像缓存到内网仓库 |
+| 多集群同步 | 双向 | 每个 Kubernetes 集群就近访问本地 Harbor |
 
-### 配置复制
+## 配置复制规则
 
-1. 创建目标仓库（**系统管理 → 仓库管理 → 新建目标**）。
-2. 配置目标地址、用户名、密码。
-3. 创建复制规则（**项目 → 复制 → 新建规则**）。
-4. 设置复制方向（推送 / 拉取）、过滤条件（仓库名、标签）。
-5. 手动执行或配置事件触发（推送触发、定时触发）。
+1. 创建目标仓库：进入 **系统管理 → 仓库管理 → 新建目标**，填写目标 Registry 地址和凭据，并测试连接。
+2. 创建复制规则：进入 **项目 → 复制 → 新建规则**。
+3. 设置过滤器：选择方向、源仓库、目标命名空间和标签匹配模式。
+4. 设置触发方式：选择手动、定时或事件触发。
 
-### 复制规则示例
+复制规则示例：
 
 ```text
-方向：推送
-源项目：business
-仓库：api-server
-标签：v*
+方向：    推送
+源项目：  business
+仓库：    api-server
+标签：    v*
+触发：    事件驱动
 ```
 
-只同步正式版本，避免将临时构建镜像复制到生产仓库。
+该规则只同步正式版本标签，`dev-*`、`test-*` 等临时标签不会进入生产仓库。
 
-### 验证复制
-
-在目标仓库拉取镜像：
+验证复制结果：
 
 ```bash
 docker login harbor-prod.example.com
@@ -92,87 +107,33 @@ docker pull harbor-prod.example.com/business/api-server:v1.0.0
 
 ## 备份建议
 
-Harbor 备份不是简单复制目录。生产环境建议在维护窗口内执行，先暂停推送和删除操作，保证数据库和 registry 数据一致。
+Harbor 备份至少应覆盖配置文件、数据库和 Registry 数据。备份前建议将 Harbor 设置为只读，或安排维护窗口停止写入，避免备份过程中产生数据不一致。
 
-建议备份以下内容：
+需要保留的关键内容：
 
 | 内容 | 说明 |
 | --- | --- |
-| `harbor.yml` | Harbor 核心配置、域名、证书路径、数据目录 |
-| `/data/harbor` | registry blob、job 日志、数据库数据等 |
-| PostgreSQL 数据库 | 项目、用户、权限、tag、artifact 元数据 |
-| 证书和密钥 | HTTPS 证书、私钥、内部 secret |
-| Harbor 版本 | 恢复时尽量使用相同 Harbor 版本 |
+| `harbor.yml` | Harbor 主配置文件，包含访问地址、端口、证书路径和数据目录 |
+| `/data/harbor/database` | Harbor 元数据，包括用户、项目、权限、策略和任务记录 |
+| `/data/harbor/registry` | 镜像层、清单和 OCI 制品数据 |
+| 证书和私钥 | HTTPS 证书、内部 CA、复制目标证书等安全材料 |
 
-### 维护窗口备份流程
-
-进入 Harbor 安装目录，先停止写入流量。小规模实验环境可以直接停止 Harbor：
+配置文件可单独备份：
 
 ```bash
-cd /opt/harbor
-docker compose stop
+cp harbor.yml harbor.yml.$(date +%Y%m%d)
 ```
 
-备份配置、证书和数据目录：
+数据库可以使用逻辑备份：
 
 ```bash
-backup_date=$(date +%Y%m%d)
-mkdir -p /backup/harbor-${backup_date}
-
-cp harbor.yml /backup/harbor-${backup_date}/harbor.yml
-cp -a /etc/harbor/certs /backup/harbor-${backup_date}/certs 2>/dev/null || true
-tar czf /backup/harbor-${backup_date}/data-harbor.tar.gz /data/harbor
+docker exec harbor-db pg_dump -U postgres -d registry > harbor-db-$(date +%Y%m%d).sql
 ```
 
-重新启动 Harbor：
+数据目录可以使用文件级备份或存储快照。文件级备份示例：
 
 ```bash
-docker compose up -d
-docker compose ps
+tar czf harbor-data-$(date +%Y%m%d).tar.gz /data/harbor
 ```
 
-如果不方便停机，可以至少进入只读或暂停 CI/CD 推送任务后，再备份数据库和 registry 数据。不要在大量推送同时进行时直接复制数据目录。
-
-### 数据库导出
-
-Harbor 数据库（PostgreSQL）可通过 `docker exec` 执行 `pg_dump`。不同版本容器名可能略有差异，先确认：
-
-```bash
-docker compose ps
-```
-
-常见导出方式：
-
-```bash
-docker exec harbor-db pg_dump -U postgres registry > /backup/harbor-${backup_date}/harbor-db.sql
-```
-
-如果数据库用户名、库名与环境不一致，以 `harbor.yml` 和容器环境变量为准。
-
-### 恢复校验
-
-恢复后至少检查：
-
-```bash
-docker compose ps
-curl -I https://harbor.example.com
-docker login harbor.example.com
-docker pull harbor.example.com/base/nginx:alpine
-```
-
-还应在 Web 控制台确认项目、用户、机器人账号、复制规则、保留策略和扫描配置是否存在。
-
-## 本章回顾
-
-完成本章后，你应该具备以下能力：
-
-- 理解镜像仓库的作用和镜像地址命名规范。
-- 独立完成 Harbor 离线安装和基本配置。
-- 向 Harbor 推送和拉取镜像。
-- 配置 Docker 和 containerd 对接 HTTP / 自签证书的 Harbor。
-- 理解 Harbor 的项目、用户、角色体系，能合理拆分权限。
-- 为 Kubernetes 配置 imagePullSecrets 拉取私有仓库镜像。
-- 配置镜像保留策略、执行垃圾回收、管理磁盘空间。
-- 配置镜像复制实现多仓库同步。
-
-下一步进入第 07 章，深入学习 Containerd 容器运行时。
+备份文件应存储在与 Harbor 不同的物理介质上，例如对象存储、NAS 或异地服务器。恢复方案需要定期演练，确保数据库、Registry 数据和配置文件能够在同一时间点匹配。
