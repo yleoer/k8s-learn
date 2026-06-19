@@ -106,18 +106,54 @@ kubectl get ns 查看所有命名空间
 
 ## Pod 概念及Pod架构
 
+Pod 是 Kubernetes 集群中运行和管理的最小部署单元，其内部封装了一个或多个容器，这些容器共享存储、网络、PID、IPC等，并且容器之间可以使用localhost:port相互访问，也可以使用volume等实现数据共享。
 
+同时每个pod还包含了一个Pause容器，Pause容器是Pod的父容器，它主要负责僵尸进程的回收管理，并且存储共享、网络共享等功能都是通过Pause容器实现的。
+
+//TODO Pod 架构图
 
 ## Pod 设计思想及解决的问题
 
-
+- 多容器协作
+- 强依赖服务
+- 简化应用的生命周期管理
+- 兼容多种 CRI 运行时
 
 ## Pod 基本使用及多容器注意事项
 
+```bash
+kubectl run nginx -n web
+kubectl delete po nginx // 删除后不会再重建
+kubectl get po -owide --show-labels
+kubectl describe po
+kubectl logs -f
+```
 
+什么时候使用 describe，什么时候使用 logs
 
 ## Pod 常见状态及问题排查通用方法
 
-
+- Pending（挂起）Pod 已被Kubernetes系统接收，但仍有一个或多个容器未被创建，可以通过 kubectl describe 查看处于 pending 状态的原因
+- Running（运行中）Pod已经被绑定到一个节点上，并且所有的容器都已经创建，而且至少有一个是运行状态，或者是正在启动或者重启，可以通过kubectl logs查看pod的日志
+- Succeeded（成功）所有容器执行成功并终止，并且不会再次重启，可以通过kubectl logs查看pod日志
+- Failed/Err（失败）所有容器都已终止，并且至少有一个容器以失败的方式终止，也就是说这个容器要么以非零状态退出，要么被系统终止
+- Unknown（未知）通常是由于通信问题造成的无法获取pod的状态
+- ImagePullBackOff/ErrImagePull：镜像拉取失败，一般是由于镜像不存在、网络不通或者需要登录认证引起的
+- CrashLoopBackOff：容器启动失败
+- OOMKilled：容器内存溢出，一般是容器的内存Limit设置的过小，或者程序本身有内存溢出
+- Terminating：Pod正在被删除
+- SysctlForbidden：Pod自定义了内核配置，但kubelet没有添加内核配置或配置的内核参数不支持
+- Completed：容器内部主进程退出，一般计划任务执行结束会显示该状态
+- ContainerCreating：Pod正在创建，一般为正在下载镜像，或者有配置不当的地方
 
 ## K8s 初体验总结及常见面试问题
+
+- Kubectl 使用详解及yaml编写规则
+- Namespace概念、作用及使用
+- Pod概念、设计思想与使用
+- Pod常见状态及故障排除通用方法
+
+1. Pod 和容器的关系？或者区别？或者Pod是什么
+2. Namespace是什么？有什么作用？和K8s集群有什么关系
+3. Pause容器是什么？有什么作用？
+4. Pod常见状态，以及问题如何排查？
