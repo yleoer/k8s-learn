@@ -207,24 +207,26 @@ function partNavItem(part) {
   }
 }
 
+const visibleCourseParts = courseParts.filter((part) => chaptersInPart(part).length > 0)
+
 const courseSidebar = {
   '/': [
     {
       text: '课程导航',
-      items: courseParts.map((part) => ({
+      items: visibleCourseParts.map((part) => ({
         text: part.label,
         link: partLink(part),
       })),
     },
   ],
-  ...Object.fromEntries(courseParts.flatMap((part) => {
+  ...Object.fromEntries(visibleCourseParts.flatMap((part) => {
     return chaptersInPart(part).map((chapter) => [chapter.link, chapterSidebar(chapter, part)])
   })),
 }
 
 const courseNav = [
   { text: '首页', link: '/' },
-  ...courseParts.map((part) => partNavItem(part)),
+  ...visibleCourseParts.map((part) => partNavItem(part)),
 ]
 
 // VitePress 配置文档：https://vitepress.dev/reference/site-config
