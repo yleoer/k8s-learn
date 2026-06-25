@@ -1,0 +1,429 @@
+# DaemonSet
+
+DaemonSet 用于在每个匹配节点上运行一个 Pod。它不以业务副本数为中心，而是以节点覆盖为中心，适合日志采集、监控 Agent、网络插件和存储插件等节点级组件。
+
+本节将 DaemonSet 相关内容合并为一个文档，内容包括定义与创建、更新回滚、指定节点部署和常见排查方法。
+
+## DaemonSet 定义与创建
+
+当新节点加入集群时，DaemonSet 会自动在该节点上创建 Pod。当节点从集群中移除时，该节点上的 Pod 也会随节点生命周期消失。删除 DaemonSet 时，它创建的 Pod 会被一起删除。
+
+### 适用场景
+
+DaemonSet 常用于以下场景：
+
+- 每个节点运行日志采集进程，例如 Fluentd、Filebeat、Vector
+- 每个节点运行监控进程，例如 Prometheus Node Exporter
+- 每个节点运行网络组件，例如 CNI 插件 Agent
+- 每个节点运行存储组件，例如 Ceph、GlusterFS 或 CSI 节点插件
+- 每个匹配节点运行安全、审计或巡检进程
+
+这些组件通常需要访问节点本地日志、网络、设备、文件系统或运行时信息。如果使用 Deployment，就需要额外控制副本与节点的分布关系；DaemonSet 则天然表达“每个匹配节点一个”的意图。
+
+### 与其他控制器对比
+
+| 控制器 | 调度目标 | 典型场景 |
+| --- | --- | --- |
+| Deployment | 指定副本数，调度到合适节点 | Web、API、微服务 |
+| StatefulSet | 指定副本数，并保持稳定身份 | 数据库、注册中心、协调组件 |
+| DaemonSet | 每个匹配节点运行一个 Pod | 日志、监控、网络、存储节点组件 |
+| Job | 任务完成后退出 | 一次性批处理任务 |
+
+DaemonSet 不需要配置 `replicas`。副本数量由符合条件的节点数量决定。
+
+### 最小示例
+
+下面示例使用 DaemonSet 在每个匹配节点运行一个 Nginx Pod：
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-nginx
+  labels:
+    app: node-nginx
+spec:
+  selector:
+    matchLabels:
+      app: node-nginx
+  template:
+    metadata:
+      labels:
+        app: node-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          ports:
+            - name: http
+              containerPort: 80
+```
+
+创建并查看：
+
+```bash
+kubectl apply -f node-nginx-daemonset.yaml
+kubectl get ds
+kubectl get pod -l app=node-nginx -o wide
+```
+
+如果集群有 3 个可调度节点，并且没有其他限制条件，通常会看到 3 个 Pod，分别运行在不同节点上。
+
+### 核心字段
+
+| 字段 | 是否必选 | 说明 |
+| --- | --- | --- |
+| `apiVersion` | 是 | DaemonSet 使用 `apps/v1` |
+| `kind` | 是 | 资源类型，固定为 `DaemonSet` |
+| `metadata.name` | 是 | DaemonSet 名称 |
+| `spec.selector` | 是 | 匹配 DaemonSet 管理的 Pod |
+| `spec.template` | 是 | Pod 模板 |
+| `spec.updateStrategy` | 否 | 更新策略，默认是 `RollingUpdate` |
+| `spec.template.spec.nodeSelector` | 否 | 限制 Pod 运行到指定标签节点 |
+| `spec.template.spec.tolerations` | 否 | 允许 Pod 调度到带污点的节点 |
+
+与 Deployment 类似，`spec.selector.matchLabels` 必须匹配 `spec.template.metadata.labels`。创建后 selector 通常不可修改。
+
+### 创建过程
+
+DaemonSet 创建 Pod 的过程可以概括为：
+
+| 步骤 | 组件 | 行为 |
+| --- | --- | --- |
+| 1 | APIServer | 保存 DaemonSet 资源 |
+| 2 | DaemonSet Controller | 观察符合条件的节点 |
+| 3 | DaemonSet Controller | 为每个匹配节点创建 Pod |
+| 4 | Scheduler | 结合节点亲和性、污点容忍和资源需求完成调度 |
+| 5 | kubelet | 在目标节点启动容器 |
+
+DaemonSet 控制器会持续对齐节点与 Pod 的关系。某个节点上的 DaemonSet Pod 被删除后，控制器会重新创建一个新的 Pod。
+
+验证自愈：
+
+```bash
+kubectl delete pod -l app=node-nginx
+kubectl get pod -l app=node-nginx -w
+```
+
+Pod 删除后会被重新创建，最终每个匹配节点仍保持一个 Pod。
+
+### 状态字段
+
+查看 DaemonSet：
+
+```bash
+kubectl get ds node-nginx
+```
+
+示例输出：
+
+```text
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+node-nginx   3         3         3       3            3           <none>          1m
+```
+
+字段说明：
+
+| 字段 | 说明 |
+| --- | --- |
+| `DESIRED` | 期望运行 DaemonSet Pod 的节点数量 |
+| `CURRENT` | 当前已经创建 Pod 的节点数量 |
+| `READY` | Ready 状态的 Pod 数量 |
+| `UP-TO-DATE` | 已经使用最新模板的 Pod 数量 |
+| `AVAILABLE` | 可用 Pod 数量 |
+| `NODE SELECTOR` | 节点选择条件 |
+
+如果 `DESIRED` 小于集群节点数量，通常是因为节点不可调度、节点标签不匹配、污点未容忍或调度条件限制。
+
+### 常见增强配置
+
+日志采集、监控和节点插件通常需要访问宿主机路径。下面示例挂载节点日志目录：
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-agent
+spec:
+  selector:
+    matchLabels:
+      app: log-agent
+  template:
+    metadata:
+      labels:
+        app: log-agent
+    spec:
+      containers:
+        - name: agent
+          image: <registry.example.com>/<namespace>/log-agent:1.0.0
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+```
+
+使用 `hostPath` 时要格外谨慎。它会把节点文件系统暴露给容器，生产环境应配合最小权限、只读挂载、安全上下文和命名空间隔离使用。
+
+### 注意事项
+
+- DaemonSet 不配置 `replicas`，副本数由匹配节点数量决定
+- 新节点加入后会自动创建对应 Pod
+- 节点删除后，节点上的 Pod 会随节点消失
+- 删除 DaemonSet 会删除它创建的 Pod
+- 节点污点、节点标签、资源 requests 都会影响 DaemonSet 覆盖范围
+- 节点级组件应配置资源限制，避免影响业务 Pod
+
+DaemonSet 的排查重点不是“副本数是否等于配置值”，而是“哪些节点应该运行、哪些节点实际运行、未运行节点为什么不匹配”。
+
+## DaemonSet 更新与节点选择
+
+DaemonSet 的日常运维主要包括版本更新、异常回滚和节点范围控制。它运行在节点层面，影响面通常覆盖整个集群，因此更新前需要特别关注发布节奏、资源占用和节点选择条件。
+
+相比 Deployment，DaemonSet 的副本不是面向业务容量，而是面向节点覆盖。排查时应把 Pod 状态与节点标签、污点、可调度状态一起观察。
+
+### 更新策略
+
+DaemonSet 通过 `spec.updateStrategy` 控制更新方式：
+
+```yaml
+spec:
+  updateStrategy:
+    type: RollingUpdate
+```
+
+常见策略如下：
+
+| 策略 | 行为 | 适用场景 |
+| --- | --- | --- |
+| `RollingUpdate` | Pod 模板变化后自动滚动替换旧 Pod | 大多数 DaemonSet |
+| `OnDelete` | 模板变化后不自动替换，手动删除 Pod 才重建 | 需要人工逐节点确认的组件 |
+
+默认策略是 `RollingUpdate`。更新镜像：
+
+```bash
+kubectl set image ds node-nginx nginx=nginx:1.26
+kubectl rollout status ds node-nginx
+```
+
+查看更新历史：
+
+```bash
+kubectl rollout history ds node-nginx
+```
+
+查看新旧 Pod：
+
+```bash
+kubectl get pod -l app=node-nginx -o wide
+```
+
+DaemonSet 更新会逐步删除旧 Pod 并创建新 Pod。对于日志、监控、网络这类节点组件，建议在低峰期执行，并观察节点状态和组件指标。
+
+### 滚动更新参数
+
+DaemonSet RollingUpdate 支持 `maxUnavailable`，用于控制更新期间最多有多少个 DaemonSet Pod 不可用：
+
+```yaml
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+```
+
+`maxUnavailable` 可以是整数或百分比。对节点级核心组件而言，通常从较小值开始，避免一次更新过多节点。
+
+如果组件在每个节点上都很关键，例如网络插件或存储插件，应结合组件自身建议设置更新策略，并提前确认集群控制面、业务流量和监控告警状态。
+
+### 版本回滚
+
+DaemonSet 支持回滚到上一个版本：
+
+```bash
+kubectl rollout undo ds node-nginx
+kubectl rollout status ds node-nginx
+```
+
+回滚到指定 revision：
+
+```bash
+kubectl rollout history ds node-nginx
+kubectl rollout undo ds node-nginx --to-revision=2
+kubectl rollout status ds node-nginx
+```
+
+回滚本质上仍是一次新的滚动更新。对于节点级组件，回滚前应确认问题来自 Pod 模板变更，而不是节点资源、宿主机路径、权限或外部配置。
+
+### OnDelete 策略
+
+如果希望手动控制每个节点上的更新节奏，可以使用 `OnDelete`：
+
+```yaml
+spec:
+  updateStrategy:
+    type: OnDelete
+```
+
+修改 Pod 模板后，DaemonSet 不会自动删除旧 Pod。手动删除某个节点上的 Pod 后，新 Pod 才会按最新模板创建：
+
+```bash
+kubectl set image ds node-nginx nginx=nginx:1.26
+kubectl delete pod <daemonset-pod-name>
+kubectl get pod -l app=node-nginx -o wide
+```
+
+这种方式适合非常敏感的节点组件，例如每次只更新一个节点，并在业务和指标稳定后再继续下一个节点。
+
+### 指定节点部署
+
+DaemonSet 默认会覆盖所有符合调度条件的节点。可以通过 `nodeSelector` 只部署到带特定标签的节点。
+
+给节点添加标签：
+
+```bash
+kubectl label node <node-name> node-role.example.com/logging=true
+```
+
+DaemonSet 配置：
+
+```yaml
+spec:
+  template:
+    spec:
+      nodeSelector:
+        node-role.example.com/logging: "true"
+```
+
+查看部署结果：
+
+```bash
+kubectl get ds
+kubectl get pod -l app=node-nginx -o wide
+```
+
+移除节点标签：
+
+```bash
+kubectl label node <node-name> node-role.example.com/logging-
+```
+
+标签移除后，如果节点不再匹配 DaemonSet 条件，该节点上的 DaemonSet Pod 会被删除。
+
+### 节点亲和性
+
+`nodeSelector` 适合简单等值匹配。复杂条件可以使用节点亲和性：
+
+```yaml
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.example.com/logging
+                    operator: In
+                    values:
+                      - "true"
+```
+
+节点亲和性支持 `In`、`NotIn`、`Exists`、`DoesNotExist` 等表达方式，适合按节点角色、机房、硬件能力或操作系统类型选择部署范围。
+
+需要注意，`requiredDuringSchedulingIgnoredDuringExecution` 表示调度时必须满足条件，但运行期间如果节点标签变化，已经运行的 Pod 不一定会立刻被驱逐。DaemonSet 控制器会根据整体状态继续对齐，实际行为还需结合资源变化观察。
+
+### 污点与容忍
+
+控制平面节点或专用节点通常带有污点。DaemonSet 如果需要运行到这些节点，需要配置 tolerations。
+
+查看节点污点：
+
+```bash
+kubectl describe node <node-name> | grep -i taints
+```
+
+容忍示例：
+
+```yaml
+spec:
+  template:
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+```
+
+如果希望日志或监控 Agent 覆盖控制平面节点，通常需要添加对应容忍。是否部署到控制平面节点应结合集群规模和安全策略决定。
+
+### 排查方法
+
+当 DaemonSet 没有覆盖预期节点时，可以按以下顺序检查：
+
+```bash
+kubectl get ds node-nginx -o wide
+kubectl describe ds node-nginx
+kubectl get node --show-labels
+kubectl describe node <node-name>
+kubectl get pod -l app=node-nginx -o wide
+```
+
+常见原因如下：
+
+| 现象 | 可能原因 | 处理方向 |
+| --- | --- | --- |
+| `DESIRED` 小于节点数 | nodeSelector 或亲和性限制 | 检查节点标签和选择条件 |
+| Pod Pending | 节点资源不足或污点未容忍 | 查看 Pod 事件和节点污点 |
+| Pod CrashLoopBackOff | 进程启动失败 | 查看日志和启动参数 |
+| Pod Running 但功能异常 | 宿主机路径、权限或配置错误 | 检查 volume、securityContext 和配置 |
+| 控制平面节点没有 Pod | 未容忍控制平面污点 | 添加必要 tolerations |
+
+查看 Pod 事件：
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+查看容器日志：
+
+```bash
+kubectl logs <pod-name>
+```
+
+DaemonSet 的排查要把控制器、Pod 和节点三者放在一起看。只看 Pod 数量容易遗漏节点标签、污点和可调度状态带来的影响。
+
+### 清理资源
+
+删除 DaemonSet：
+
+```bash
+kubectl delete ds node-nginx
+```
+
+删除测试用节点标签：
+
+```bash
+kubectl label node <node-name> node-role.example.com/logging-
+```
+
+如果创建了临时镜像、ConfigMap、ServiceAccount 或 RBAC，也应一并清理。节点级组件经常涉及较高权限，测试完成后不要把无用权限长期留在集群中。
+
+### 本章小结
+
+StatefulSet 适合稳定身份、有序发布和独立存储的有状态应用。它通过固定 Pod 序号、Headless Service 和可选的 PVC 模板，让每个副本拥有可预测的身份。
+
+DaemonSet 适合节点级常驻进程。它不关心固定副本数，而是根据节点匹配条件自动维持每个节点一个 Pod。
+
+选择控制器时，可以用一句话判断：无状态业务优先 Deployment，有状态集群选择 StatefulSet，节点级组件选择 DaemonSet。控制器选对之后，再补充探针、资源限制、存储、配置和发布策略，才能形成稳定的生产部署。
