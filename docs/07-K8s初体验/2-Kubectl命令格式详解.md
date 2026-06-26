@@ -75,7 +75,7 @@ kubectl get pod --namespace kube-system
 
 ## 输出格式
 
-kubectl 默认以表格形式输出。学习和排障时还常用以下格式：
+kubectl 默认以表格形式输出。查看和排障时还常用以下格式：
 
 ```bash
 kubectl get pod -o wide
@@ -87,7 +87,7 @@ kubectl get pod -o name
 | 输出格式 | 适用场景 |
 | --- | --- |
 | `wide` | 查看更多摘要字段，如 Pod IP、Node |
-| `yaml` | 查看完整资源定义，适合学习字段和备份配置 |
+| `yaml` | 查看完整资源定义，适合查看字段和备份配置 |
 | `json` | 适合脚本或工具进一步处理 |
 | `name` | 只输出资源类型和名称，适合批量操作 |
 

@@ -1,6 +1,6 @@
-# Kubernetes 学习笔记
+# Kubernetes 学习记录
 
-基于 VitePress 搭建的 Kubernetes 系统学习文档站，记录 Docker、容器运行时与 Kubernetes 从基础环境到集群实践的学习过程。
+基于 VitePress 搭建的 Kubernetes 文档站，用于记录 Docker、容器运行时与 Kubernetes 从基础环境到集群实践的个人学习过程。
 
 ## 本地开发
 
@@ -11,45 +11,57 @@ npm run docs:build   # 构建静态站点
 npm run docs:preview # 预览构建产物
 ```
 
-## 课程体系（43 章 / 10 个阶段）
+## 当前记录范围
 
-| 阶段 | 章节范围 | 内容 |
+| 范围 | 章节 | 内容 |
 | --- | --- | --- |
-| 一 · 入门起步 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico 网络和集群验证 |
-| 二 · 容器基石 | 02 ~ 05 | 容器运行模型、Docker 架构、镜像管理、镜像制作、镜像仓库和容器运行时 |
-| 三 · K8s 核心资源 | 06 ~ 17 | Kubernetes 设计思想、K8s 初体验、Pod 入门与实战、Deployment 无状态调度、StatefulSet 有状态调度、Service 东西流量、Ingress 南北流量、ConfigMap/Secret 配置管理、存储管理、Job/CronJob 任务管理 |
-| 四 · 综合实战 | 18 ~ 19 | SpringCloud 项目迁移至 K8s、云原生架构升级（去中心化） |
-| 五 · 调度与资源治理 | 20 ~ 25 | 亲和力调度、污点与容忍、ResourceQuota、LimitRange、QoS、RBAC 权限管理 |
-| 六 · 工程化与弹性 | 26 ~ 28 | Helm 包管理、Operator 扩展、KEDA 弹性伸缩 |
-| 七 · 可观测性 | 29 ~ 33 | ECK 日志平台、Prometheus 监控、Alertmanager 告警、Skywalking 全链路追踪、Istio 服务网格 |
-| 八 · 分布式存储 | 34 | CubeFS EB 级分布式高可用存储平台落地 |
-| 九 · DevOps 落地 | 35 ~ 38 | Jenkins Pipeline、从零建设 K8s DevOps 平台、Tekton 云原生流水线 |
-| 十 · 企业级落地 | 39 ~ 43 | 高可用架构设计、异地多活与智能 DNS、ArgoCD 多集群管理、集群备份恢复（Velero）、简历指导 |
+| 入门起步 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico、Metrics Server 和集群验证 |
+| 容器基础 | 02 | 容器核心概念、Docker 架构、镜像管理、容器操作、数据持久化和 Docker 命令速查 |
+| 镜像制作 | 03 | Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建和多架构镜像 |
+| 镜像仓库 | 04 | 镜像仓库概念、Harbor 安装、镜像推拉、权限管理和运维管理 |
+| 容器运行 | 05 | CRI、containerd、crictl、ctr、nerdctl、仓库访问配置和运行时排障记录 |
+| Kubernetes 设计思想 | 06 | Kubernetes 定位、声明式模型、集群架构、控制面组件、节点组件和核心资源抽象 |
+| Kubernetes 初体验 | 07 | kubectl、Namespace、Pod 基础操作、状态观察和问题记录 |
+| Pod 入门 | 08 | Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期和健康检查 |
+| 工作负载 | 09 | Deployment、StatefulSet、DaemonSet、HPA 和 PDB |
+
+## 后续补全清单
+
+以下内容已与 Kubernetes 官方文档主线对照，当前仅作为后续记录清单保留：
+
+- Service、EndpointSlice、CoreDNS、Ingress、Gateway API 和 NetworkPolicy
+- ConfigMap、Secret、ServiceAccount 与应用配置注入
+- Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
+- Job、CronJob 与任务型工作负载
+- Workload API、PodGroupTemplates 与成组调度
+- nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占与驱逐
+- ResourceQuota、LimitRange、QoS、RBAC、SecurityContext 和 Pod Security Standards
+- 集群升级、证书、etcd 备份恢复、系统日志、系统指标和可观测性组件
+- Helm、Operator、KEDA、GitOps、CI/CD、备份恢复和多集群管理
 
 ## 目录结构
 
 ```
 docs/
-├── index.md                          # 首页（VitePress home 布局）
+├── index.md                       # 首页（VitePress home 布局）
 ├── public/
-│   └── favicon.svg                   # 站点图标
+│   └── favicon.svg                # 站点图标
 ├── .vitepress/
-│   ├── config.mjs                    # 站点配置（自动生成导航与侧边栏）
+│   ├── config.mjs                 # 站点配置（自动生成导航与侧边栏）
 │   └── theme/
-│       └── Mermaid.vue               # Mermaid 图表组件
-├── 01-入门起步/                      # 章节目录（编号-标题）
-│   ├── index.md                      # 章节入口（任务列表 + 目录表格）
-│   ├── 1-环境规划与版本选择.md        # 课时文件（课时号-标题）
+│       └── Mermaid.vue            # Mermaid 图表组件
+├── 01-入门起步/                   # 章节目录（编号-标题）
+│   ├── index.md                   # 章节入口
+│   ├── 1-环境规划与版本选择.md     # 文档文件（编号-标题）
 │   └── ...
 ├── 02-容器基础/
-├── ...
-└── 43-简历指导及优化/
+└── 09-工作负载调度/
 ```
 
 ### 文件命名约定
 
-- **章节目录**：`{两位编号}-{中文标题}`，如 `10-K8s核心单元-Pod入门与实战/`
-- **课时文件**：`{课时号}-{中文标题}.md`，如 `5-Pod资源分配limits和requests细节.md`
+- **章节目录**：`{两位编号}-{中文标题}`，如 `08-Pod入门/`
+- **文档文件**：`{编号}-{中文标题}.md`，如 `5-Pod生命周期与优雅退出.md`
 - **章节入口**：每个目录下的 `index.md`，包含章节说明、涵盖内容和目录表格
 - **附录文件**：`appendix-{中文标题}.md`，会在侧边栏中显示为“附录：{中文标题}”
 

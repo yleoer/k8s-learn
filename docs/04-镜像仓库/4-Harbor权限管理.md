@@ -91,7 +91,7 @@ CI/CD 流水线、Kubernetes 拉取任务和跨系统集成应优先使用 Robot
 kubectl create secret docker-registry harbor-secret \
   --docker-server=harbor.example.com \
   --docker-username=developer \
-  --docker-password=YourPassword \
+  --docker-password=<password> \
   -n default
 ```
 
@@ -100,6 +100,10 @@ kubectl create secret docker-registry harbor-secret \
 ### 在 Pod 中引用
 
 ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-nginx
 spec:
   imagePullSecrets:
     - name: harbor-secret
@@ -111,8 +115,19 @@ spec:
 ### 在 Deployment 中引用
 
 ```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
 spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-server
   template:
+    metadata:
+      labels:
+        app: api-server
     spec:
       imagePullSecrets:
         - name: harbor-secret

@@ -1,6 +1,6 @@
 # Pod 健康检查与探针配置
 
-Kubernetes 为容器提供三种健康探针：`startupProbe`、`livenessProbe` 和 `readinessProbe`。它们检查的是不同层面的问题，失败后的处理方式也不同。
+Kubernetes 通过 kubelet 对容器执行健康探针：`startupProbe`、`livenessProbe` 和 `readinessProbe`。它们检查的是不同层面的问题，失败后的处理方式也不同。
 
 ## 三种探针
 
@@ -8,7 +8,7 @@ Kubernetes 为容器提供三种健康探针：`startupProbe`、`livenessProbe` 
 | --- | --- | --- |
 | `startupProbe` | 应用是否已经完成启动 | 失败超过阈值后重启容器 |
 | `livenessProbe` | 应用是否仍然存活 | 失败超过阈值后重启容器 |
-| `readinessProbe` | 应用是否可以接收流量 | 失败后从 Service Endpoint 中移除 |
+| `readinessProbe` | 应用是否可以接收流量 | 失败后标记为 NotReady，Service 不再将其作为可用后端 |
 
 慢启动应用应优先配置 startupProbe。长期运行的服务建议配置 readinessProbe。livenessProbe 只检查应用是否需要重启，不应依赖数据库、缓存或第三方外部接口。
 
@@ -86,7 +86,7 @@ kubectl describe pod liveness-probe-demo
 
 ## readinessProbe 完整示例
 
-`readinessProbe` 用于判断 Pod 是否可以接收业务流量。探针失败后，Pod 不会被重启，但会从 Service 后端中移除。
+`readinessProbe` 用于判断 Pod 是否可以接收业务流量。探针失败后，Pod 不会被重启，但会变为 NotReady，Service 不再将其作为可用后端。
 
 ```yaml
 apiVersion: v1
@@ -134,47 +134,92 @@ kubectl describe pod readiness-probe-demo
 HTTP readiness 示例：
 
 ```yaml
-readinessProbe:
-  httpGet:
-    path: /readyz
-    port: 8080
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 2
-  failureThreshold: 2
+apiVersion: v1
+kind: Pod
+metadata:
+  name: http-readiness-demo
+  labels:
+    app: http-readiness-demo
+spec:
+  containers:
+    - name: nginx
+      image: nginx:stable-alpine
+      ports:
+        - containerPort: 80
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        timeoutSeconds: 2
+        failureThreshold: 2
 ```
 
 TCP liveness 示例：
 
 ```yaml
-livenessProbe:
-  tcpSocket:
-    port: 80
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  failureThreshold: 3
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcp-liveness-demo
+spec:
+  containers:
+    - name: nginx
+      image: nginx:stable-alpine
+      ports:
+        - containerPort: 80
+      livenessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        failureThreshold: 3
 ```
 
 exec 示例：
 
 ```yaml
-livenessProbe:
-  exec:
-    command:
-      - sh
-      - -c
-      - pgrep nginx
-  periodSeconds: 10
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exec-liveness-demo
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - touch /tmp/healthy; sleep 3600
+      livenessProbe:
+        exec:
+          command:
+            - sh
+            - -c
+            - test -f /tmp/healthy
+        periodSeconds: 10
 ```
 
 gRPC 示例：
 
 ```yaml
-readinessProbe:
-  grpc:
-    port: 50051
-    service: app.Health
-  periodSeconds: 5
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grpc-readiness-demo
+spec:
+  containers:
+    - name: agnhost
+      image: registry.k8s.io/e2e-test-images/agnhost:2.45
+      args:
+        - grpc-health-checking
+      ports:
+        - containerPort: 50051
+      readinessProbe:
+        grpc:
+          port: 50051
+        periodSeconds: 5
 ```
 
 gRPC 探针要求应用实现标准的 gRPC Health Checking 协议，响应为 `SERVING` 时视为检查通过。

@@ -50,12 +50,12 @@ README.md
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K8s 学习平台</title>
+  <title>K8s 演示平台</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Kubernetes 学习平台</h1>
+    <h1>Kubernetes 演示平台</h1>
     <p>版本：<span id="version">v1.0.0</span></p>
   </div>
   <script src="app.js"></script>

@@ -55,7 +55,7 @@ flowchart TB
 
 需要明确这条边界：容器运行时负责单节点的容器生命周期，Kubernetes 负责集群范围内应用的调度、发布、恢复和治理。
 
-## 学习主线
+## 记录主线
 
 后续章节中的 kubectl、Pod、Deployment、Service、ConfigMap 和 Namespace，本质上都围绕三条主线展开：
 

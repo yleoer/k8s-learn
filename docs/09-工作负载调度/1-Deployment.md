@@ -1,12 +1,12 @@
 # Deployment
 
-Deployment 是 Kubernetes 中最常用的无状态工作负载控制器。它通过声明式配置描述应用期望状态，再由控制器自动维护副本数量、滚动发布版本，并在异常时提供回滚能力。
+Deployment 是 Kubernetes 中最常用的无状态工作负载控制器。它通过声明式配置描述应用期望状态，再由控制器自动维护 Pod 和 ReplicaSet，完成副本数量维持、滚动发布、历史版本保留和回滚。
 
-本节将原无状态调度章节合并为一个完整的 Deployment 文档，内容包括无状态调度基础、Deployment 定义与创建、更新与回滚、扩缩容与策略。
+本文将无状态调度相关内容合并为一个完整的 Deployment 文档，内容包括无状态调度基础、Deployment 定义与创建、更新与回滚、扩缩容与策略。
 
 ## 无状态调度基础
 
-直接创建 Pod 有助于理解 Kubernetes 的最小运行单元，但生产环境通常不会长期使用裸 Pod 承载业务。Pod 退出后不会自动维持副本数，也缺少滚动更新、版本回滚和统一扩缩容能力。
+直接创建 Pod 有助于明确 Kubernetes 最小可部署单元的边界，但生产环境通常不会长期使用裸 Pod 承载业务。Pod 退出后不会自动维持副本数，也缺少滚动更新、版本回滚和统一扩缩容能力。
 
 Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望状态。无状态服务通常使用 Deployment，有状态服务通常使用 StatefulSet，节点级守护进程通常使用 DaemonSet。
 
@@ -33,11 +33,11 @@ Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望
 | `ReplicaSet` | Deployment 底层副本控制 | 维持 Pod 副本数量 |
 | `ReplicationController` | 早期副本控制器 | 维持 Pod 副本数量 |
 | `StatefulSet` | 数据库、注册中心、有序集群 | 稳定网络标识、稳定存储、有序发布 |
-| `DaemonSet` | 日志采集、监控 Agent、节点插件 | 在每个匹配节点运行一个 Pod |
+| `DaemonSet` | 日志采集、监控 Agent、节点插件 | 稳定状态下按匹配节点各运行一份 Pod |
 | `Job` | 一次性任务 | 执行完成即退出 |
 | `CronJob` | 周期性任务 | 按计划创建 Job |
 
-本章聚焦常用工作负载调度，重点学习 Deployment、StatefulSet 和 DaemonSet。Job 和 CronJob 将在后续章节展开。
+本章聚焦常用工作负载调度，记录 Deployment、StatefulSet 和 DaemonSet 的核心行为。Job 和 CronJob 将在后续章节展开。
 
 ### RC 与 ReplicaSet
 
@@ -50,20 +50,35 @@ ReplicaSet 简称 RS，是 RC 的下一代实现。它同样用于维持 Pod 副
 | API 版本 | `v1` | `apps/v1` |
 | 主要职责 | 维持 Pod 副本数量 | 维持 Pod 副本数量 |
 | 标签选择器 | 等值匹配 | 等值匹配与集合表达式 |
-| 当前定位 | 早期资源，了解即可 | Deployment 底层资源 |
+| 当前定位 | 早期资源，作为背景保留 | Deployment 底层资源 |
 | 生产建议 | 不建议新建使用 | 由 Deployment 自动管理 |
 
 ReplicaSet 支持 `matchLabels` 和 `matchExpressions`：
 
 ```yaml
-selector:
-  matchLabels:
-    app: nginx
-  matchExpressions:
-    - key: tier
-      operator: In
-      values:
-        - frontend
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs-selector
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+    matchExpressions:
+      - key: tier
+        operator: In
+        values:
+          - frontend
+  template:
+    metadata:
+      labels:
+        app: nginx
+        tier: frontend
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 现代 Kubernetes 中更常见的是 Deployment。Deployment 会自动创建和管理 ReplicaSet，再由 ReplicaSet 管理 Pod，因此实际使用中通常不直接操作 ReplicaSet 或 ReplicationController。
@@ -119,7 +134,7 @@ kubectl delete rs nginx-rs
 
 ### Deployment 的定位
 
-Deployment 是 Kubernetes 中最常用的无状态工作负载控制器。它以声明式方式描述应用期望状态，控制器自动完成 Pod 副本维护、滚动更新、版本回滚和扩缩容。
+Deployment 是 Kubernetes 中最常用的无状态工作负载控制器，通常用于不维护本地状态的应用。它以声明式方式描述期望状态，控制器自动完成 Pod 与 ReplicaSet 的副本维护、滚动更新、历史版本回滚和扩缩容。
 
 Deployment、ReplicaSet 和 Pod 的关系可以概括为：
 
@@ -202,13 +217,23 @@ kubectl create deploy nginx-deploy --image=nginx:1.25 --dry-run=client -o yaml
 Deployment 的 `spec.selector.matchLabels` 必须匹配 Pod 模板中的标签：
 
 ```yaml
-selector:
-  matchLabels:
-    app: nginx
-template:
-  metadata:
-    labels:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selector-match-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
       app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 如果二者不匹配，创建时会失败。创建成功后，`spec.selector` 通常不可修改，因此前期应规划好稳定标签。
@@ -570,8 +595,24 @@ kubectl annotate deploy nginx-update kubernetes.io/change-cause="update nginx to
 `revisionHistoryLimit` 用于控制 Deployment 保留多少个旧版本：
 
 ```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-history
 spec:
+  replicas: 2
   revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: nginx-history
+  template:
+    metadata:
+      labels:
+        app: nginx-history
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 常见取值为 5 到 10。版本保留数量需要结合发布频率、回滚要求和集群规模确定。不要把 Deployment 历史版本当作唯一回滚手段，可靠的回滚还应包括 Git 中的 YAML、不可变镜像 tag、配置变更记录和数据库变更预案。
@@ -652,8 +693,19 @@ kubectl describe pod <pod-name>
 示例：
 
 ```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graceful-nginx
 spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: graceful-nginx
   template:
+    metadata:
+      labels:
+        app: graceful-nginx
     spec:
       terminationGracePeriodSeconds: 30
       containers:
@@ -669,18 +721,35 @@ spec:
 
 手动调整 `spec.replicas` 适合明确的容量变更，面对流量波动时可以使用 HorizontalPodAutoscaler，简称 HPA。HPA 会根据指标周期性计算期望副本数，并通过工作负载的 `scale` 子资源调整 Deployment。
 
-HPA 适用于 Deployment、StatefulSet 等支持 scale 子资源的工作负载，不适用于 DaemonSet。以 CPU 使用率为例，HPA 依赖 `metrics.k8s.io` 指标接口，通常需要集群中已经部署 Metrics Server。
+HPA 适用于 Deployment、StatefulSet 等支持 scale 子资源的工作负载，不适用于 DaemonSet。以 CPU 使用率为例，HPA 依赖 `metrics.k8s.io` 指标接口，集群中需要先部署 Metrics Server。
 
 创建 HPA 前，容器应配置 `resources.requests`，否则 CPU 或内存利用率没有稳定的计算基准：
 
 ```yaml
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 500m
-    memory: 256Mi
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-scale
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-scale
+  template:
+    metadata:
+      labels:
+        app: nginx-scale
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
 ```
 
 HPA 示例：
@@ -796,11 +865,28 @@ RollingUpdate 可以在发布过程中保持部分旧版本继续服务，同时
 常见 RollingUpdate 配置：
 
 ```yaml
-strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxSurge: 1
-    maxUnavailable: 0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-rolling
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: nginx-rolling
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: nginx-rolling
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 字段说明：
@@ -839,8 +925,25 @@ kubectl get rs -l app=nginx-scale
 Recreate 配置如下：
 
 ```yaml
-strategy:
-  type: Recreate
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-recreate
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-recreate
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nginx-recreate
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 使用 Recreate 时不能配置 `rollingUpdate`。更新过程会先删除旧 Pod，再创建新 Pod，因此服务可能短暂不可用。
@@ -849,7 +952,7 @@ Recreate 可以用于以下场景：
 
 - 应用新旧版本不能同时访问同一外部资源
 - 单副本内部管理任务，短暂中断可接受
-- 学习环境中希望清晰观察删除再创建过程
+- 实验环境中希望清晰观察删除再创建过程
 - 业务已经在上层网关、队列或发布流程中处理了中断影响
 
 如果服务面向用户请求，优先考虑 RollingUpdate。如果新旧版本不能共存，更推荐改造应用兼容性或设计灰度方案，而不是长期依赖 Recreate。

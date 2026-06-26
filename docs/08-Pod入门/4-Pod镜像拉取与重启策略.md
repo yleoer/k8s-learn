@@ -39,6 +39,10 @@ spec:
 私有仓库需要配置 `imagePullSecrets`：
 
 ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-image-demo
 spec:
   imagePullSecrets:
     - name: registry-secret

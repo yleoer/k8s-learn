@@ -1,6 +1,6 @@
 # Kubectl 常用命令详解
 
-kubectl 常用命令大致可以分为集群连接、资源查看、日志排查、容器调试、文件传输、发布观察和字段查询几类。初学阶段不必记住所有参数，但要熟悉这些常见的操作入口。
+kubectl 常用命令大致可以分为集群连接、资源查看、日志排查、容器调试、文件传输、发布观察和字段查询几类。日常操作先关注这些常见入口。
 
 ## 查看集群信息
 
@@ -123,7 +123,7 @@ kubectl get pod --field-selector status.phase=Pending
 kubectl get event --field-selector type=Warning
 ```
 
-字段筛选支持的字段因资源类型而异。初学阶段，常用它来快速找出异常 Pod 或 Warning 事件。
+字段筛选支持的字段因资源类型而异，常用于快速找出异常 Pod 或 Warning 事件。
 
 ## 排序输出
 
@@ -276,7 +276,7 @@ kubectl explain pod.spec.containers --recursive
 - 字段说明以当前集群 API 为准
 - 写完 YAML 后再使用 `kubectl apply -f <file> --dry-run=client` 做基础检查
 
-`explain` 是一个辅助命令，掌握它的核心价值即可：遇到不熟悉的 YAML 字段时，直接查询字段的路径和含义。
+`explain` 是一个辅助命令：遇到不确定的 YAML 字段时，直接查询字段的路径和含义。
 
 ## 常用排障顺序
 
@@ -290,4 +290,4 @@ kubectl logs <pod-name> --previous
 kubectl get events --sort-by=.metadata.creationTimestamp
 ```
 
-这套顺序能覆盖大部分初学阶段的问题，包括调度失败、镜像拉取失败、容器启动失败和健康检查失败。
+这套顺序能覆盖大部分常见问题，包括调度失败、镜像拉取失败、容器启动失败和健康检查失败。

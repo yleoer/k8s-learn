@@ -1,13 +1,13 @@
 # Pod 资源分配与调度排查
 
-Kubernetes 使用 `resources.requests` 和 `resources.limits` 描述容器资源需求。调度阶段主要看 requests，运行阶段主要受 limits 约束。
+Kubernetes 使用 `resources.requests` 和 `resources.limits` 描述容器资源需求。调度阶段主要依据 requests 判断节点是否可放置，运行阶段由 kubelet、容器运行时和内核共同执行 limits 约束。
 
 ## requests 与 limits
 
 | 字段 | 作用 | 主要影响 |
 | --- | --- | --- |
-| `requests` | 声明容器运行所需的最小资源 | Scheduler 根据它选择节点 |
-| `limits` | 限制容器最多可使用的资源 | kubelet 和运行时根据它限制容器 |
+| `requests` | 声明容器运行所需的资源基准 | Scheduler 根据它选择节点 |
+| `limits` | 限制容器最多可使用的资源 | kubelet、运行时和内核共同限制容器 |
 
 下面示例为 `nginx` 容器同时配置 CPU 和内存的 requests、limits：
 
@@ -78,17 +78,21 @@ Containers:
 
 :::
 
-在 `kubectl describe pod resource-demo` 的输出中，可以在 `Containers` 区域看到 `Requests` 和 `Limits`。其中 requests 会参与调度决策，limits 会在容器运行阶段形成资源上限。
+在 `kubectl describe pod resource-demo` 的输出中，可以在 `Containers` 区域看到 `Requests` 和 `Limits`。其中 requests 会参与调度决策，并作为资源预留基准；limits 会在容器运行阶段形成资源上限。
 
 CPU 使用毫核表示时，`100m` 表示 0.1 核，`500m` 表示 0.5 核，`1000m` 等于 1 核。内存常用 `Mi`、`Gi` 表示，例如 `64Mi`、`128Mi`、`1Gi`。
 
-CPU 超过 limit 时通常表现为限速；内存超过 limit 时，容器可能被 OOM Kill，并根据 Pod 的重启策略进行后续处理。
+CPU 超过 limit 时通常表现为限速；内存超过 limit 时，容器可能被 OOM Kill，并根据 Pod 的重启策略进行后续处理。requests 不是实时使用量，也不表示容器只能使用这么多资源。
 
 ## 多容器资源计算
 
-Pod 的总 requests 是所有容器 requests 的总和。一个 Pod 内有多个容器时，每个容器都应按照自身职责分别配置资源。
+普通容器的 requests 会按资源类型求和，用于计算 Pod 调度时需要的资源。一个 Pod 内有多个容器时，每个容器都应按照自身职责分别配置资源。
 
 ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-resource-demo
 spec:
   containers:
     - name: app
@@ -112,7 +116,9 @@ spec:
           memory: 128Mi
 ```
 
-这个 Pod 的调度请求值是 `250m` CPU 和 `320Mi` 内存。
+这个 Pod 没有 Init Container，因此调度请求值是两个普通容器 requests 之和，即 `250m` CPU 和 `320Mi` 内存。
+
+如果 Pod 同时包含 Init Container，调度时会按每种资源分别比较“所有普通容器 requests 总和”和“单个 Init Container requests 最大值”，取较大者作为 Pod 的有效请求值。
 
 ## 节点存在空闲资源仍提示资源不足
 
@@ -194,11 +200,13 @@ Allocated resources:
 
 ### 查看节点实时使用量
 
-如果集群安装了 Metrics Server，可以使用 `kubectl top node` 查看节点实时资源使用情况：
+集群部署 Metrics Server 后，可以使用 `kubectl top node` 查看节点实时资源使用情况：
 
 ```bash
 kubectl top node
 ```
+
+如果命令提示 `Metrics API not available`，先回到集群初始化记录中检查 Metrics Server、`v1beta1.metrics.k8s.io` APIService 和 kubelet `10250` 端口连通性。
 
 示例输出：
 

@@ -1,6 +1,6 @@
 # 环境准备执行速查
 
-本页仅保留关键执行步骤与顺序，适合在理解前文内容后快速回顾或复现环境。首次搭建请按正文各节逐步操作，切勿跳步执行。
+本页仅保留关键执行步骤与顺序，用于快速回顾或复现实验环境。首次搭建仍应按正文各节逐步操作，避免跳过必要检查。
 
 ## 所有节点：系统初始化与内核配置
 
@@ -60,6 +60,20 @@ sudo kubeadm join <control-plane-ip>:6443 \
   --cri-socket unix:///run/containerd/containerd.sock
 ```
 
+## control-plane 节点：安装 Metrics Server
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl -n kube-system rollout status deploy/metrics-server
+kubectl get apiservice v1beta1.metrics.k8s.io
+
+# kubeadm 实验环境出现 kubelet x509 证书错误时使用
+kubectl -n kube-system patch deployment metrics-server \
+  --type=json \
+  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl -n kube-system rollout restart deployment metrics-server
+```
+
 ## 最终检查
 
 ```bash
@@ -68,6 +82,10 @@ kubectl get nodes -o wide
 
 # 确认所有系统 Pod 正常运行
 kubectl get pods -A -o wide
+
+# 确认资源指标 API 可用
+kubectl get apiservice v1beta1.metrics.k8s.io
+kubectl top nodes
 
 # 部署测试应用并验证 NodePort 访问
 kubectl create deployment nginx --image=nginx:1.27

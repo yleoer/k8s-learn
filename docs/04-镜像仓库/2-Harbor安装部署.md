@@ -2,7 +2,7 @@
 
 Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本章以 Harbor v2.14 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。
 
-## 环境要求
+## 运行环境
 
 | 项目 | 最低配置 | 建议配置 |
 | --- | --- | --- |
@@ -43,20 +43,26 @@ cp harbor.yml.tmpl harbor.yml
 vim harbor.yml
 ```
 
-核心字段示例：
+HTTP 方式的 `harbor.yml` 示例：
 
 ```yaml
 hostname: harbor.example.com
-
-harbor_admin_password: Harbor12345
-
+http:
+  port: 80
+harbor_admin_password: <harbor-admin-password>
+database:
+  password: <harbor-db-password>
 data_volume: /data/harbor
+trivy:
+  ignore_unfixed: false
+jobservice:
+  max_job_workers: 10
 ```
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `hostname` | 是 | Harbor 对外访问地址，必须使用客户端可访问的域名或 IP，不应使用 `127.0.0.1` 或 `localhost` |
-| `harbor_admin_password` | 是 | 管理员 `admin` 的初始密码，安装完成后应立即修改 |
+| `harbor_admin_password` | 是 | 管理员 `admin` 的初始密码，使用本地安全密码，安装完成后应立即修改 |
 | `data_volume` | 是 | 镜像数据、数据库和任务数据的存储目录，建议使用独立磁盘 |
 | `http.port` | 否 | HTTP 访问端口，默认 `80` |
 | `https` | 否 | HTTPS 证书配置，生产环境建议启用 |
@@ -65,13 +71,24 @@ data_volume: /data/harbor
 
 测试环境可以注释 `https` 段，只保留 HTTP 访问。此时所有需要访问 Harbor 的 Docker、containerd 或 Kubernetes 节点都必须配置对该仓库的非安全访问或信任规则。
 
-生产环境应配置权威 CA 证书或内部统一签发的受信任证书：
+生产环境应配置权威 CA 证书或内部统一签发的受信任证书。启用 HTTPS 时，`harbor.yml` 可按下面的结构保留 HTTP 监听并补充 HTTPS 证书路径：
 
 ```yaml
+hostname: harbor.example.com
+http:
+  port: 80
 https:
   port: 443
   certificate: /etc/ssl/certs/harbor.example.com.crt
   private_key: /etc/ssl/private/harbor.example.com.key
+harbor_admin_password: <harbor-admin-password>
+database:
+  password: <harbor-db-password>
+data_volume: /data/harbor
+trivy:
+  ignore_unfixed: false
+jobservice:
+  max_job_workers: 10
 ```
 
 自签证书也可以使用，但每个客户端节点都需要额外导入 CA 或配置跳过校验。集群规模扩大后，统一证书信任链比逐台配置 `insecure-registry` 更易维护。
@@ -190,7 +207,7 @@ registryctl         running
 
 ```text
 用户名：admin
-密码：  Harbor12345
+密码：  <harbor-admin-password>
 ```
 
 首次登录后应立即进入 **系统管理 → 用户管理** 修改 `admin` 密码，并根据业务边界创建项目和用户。

@@ -104,7 +104,7 @@ Namespace 不适合用于：
 - 隔离 Node、PV 等集群级资源
 - 作为强多租户的唯一手段
 
-学习阶段先掌握创建、查看、切换和删除 Namespace。后续 RBAC、ResourceQuota、LimitRange 和 NetworkPolicy 章节会继续扩展它的治理能力。
+本文先记录 Namespace 的创建、查看、切换和删除。后续 RBAC、ResourceQuota、LimitRange 和 NetworkPolicy 章节会继续扩展它的治理能力。
 
 ## 默认 Namespace
 
@@ -124,7 +124,7 @@ kubectl get namespace
 kubectl get ns
 ```
 
-学习环境可以把临时资源放在 `default` 中。生产环境不建议把所有业务资源都放在 `default`，否则权限、配额、监控和清理都会变得不清晰。
+实验环境可以把临时资源放在 `default` 中。生产环境不建议把所有业务资源都放在 `default`，否则权限、配额、监控和清理都会变得不清晰。
 
 `kube-system` 中通常运行 CoreDNS、kube-proxy、CNI 插件、metrics-server 等系统组件，不要随意删除或修改其中资源。`kube-public` 不应放置敏感配置。`kube-node-lease` 通常不需要手工维护。
 
@@ -252,7 +252,7 @@ kubectl delete namespace dev
 
 删除 Namespace 会连带删除其下的大多数资源，包括 Pod、Deployment、Service、ConfigMap、Secret 等。这个操作影响较大，生产环境必须谨慎。
 
-有时删除 Namespace 会停留在 `Terminating` 状态，常见原因包括带 finalizer 的资源未完成清理、某些 APIService 不可用、控制器无法完成资源清理等。初学阶段遇到该问题，应先用 `kubectl describe namespace <namespace>` 查看原因。
+有时删除 Namespace 会停留在 `Terminating` 状态，常见原因包括带 finalizer 的资源未完成清理、某些 APIService 不可用、控制器无法完成资源清理等。遇到该问题时，先用 `kubectl describe namespace <namespace>` 查看原因。
 
 ## 命名规则
 

@@ -254,7 +254,7 @@ const visibleCourseParts = courseParts.filter((part) => chaptersInPart(part).len
 const courseSidebar = {
   '/': [
     {
-      text: '课程导航',
+      text: '文档导航',
       items: visibleCourseParts.map((part) => ({
         text: part.label,
         link: partLink(part),

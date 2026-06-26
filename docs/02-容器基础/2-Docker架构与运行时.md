@@ -1,6 +1,6 @@
 # Docker 架构与运行时
 
-Docker 是一个面向开发、构建和运行容器的工具体系。学习 Docker 不应只停留在命令层面，还需要理解 Docker Client、Docker Daemon、containerd、runc 和 Linux 内核之间的调用关系。
+Docker 是一个面向开发、构建和运行容器的工具体系。本文不只记录命令，还记录 Docker Client、Docker Daemon、containerd、runc 和 Linux 内核之间的调用关系。
 
 这一层知识会直接影响后续对 Kubernetes 运行时的理解。Kubernetes 不再通过内置 dockershim 直接对接 Docker Engine，但 Docker 构建出的 OCI 镜像仍然可以被 containerd、CRI-O 等 CRI 运行时正常拉取和运行。
 
@@ -14,7 +14,7 @@ Docker 是一个面向开发、构建和运行容器的工具体系。学习 Doc
 | Docker Container | 由镜像创建的运行实例，内部运行应用进程 |
 | Docker Registry | 存储和分发镜像的远程服务 |
 | containerd | 管理镜像拉取、快照、容器生命周期和运行时任务 |
-| runc | OCI 标准运行时，负责创建真正的容器进程 |
+| runc | OCI 标准运行时，根据 OCI runtime spec 创建隔离进程 |
 
 Docker Daemon 是 Docker Engine 的核心服务。用户通过 `docker` 命令与 Daemon 通信，Daemon 再调用更底层的 containerd 和 runc 完成容器创建。
 
@@ -41,7 +41,7 @@ flowchart LR
 3. 如果镜像不存在，Docker Daemon 从 Registry 拉取镜像。
 4. Docker Daemon 准备网络、挂载、日志、资源限制等配置。
 5. Docker Daemon 调用 containerd 管理容器生命周期。
-6. containerd 调用 runc，由 runc 使用 Linux namespaces 与 cgroups 创建容器进程。
+6. containerd 调用 runc，由 runc 根据 OCI runtime spec 使用 Linux namespaces 与 cgroups 创建隔离进程。
 
 理解这条链路后，排查问题时可以按层定位：命令无法连接通常是 Client 到 Daemon 的问题；镜像拉取失败通常与 Registry、网络或认证有关；容器启动失败则可能出现在镜像入口命令、挂载、权限或运行时层。
 

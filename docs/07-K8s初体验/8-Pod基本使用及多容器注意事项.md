@@ -1,6 +1,6 @@
 # Pod 基本使用及多容器注意事项
 
-本节先通过 YAML 创建一个基础 Pod，演示查看、进入容器、查看日志和删除等操作，再说明多容器 Pod 的常见注意事项。
+本文先通过 YAML 创建一个基础 Pod，记录查看、进入容器、查看日志和删除等操作，再说明多容器 Pod 的常见注意事项。
 
 ## 创建单容器 Pod
 
@@ -68,7 +68,7 @@ kubectl get pod nginx -o yaml
 kubectl run nginx --image=nginx:1.25 --dry-run=client -o yaml
 ```
 
-学习阶段可以用 `run` 快速验证；正式管理资源时，建议使用 YAML。
+临时验证可以用 `run` 快速创建；需要反复保留的资源统一写入 YAML。
 
 ## 创建多容器 Pod
 
@@ -132,6 +132,10 @@ kubectl exec -it multi-container-demo -c sidecar -- sh
 Pod 中常见镜像字段如下：
 
 ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: image-pull-policy-demo
 spec:
   containers:
     - name: nginx
@@ -149,7 +153,7 @@ spec:
 
 使用 `latest` 标签时，默认拉取策略会变为 `Always`，每次启动都会尝试拉取。生产环境建议使用明确的版本标签，避免镜像内容不可控。
 
-## 初学常见问题
+## 常见问题
 
 Pod 创建失败时，先按以下顺序检查：
 

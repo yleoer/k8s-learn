@@ -1,14 +1,14 @@
 # StatefulSet
 
-StatefulSet 用于管理需要稳定身份、稳定存储和有序变更的有状态应用。它同样使用声明式方式描述期望状态，但每个副本都拥有固定序号和可预测的网络标识。
+StatefulSet 用于管理需要稳定身份、稳定存储和有序变更的有状态应用。它同样使用声明式方式描述期望状态，但每个副本都拥有固定序号、可预测网络标识和跨重调度保持的粘性身份。
 
-本节将 StatefulSet 相关内容合并为一个文档，内容包括基础与创建、Headless Service 与内部通信、更新扩缩容和版本管理。
+本文将 StatefulSet 相关内容合并为一个文档，内容包括基础与创建、Headless Service 与内部通信、更新扩缩容和版本管理。
 
 ## StatefulSet 基础与创建
 
 Deployment 适合管理无状态副本，任意 Pod 被替换后都可以继续承接请求。有些应用则依赖稳定身份、固定存储或有序启动，例如数据库、注册中心和分布式协调组件，这类应用通常更适合使用 StatefulSet。
 
-StatefulSet 是 Kubernetes 中用于管理有状态应用的工作负载控制器。它同样使用声明式配置描述期望状态，但会为每个 Pod 分配稳定的序号、稳定的网络标识，并可以结合存储卷声明为每个副本维护独立数据。
+StatefulSet 是 Kubernetes 中用于管理有状态应用的工作负载控制器。它同样使用声明式配置描述期望状态，但会为每个 Pod 分配稳定的序号、稳定的网络标识，并可以结合存储卷声明为每个副本维护独立数据。这些 Pod 来自同一模板，但彼此不可互换。
 
 ### 适用场景
 
@@ -504,9 +504,26 @@ kubectl delete pvc data-web-2
 StatefulSet 通过 `spec.updateStrategy` 控制更新方式：
 
 ```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rolling-web
 spec:
+  serviceName: rolling-web
+  replicas: 3
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: rolling-web
+  template:
+    metadata:
+      labels:
+        app: rolling-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 常见策略如下：
@@ -536,11 +553,28 @@ web-2 -> web-1 -> web-0
 `partition` 可以让 StatefulSet 只更新部分高序号 Pod，常用于灰度发布：
 
 ```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: partition-web
 spec:
+  serviceName: partition-web
+  replicas: 5
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
       partition: 3
+  selector:
+    matchLabels:
+      app: partition-web
+  template:
+    metadata:
+      labels:
+        app: partition-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.26
 ```
 
 假设 StatefulSet 有 5 个副本：
@@ -597,9 +631,26 @@ kubectl patch sts web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition
 `OnDelete` 策略不会在 Pod 模板变化后自动替换 Pod：
 
 ```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ondelete-web
 spec:
+  serviceName: ondelete-web
+  replicas: 3
   updateStrategy:
     type: OnDelete
+  selector:
+    matchLabels:
+      app: ondelete-web
+  template:
+    metadata:
+      labels:
+        app: ondelete-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 修改镜像后，已有 Pod 仍会继续运行旧版本。只有手动删除某个 Pod 后，StatefulSet 才会按新模板创建替代 Pod：
@@ -648,15 +699,49 @@ kubectl describe pod web-0 | grep Image:
 StatefulSet 默认的 Pod 管理策略是 `OrderedReady`：
 
 ```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ordered-web
 spec:
+  serviceName: ordered-web
+  replicas: 3
   podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: ordered-web
+  template:
+    metadata:
+      labels:
+        app: ordered-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 它会按顺序创建、删除和扩缩容 Pod。也可以改为 `Parallel`：
 
 ```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: parallel-web
 spec:
+  serviceName: parallel-web
+  replicas: 3
   podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: parallel-web
+  template:
+    metadata:
+      labels:
+        app: parallel-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
 ```
 
 两种策略对比如下：

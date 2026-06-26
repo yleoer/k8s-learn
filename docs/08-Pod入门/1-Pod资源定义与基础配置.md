@@ -1,6 +1,6 @@
 # Pod 资源定义与基础配置
 
-Pod 是 Kubernetes 中最小的调度和运行单元。它并非单纯的“一个容器”，而是一组紧密协作容器的运行环境，统一承载网络、存储、启动命令、环境变量、资源限制、生命周期和健康检查等配置。
+Pod 是 Kubernetes 中最小的可部署计算单元，也是调度的基本对象。它并非单纯的“一个容器”，而是一组紧密协作容器的运行环境，统一承载网络、存储、启动命令、环境变量、资源限制、生命周期和健康检查等配置。
 
 ## 最小 Pod 示例
 
@@ -43,7 +43,7 @@ kubectl run nginx-demo --image=nginx:stable-alpine
 kubectl run nginx-demo --image=nginx:stable-alpine --dry-run=client -o yaml
 ```
 
-`kubectl run` 适合临时验证，正式交付建议保存为 YAML 并通过声明式方式管理。
+`kubectl run` 适合临时验证，需要长期保留的资源建议保存为 YAML，并通过声明式方式管理。
 
 ## 基础字段说明
 
