@@ -786,8 +786,10 @@ kubectl describe hpa nginx-scale
 也可以用命令快速创建 CPU 利用率 HPA：
 
 ```bash
-kubectl autoscale deploy nginx-scale --min=2 --max=10 --cpu-percent=60
+kubectl autoscale deploy nginx-scale --min=2 --max=10 --cpu=60%
 ```
+
+使用 `--cpu` 指定目标。`--cpu=60%` 表示以容器 `requests.cpu` 为基准的平均 CPU 利用率目标，`--cpu=500m` 则表示平均 CPU 用量目标。
 
 HPA 运行后，不建议再频繁手动修改 Deployment 的 `spec.replicas`。如果需要调整容量边界，应优先修改 HPA 的 `minReplicas` 和 `maxReplicas`。
 
@@ -804,9 +806,11 @@ kubectl describe hpa nginx-scale
 
 ### PDB 中断保护
 
-PodDisruptionBudget 简称 PDB，用于限制自愿中断期间同一组 Pod 同时不可用的数量。常见自愿中断包括节点维护、节点 drain、集群升级和驱逐操作。
+PodDisruptionBudget 简称 PDB，可以理解为给一组 Pod 设置维护中断预算。集群执行节点维护、节点 drain、升级驱逐这类计划内操作时，需要先检查这组 Pod 还能承受多少副本暂时不可用。
 
-PDB 不能防止节点宕机、进程崩溃、镜像错误等非自愿故障，也不能替代 readinessProbe、优雅退出和合理的滚动更新策略。它的作用是给集群维护动作加一道可用性约束。
+PDB 的判断方式很直接：一次驱逐发生后，如果可用副本数仍满足预算，驱逐会被允许；如果会超过预算，驱逐会被拒绝或等待。PDB 不负责扩容或重建 Pod，也不能防止节点宕机、进程崩溃、镜像错误等非自愿故障。
+
+例如一个 Deployment 有 3 个副本，并配置 `maxUnavailable: 1`。执行节点 drain 时，Kubernetes 最多先驱逐 1 个匹配 Pod；等新 Pod 在其他节点创建并 Ready，预算恢复后，才允许继续驱逐下一个，避免一次维护同时带走多个可用副本。
 
 下面示例要求 `app=nginx-scale` 的 Deployment 在自愿中断后最多只有 1 个 Pod 不可用：
 
@@ -836,7 +840,7 @@ spec:
       app: nginx-scale
 ```
 
-`minAvailable` 和 `maxUnavailable` 只能二选一。对会自动扩缩容的 Deployment，通常更推荐使用 `maxUnavailable`，因为它能随着副本数变化保持相对稳定的维护窗口。
+`minAvailable` 和 `maxUnavailable` 只能二选一。`maxUnavailable` 从最多允许少几个副本的角度表达预算，`minAvailable` 从至少保留几个可用副本的角度表达底线。对会自动扩缩容的 Deployment，通常更推荐使用 `maxUnavailable`，因为它能随着副本数变化保持相对稳定的维护窗口。
 
 创建并查看：
 
