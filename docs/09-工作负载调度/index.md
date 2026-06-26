@@ -17,3 +17,5 @@
 | [Deployment](./1-Deployment) | 说明无状态服务的副本维护、滚动更新、回滚和扩缩容方式 |
 | [StatefulSet](./2-StatefulSet) | 讲解有状态应用的稳定身份、内部通信、扩缩容和版本管理 |
 | [DaemonSet](./3-DaemonSet) | 演示节点级守护进程的创建、更新、回滚和节点选择 |
+
+章节总结：Deployment 适合无状态业务，通过 ReplicaSet 维护副本并支持滚动更新、回滚、手动扩缩容、HPA 自动扩缩容和 PDB 中断保护。StatefulSet 适合稳定身份、有序发布和独立存储的有状态应用，DaemonSet 适合节点级常驻进程；控制器选对之后，再补充探针、资源限制、存储、配置和发布策略，才能形成稳定的生产部署。

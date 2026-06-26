@@ -130,6 +130,8 @@ function customChapterItems(chapter, dir) {
         { text: 'Deployment 定义与创建', link: `/${dir}/1-Deployment#deployment-定义与创建` },
         { text: 'Deployment 更新与回滚', link: `/${dir}/1-Deployment#deployment-更新与回滚` },
         { text: 'Deployment 扩缩容与策略', link: `/${dir}/1-Deployment#deployment-扩缩容与策略` },
+        { text: 'HPA 自动扩缩容', link: `/${dir}/1-Deployment#hpa-自动扩缩容` },
+        { text: 'PDB 中断保护', link: `/${dir}/1-Deployment#pdb-中断保护` },
       ],
     },
     {

@@ -665,6 +665,125 @@ spec:
                 command: ["sh", "-c", "sleep 10"]
 ```
 
+### HPA 自动扩缩容
+
+手动调整 `spec.replicas` 适合明确的容量变更，面对流量波动时可以使用 HorizontalPodAutoscaler，简称 HPA。HPA 会根据指标周期性计算期望副本数，并通过工作负载的 `scale` 子资源调整 Deployment。
+
+HPA 适用于 Deployment、StatefulSet 等支持 scale 子资源的工作负载，不适用于 DaemonSet。以 CPU 使用率为例，HPA 依赖 `metrics.k8s.io` 指标接口，通常需要集群中已经部署 Metrics Server。
+
+创建 HPA 前，容器应配置 `resources.requests`，否则 CPU 或内存利用率没有稳定的计算基准：
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+```
+
+HPA 示例：
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-scale
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-scale
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+```
+
+创建并查看：
+
+```bash
+kubectl apply -f nginx-hpa.yaml
+kubectl get hpa
+kubectl describe hpa nginx-scale
+```
+
+也可以用命令快速创建 CPU 利用率 HPA：
+
+```bash
+kubectl autoscale deploy nginx-scale --min=2 --max=10 --cpu-percent=60
+```
+
+HPA 运行后，不建议再频繁手动修改 Deployment 的 `spec.replicas`。如果需要调整容量边界，应优先修改 HPA 的 `minReplicas` 和 `maxReplicas`。
+
+常见排查命令：
+
+```bash
+kubectl top pod
+kubectl top node
+kubectl get apiservice v1beta1.metrics.k8s.io
+kubectl describe hpa nginx-scale
+```
+
+如果 HPA 显示 `<unknown>` 或无法计算副本数，通常需要检查 Metrics Server、Pod 的 requests、指标采集权限以及目标 Deployment 的 selector。
+
+### PDB 中断保护
+
+PodDisruptionBudget 简称 PDB，用于限制自愿中断期间同一组 Pod 同时不可用的数量。常见自愿中断包括节点维护、节点 drain、集群升级和驱逐操作。
+
+PDB 不能防止节点宕机、进程崩溃、镜像错误等非自愿故障，也不能替代 readinessProbe、优雅退出和合理的滚动更新策略。它的作用是给集群维护动作加一道可用性约束。
+
+下面示例要求 `app=nginx-scale` 的 Deployment 在自愿中断后最多只有 1 个 Pod 不可用：
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx-scale-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: nginx-scale
+```
+
+也可以使用 `minAvailable` 表示至少保留多少个可用 Pod：
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx-scale-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: nginx-scale
+```
+
+`minAvailable` 和 `maxUnavailable` 只能二选一。对会自动扩缩容的 Deployment，通常更推荐使用 `maxUnavailable`，因为它能随着副本数变化保持相对稳定的维护窗口。
+
+创建并查看：
+
+```bash
+kubectl apply -f nginx-pdb.yaml
+kubectl get pdb
+kubectl describe pdb nginx-scale-pdb
+```
+
+配置 PDB 时需要注意：
+
+- selector 应与 Deployment 管理的 Pod 标签匹配
+- 单副本服务配置严格 PDB 可能导致节点 drain 无法完成
+- PDB 只保护通过 Eviction API 发起的自愿中断
+- PDB 不会阻止用户直接删除 Deployment 或修改副本数
+
 ### 更新策略
 
 | 策略 | 行为 | 适用场景 |
