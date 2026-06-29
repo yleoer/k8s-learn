@@ -340,3 +340,156 @@ spec:
 /api-a/test/test -> /test/test
 
 需要重写的和不需要重新的不要放在一起
+
+### 访问速率限制
+
+限制速率以降低后端压力，或者限制单个IP每秒的访问速率防止攻击。此时可以使用 Nginx 的 rate limit 进行配置
+
+```bash
+# 测试速率
+ab -c 10 -n 100 http://auth.test.com/ | grep requests
+```
+
+限制只能有一个连接：
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/limit-connections: "1" 
+```
+
+其他常用限制：
+
+```yaml
+# 限制每秒的连接，单个IP
+nginx.ingress.kubernetes.io/limit-rps
+# 限制每分钟的连接，单个IP
+nginx.ingress.kubernetes.io/limit-rpm
+#限制客户端每秒传输的字节数，单位为K，需要开启proxy-buffering
+nginx.ingress.kubernetes.io/limit-rate
+# 速率限制白名单
+nginx.ingress.kubernetes.io/limit-whitelist
+```
+
+### Ingress Nginx 黑白名单
+
+黑名单：支持 IP，网段，多个黑名单逗号分隔
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/denylist-source-range: 192.168.5.101
+```
+
+白名单：只允许某些IP，网段访问：
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/whitelist-source-range: 192.168.5.101
+```
+
+全局黑白名单
+
+```bash
+kubectl edit cm ingress-nginx-controller -n ingress-nginx
+
+data:
+  allow-snippet-annotations: "true"
+  denylist-source-range: 192.168.5.101
+  whitelist-source-range: 192.168.0.0/16
+```
+
+### 自定义错误页
+
+使用 default backend 自定义错误页
+
+安装 default backend 服务
+
+```bash
+kubectl create -f custom-default-backend.yaml -n ingress-nginx
+```
+
+更改 ingress-nginx 的启动参数，支持自定义错误页
+
+```bash
+kubectl edit ds -n ingress-nginx
+
+- args:
+  - --default-backend-service=ingress-nginx/nginx-errors
+```
+
+配置 ConfigMap，定义哪些错误码被重定向到自定义错误页
+
+```yaml
+custom-http-errors: "404,502,503"
+```
+
+### 匹配请求头区分不同客户端
+
+// TODO
+
+### 灰度/金丝雀/蓝绿发布
+
+//TODO
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+```
+
+### 常见问题
+
+#### 404
+
+- Ingress 路径配置的不正确
+- Ingress 的配置未被 Controller 解析
+- 未使用正确的域名和路径访问
+- 代理的服务没有该路径
+
+#### 413
+
+nginx 默认允许的最大文件大小只有 8M，通过 `nginx.ingress.kubernetes.io/proxy-body-size` 参数进行更改。
+
+#### 503
+
+- Ingress 代理配置错误，比如 Service 名字或端口写错
+- Ingress 代理的 Service 不存在
+- Ingress 代理的 Service 后端 Pod 不正常
+
+#### 504
+
+一般是代理的服务处理请求的时间过长，导致 Nginx 等待超时，此时需要确认服务的处理时长，或者查看服务是否有问题
+
+配置合适的超时时间
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+```
+
+#### CORS 跨域报错
+
+允许跨域：
+
+```yaml
+nginx.ingress.kubernetes.io/enable-cors: "true"
+# 允许跨域的方法
+nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE"
+# 允许携带的请求头
+nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"
+# 允许跨域的域名
+nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+```
+
