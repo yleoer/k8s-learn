@@ -1,6 +1,6 @@
-# Pod 常见状态及问题排查通用方法
+# Pod 状态观察
 
-Pod 状态是判断应用是否正常运行的第一入口。排查 Pod 问题时，遵循“先看状态，再看详情、事件和日志”的顺序。
+Pod 状态是判断应用是否正常运行的第一入口。本章只记录状态观察和基础排查入口，资源配置、镜像拉取、生命周期和探针等细节在第 08 章继续展开。
 
 ## 查看 Pod 状态
 
@@ -28,7 +28,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 
 需要注意，`STATUS` 列中还可能显示 `CrashLoopBackOff`、`ImagePullBackOff` 等状态，它们并不是 Pod 的 phase，而是更具体的容器状态原因。
 
-## Pending
+## Pending 观察
 
 `Pending` 表示 Pod 还没有真正运行。排查步骤：
 
@@ -38,7 +38,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 kubectl get node
 ```
 
-常见原因：
+常见原因包括：
 
 - 节点资源不足
 - 节点选择器或亲和性不匹配
@@ -46,9 +46,9 @@ kubectl get node
 - PVC 没有绑定成功
 - 镜像拉取前处于等待阶段
 
-重点看 `describe` 输出中的 `Events`。
+重点看 `describe` 输出中的 `Events`，具体调度和资源不足排查在第 08 章继续记录。
 
-## ImagePullBackOff 与 ErrImagePull
+## 镜像拉取状态
 
 镜像拉取失败通常会看到 `ErrImagePull` 或 `ImagePullBackOff`。
 
@@ -67,7 +67,7 @@ kubectl get pod <pod-name> -o yaml
 - 镜像仓库证书或协议配置错误
 - 镜像体积过大导致拉取超时
 
-如果是私有仓库，需要检查 `imagePullSecrets`。
+如果是私有仓库，需要检查 `imagePullSecrets`。镜像拉取策略和私有仓库认证放在第 08 章继续记录。
 
 ## CrashLoopBackOff
 
@@ -89,7 +89,7 @@ kubectl describe pod <pod-name>
 - 健康检查配置不合理
 - 依赖的数据库或中间件不可用
 
-`--previous` 可以查看上一轮已崩溃容器的日志，通常比当前容器的日志更有价值。
+`--previous` 可以查看上一轮已崩溃容器的日志，通常比当前容器的日志更有价值。启动命令、环境变量、生命周期钩子和探针配置需要结合第 08 章的 Pod 配置内容继续分析。
 
 ## Running 但不可访问
 
@@ -133,7 +133,7 @@ kubectl get pod -o wide
 
 这类问题更偏向节点或集群组件层面的排障。
 
-## 通用排查流程
+## 观察顺序
 
 建议形成固定流程：
 
@@ -145,7 +145,7 @@ kubectl logs <pod-name> --previous
 kubectl get events --sort-by=.metadata.creationTimestamp
 ```
 
-排查时按层次判断：
+观察时按层次判断：
 
 - 是否调度到节点
 - 镜像是否拉取成功
@@ -154,4 +154,4 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 - 健康检查是否失败
 - 配置、存储、网络是否满足要求
 
-大部分 Pod 的初级问题，都能通过状态、事件和日志定位到大致方向。
+大部分 Pod 的初级问题，都能通过状态、事件和日志定位到大致方向。后续进入第 08 章后，再围绕具体字段和生命周期阶段展开细化排查。

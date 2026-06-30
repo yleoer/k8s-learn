@@ -235,7 +235,7 @@ kubectl rollout undo deployment/nginx
 kubectl rollout restart deployment/nginx
 ```
 
-初体验阶段只需要知道它们的用途：
+资源操作阶段只需要知道它们的用途：
 
 | 命令 | 作用 |
 | --- | --- |

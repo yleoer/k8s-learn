@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: Kubernetes 学习记录
-  text: 从容器基础到集群实践
+  text: 从容器基础到核心资源
   tagline: 记录 Docker、容器运行时与 Kubernetes 的个人学习过程
 
 features:
@@ -21,40 +21,51 @@ features:
     link: /03-镜像制作/
   - icon: 🗄️
     title: 04 · 镜像仓库
-    details: 镜像仓库概念、Harbor 安装、镜像推拉、权限管理和运维管理。
+    details: 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理和镜像供应链安全。
     link: /04-镜像仓库/
   - icon: 🔧
     title: 05 · 容器运行
-    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置和运行时排障记录。
+    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置、镜像缓存和运行时排障记录。
     link: /05-容器运行/
   - icon: ⚙️
-    title: 06 · 设计思想
+    title: 06 · 集群架构
     details: Kubernetes 定位、声明式模型、集群架构、控制面组件、节点组件和核心资源抽象。
-    link: /06-K8s设计思想/
+    link: /06-集群架构/
   - icon: 🧭
-    title: 07 · 初体验
+    title: 07 · 资源操作
     details: kubectl、Namespace、Pod 基础操作、资源状态观察和问题记录。
-    link: /07-K8s初体验/
+    link: /07-资源操作/
   - icon: 🧩
     title: 08 · Pod 入门
     details: Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期和健康检查。
     link: /08-Pod入门/
   - icon: 🧬
     title: 09 · 工作负载
-    details: Deployment、StatefulSet、DaemonSet、HPA、PDB 和典型控制器行为。
-    link: /09-工作负载调度/
+    details: Deployment、StatefulSet、DaemonSet 和典型控制器行为。
+    link: /09-工作负载/
+  - icon: 🔎
+    title: 10 · 服务发现
+    details: Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式和排查记录。
+    link: /10-服务发现/
 ---
+
+## 当前进度
+
+当前文档已完成基础环境、容器基础、镜像制作、镜像仓库、容器运行时，以及 Kubernetes 核心阶段的集群架构、资源操作、Pod、工作负载和服务发现。
+
+后续记录将围绕配置管理、存储管理、任务管理、网络入口、调度治理、安全、可观测性和工程化交付逐步补齐。
 
 ## 后续补全清单
 
-当前文档已记录到 Pod 与三类常用工作负载。以下内容先保留为后续补全清单：
+以下内容先保留为后续补全清单：
 
-- Service、EndpointSlice、CoreDNS、Ingress、Gateway API 和 NetworkPolicy
-- ConfigMap、Secret、ServiceAccount 与应用配置注入
-- Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
-- Job、CronJob 与任务型工作负载
-- Workload API、PodGroupTemplates 与成组调度
-- nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占与驱逐
-- ResourceQuota、LimitRange、QoS、RBAC、SecurityContext 和 Pod Security Standards
-- 集群升级、证书、etcd 备份恢复、系统日志、系统指标和可观测性组件
-- Helm、Operator、KEDA、GitOps、CI/CD、备份恢复和多集群管理
+- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Ingress、Gateway API 和 NetworkPolicy
+- 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
+- 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
+- 任务管理：Job、CronJob 和任务型工作负载
+- 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
+- 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度
+- 安全与权限：RBAC、SecurityContext、Pod Security Standards 和审计基础
+- 集群运维：kubeadm 配置文件、版本偏差、集群升级、证书续期、etcd 备份恢复和高可用控制平面
+- 可观测性：系统日志、系统指标、事件、Tracing 和常见可观测性组件
+- 交付与扩展：Helm、Operator、KEDA、GitOps、CI/CD、备份恢复和多集群管理

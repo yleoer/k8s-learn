@@ -115,47 +115,6 @@ const courseParts = [
   { text: '企业落地', label: '十 · 企业级落地', from: 39, to: 43 },
 ]
 
-function customChapterItems(chapter, dir) {
-  if (chapter.num !== '09' || chapter.title !== '工作负载调度') {
-    return null
-  }
-
-  return [
-    {
-      text: 'Deployment',
-      link: `/${dir}/1-Deployment`,
-      collapsed: false,
-      items: [
-        { text: '无状态调度基础', link: `/${dir}/1-Deployment#无状态调度基础` },
-        { text: 'Deployment 定义与创建', link: `/${dir}/1-Deployment#deployment-定义与创建` },
-        { text: 'Deployment 更新与回滚', link: `/${dir}/1-Deployment#deployment-更新与回滚` },
-        { text: 'Deployment 扩缩容与策略', link: `/${dir}/1-Deployment#deployment-扩缩容与策略` },
-        { text: 'HPA 自动扩缩容', link: `/${dir}/1-Deployment#hpa-自动扩缩容` },
-        { text: 'PDB 中断保护', link: `/${dir}/1-Deployment#pdb-中断保护` },
-      ],
-    },
-    {
-      text: 'StatefulSet',
-      link: `/${dir}/2-StatefulSet`,
-      collapsed: false,
-      items: [
-        { text: 'StatefulSet 基础与创建', link: `/${dir}/2-StatefulSet#statefulset-基础与创建` },
-        { text: 'Headless Service 与内部通信', link: `/${dir}/2-StatefulSet#headless-service-与内部通信` },
-        { text: 'StatefulSet 更新扩缩容', link: `/${dir}/2-StatefulSet#statefulset-更新扩缩容` },
-      ],
-    },
-    {
-      text: 'DaemonSet',
-      link: `/${dir}/3-DaemonSet`,
-      collapsed: false,
-      items: [
-        { text: 'DaemonSet 定义与创建', link: `/${dir}/3-DaemonSet#daemonset-定义与创建` },
-        { text: 'DaemonSet 更新与节点选择', link: `/${dir}/3-DaemonSet#daemonset-更新与节点选择` },
-      ],
-    },
-  ]
-}
-
 const courseChapters = course.map((chapter, index) => {
   const dir = chapterPath(chapter, index)
   const num = chapter.num ?? String(index + 1).padStart(2, '0')
@@ -176,7 +135,7 @@ const courseChapters = course.map((chapter, index) => {
     num,
     number: Number.parseInt(num, 10),
     link: `/${dir}/`,
-    items: customChapterItems(chapter, dir) ?? defaultItems,
+    items: defaultItems,
   }
 })
 

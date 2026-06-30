@@ -35,7 +35,7 @@ Kubernetes 屏蔽了底层机器差异，应用通过统一的资源对象描述
 | 应用部署 | Deployment、StatefulSet、DaemonSet 等管理副本和运行策略 |
 | 弹性伸缩 | 副本数调整和基于指标的 HPA |
 | 服务发现 | Service 为一组 Pod 提供稳定的集群内访问入口 |
-| 负载均衡 | Service、kube-proxy 或 IPVS 将请求分发到后端 Pod |
+| 负载均衡 | Service 与代理实现将请求分发到后端 Pod |
 | 自愈恢复 | 容器/Pod/节点异常时自动重建或迁移 |
 | 配置管理 | ConfigMap、Secret 将配置和敏感数据从镜像中拆分 |
 | 存储编排 | PV、PVC、StorageClass 和 CSI 对接各类存储系统 |

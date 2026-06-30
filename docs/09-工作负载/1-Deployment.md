@@ -37,7 +37,7 @@ Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望
 | `Job` | 一次性任务 | 执行完成即退出 |
 | `CronJob` | 周期性任务 | 按计划创建 Job |
 
-本章聚焦常用工作负载调度，记录 Deployment、StatefulSet 和 DaemonSet 的核心行为。Job 和 CronJob 将在后续章节展开。
+本章聚焦常用工作负载控制器，记录 Deployment、StatefulSet 和 DaemonSet 的核心行为。Job 和 CronJob 将在后续章节展开。
 
 ### RC 与 ReplicaSet
 
@@ -721,141 +721,13 @@ spec:
 
 手动调整 `spec.replicas` 适合明确的容量变更，面对流量波动时可以使用 HorizontalPodAutoscaler，简称 HPA。HPA 会根据指标周期性计算期望副本数，并通过工作负载的 `scale` 子资源调整 Deployment。
 
-HPA 适用于 Deployment、StatefulSet 等支持 scale 子资源的工作负载，不适用于 DaemonSet。以 CPU 使用率为例，HPA 依赖 `metrics.k8s.io` 指标接口，集群中需要先部署 Metrics Server。
-
-创建 HPA 前，容器应配置 `resources.requests`，否则 CPU 或内存利用率没有稳定的计算基准：
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-scale
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: nginx-scale
-  template:
-    metadata:
-      labels:
-        app: nginx-scale
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.25
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-```
-
-HPA 示例：
-
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: nginx-scale
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-scale
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 60
-```
-
-创建并查看：
-
-```bash
-kubectl apply -f nginx-hpa.yaml
-kubectl get hpa
-kubectl describe hpa nginx-scale
-```
-
-也可以用命令快速创建 CPU 利用率 HPA：
-
-```bash
-kubectl autoscale deploy nginx-scale --min=2 --max=10 --cpu=60%
-```
-
-使用 `--cpu` 指定目标。`--cpu=60%` 表示以容器 `requests.cpu` 为基准的平均 CPU 利用率目标，`--cpu=500m` 则表示平均 CPU 用量目标。
-
-HPA 运行后，不建议再频繁手动修改 Deployment 的 `spec.replicas`。如果需要调整容量边界，应优先修改 HPA 的 `minReplicas` 和 `maxReplicas`。
-
-常见排查命令：
-
-```bash
-kubectl top pod
-kubectl top node
-kubectl get apiservice v1beta1.metrics.k8s.io
-kubectl describe hpa nginx-scale
-```
-
-如果 HPA 显示 `<unknown>` 或无法计算副本数，通常需要检查 Metrics Server、Pod 的 requests、指标采集权限以及目标 Deployment 的 selector。
+HPA 依赖指标来源，常见 CPU、内存利用率场景需要 Metrics Server 和容器 `resources.requests` 作为计算基础。HPA 的指标类型、伸缩算法、稳定窗口和排查方法属于资源治理内容，后续章节再单独记录。
 
 ### PDB 中断保护
 
-PodDisruptionBudget 简称 PDB，可以理解为给一组 Pod 设置维护中断预算。集群执行节点维护、节点 drain、升级驱逐这类计划内操作时，需要先检查这组 Pod 还能承受多少副本暂时不可用。
+PodDisruptionBudget 简称 PDB，用于为一组 Pod 设置自愿中断预算。节点维护、节点 drain 或集群升级触发驱逐时，Kubernetes 会根据 PDB 判断当前是否还能继续中断匹配的 Pod。
 
-PDB 的判断方式很直接：一次驱逐发生后，如果可用副本数仍满足预算，驱逐会被允许；如果会超过预算，驱逐会被拒绝或等待。PDB 不负责扩容或重建 Pod，也不能防止节点宕机、进程崩溃、镜像错误等非自愿故障。
-
-例如一个 Deployment 有 3 个副本，并配置 `maxUnavailable: 1`。执行节点 drain 时，Kubernetes 最多先驱逐 1 个匹配 Pod；等新 Pod 在其他节点创建并 Ready，预算恢复后，才允许继续驱逐下一个，避免一次维护同时带走多个可用副本。
-
-下面示例要求 `app=nginx-scale` 的 Deployment 在自愿中断后最多只有 1 个 Pod 不可用：
-
-```yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: nginx-scale-pdb
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app: nginx-scale
-```
-
-也可以使用 `minAvailable` 表示至少保留多少个可用 Pod：
-
-```yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: nginx-scale-pdb
-spec:
-  minAvailable: 2
-  selector:
-    matchLabels:
-      app: nginx-scale
-```
-
-`minAvailable` 和 `maxUnavailable` 只能二选一。`maxUnavailable` 从最多允许少几个副本的角度表达预算，`minAvailable` 从至少保留几个可用副本的角度表达底线。对会自动扩缩容的 Deployment，通常更推荐使用 `maxUnavailable`，因为它能随着副本数变化保持相对稳定的维护窗口。
-
-创建并查看：
-
-```bash
-kubectl apply -f nginx-pdb.yaml
-kubectl get pdb
-kubectl describe pdb nginx-scale-pdb
-```
-
-配置 PDB 时需要注意：
-
-- selector 应与 Deployment 管理的 Pod 标签匹配
-- 单副本服务配置严格 PDB 可能导致节点 drain 无法完成
-- PDB 只保护通过 Eviction API 发起的自愿中断
-- PDB 不会阻止用户直接删除 Deployment 或修改副本数
+PDB 不负责扩容或重建 Pod，也不能防止节点宕机、进程崩溃、镜像错误等非自愿故障。PDB 的预算策略、Eviction API、节点维护配合方式和常见阻塞场景，后续放到调度治理或工程弹性章节展开。
 
 ### 更新策略
 
