@@ -1,6 +1,6 @@
 # Dockerfile 快速入门
 
-Dockerfile 是一个纯文本文件，按行声明构建步骤，每条指令在最终镜像中对应一层或一条元数据。理解指令的作用和顺序，是写好 Dockerfile 的前提。
+Dockerfile 是一个纯文本文件，按行声明构建步骤。构建指令会生成文件系统层或镜像配置元数据，理解指令作用和顺序，是写好 Dockerfile 的前提。
 
 ## 常用指令
 
@@ -12,7 +12,7 @@ Dockerfile 是一个纯文本文件，按行声明构建步骤，每条指令在
 | `ENV`         | 设置环境变量，构建阶段和运行阶段均可见               |
 | `ARG`         | 设置构建参数，仅在构建阶段可见                       |
 | `COPY`        | 复制文件或目录到镜像                                 |
-| `ADD`         | 复制文件到镜像，额外支持自动解压本地 tar 包          |
+| `ADD`         | 复制文件到镜像，额外支持自动解压本地 tar 包和从远程 URL 获取内容 |
 | `WORKDIR`     | 设置后续指令的工作目录                               |
 | `USER`        | 设置运行容器时使用的用户                             |
 | `EXPOSE`      | 声明容器计划监听的端口（仅文档作用，不实际发布端口） |
@@ -34,7 +34,7 @@ echo '<h1>Hello nginx</h1>' > html/index.html
 ```
 
 ```dockerfile
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 COPY ./html /usr/share/nginx/html
 EXPOSE 80
 ```
@@ -46,23 +46,23 @@ docker build -t nginx:demo .
 ```
 
 <details>
-<summary>docker build 示例输出</summary>
+<summary>docker build 输出类似如下</summary>
 
 ```text
 $ docker build -t nginx:demo .
 [+] Building 2.1s (7/7) FINISHED                                                                                                  docker:default
  => [internal] load build definition from Dockerfile                                                                                        0.0s
  => => transferring dockerfile: 99B                                                                                                         0.0s
- => [internal] load metadata for docker.io/library/nginx:alpine                                                                             2.0s
+ => [internal] load metadata for docker.io/library/nginx:1.27-alpine                                                                        2.0s
  => [internal] load .dockerignore                                                                                                           0.0s
  => => transferring context: 2B                                                                                                             0.0s
  => [internal] load build context                                                                                                           0.0s
  => => transferring context: 91B                                                                                                            0.0s
- => CACHED [1/2] FROM docker.io/library/nginx:alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a                0.0s
+ => CACHED [1/2] FROM docker.io/library/nginx:1.27-alpine@sha256:<digest>                                                                   0.0s
  => [2/2] COPY ./html /usr/share/nginx/html                                                                                                 0.0s
  => exporting to image                                                                                                                      0.0s
  => => exporting layers                                                                                                                     0.0s
- => => writing image sha256:3486854ac0df3e78395139b93bde38b4bc46124c57b0638f0a849b713df4538e                                                0.0s
+ => => writing image sha256:<image-id>                                                                                                      0.0s
  => => naming to docker.io/library/nginx:demo                                                                                               0.0s
 ```
 
@@ -93,7 +93,7 @@ FROM alpine:3.20
 
 ## RUN：执行构建命令
 
-`RUN` 在构建阶段执行命令，常用于安装依赖、创建用户、下载文件等操作。
+`RUN` 在构建阶段执行命令，常用于安装依赖、创建用户、下载文件等操作。每条 `RUN` 会生成一个新的镜像层。
 
 ```dockerfile
 FROM alpine:3.20
@@ -174,20 +174,19 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
 
 健康状态会显示在 `docker ps` 的 `STATUS` 列：
 
-```bash
-$ docker ps
+```text
 CONTAINER ID   IMAGE         STATUS                    PORTS
 a1b2c3d4e5f6   app:v1.0.0    Up 10 minutes (healthy)   0.0.0.0:8080->8080/tcp
 ```
 
-Kubernetes 不会自动读取 Docker 镜像中的 `HEALTHCHECK` 指令转换为 Pod 探针。部署到 Kubernetes 时，仍需在 Pod spec 中显式配置 `livenessProbe`、`readinessProbe` 或 `startupProbe`。但 `HEALTHCHECK` 在 Docker Compose 和本地开发调试中仍然有效。
+Kubernetes 不会自动读取 Docker 镜像中的 `HEALTHCHECK` 指令转换为 Pod 探针。部署到 Kubernetes 时，仍需在 Pod spec 中显式配置 `livenessProbe`、`readinessProbe` 或 `startupProbe`。但 `HEALTHCHECK` 在 Docker Compose 和本地 Docker 调试中仍然有效。
 
 ## 编写原则
 
 - 固定基础镜像版本，不依赖 `latest`。
 - 变更少的内容放前面，充分发挥缓存复用。
-- 敏感信息（密码、Token、私钥）不进镜像层——通过挂载、环境变量或 Secret 注入。
+- 敏感信息（密码、Token、私钥）不通过 `ARG` 或 `ENV` 写入镜像；构建阶段使用 BuildKit secret mount，运行阶段通过 Secret 或挂载文件注入。
 - 一个容器只运行一个主要进程，便于管理、监控和排障。
-- 为生产镜像添加 `HEALTHCHECK`，优先使用非 root 用户。
+- 按运行方式评估是否添加 `HEALTHCHECK`，并优先使用非 root 用户。
 - 构建完成后用 `docker scout` 或 Harbor / Trivy 扫描已知漏洞。
 - 日志一律输出到 stdout/stderr，由容器运行时统一收集。

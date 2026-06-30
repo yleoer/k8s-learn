@@ -83,15 +83,16 @@ CI/CD 流水线、Kubernetes 拉取任务和跨系统集成应优先使用 Robot
 
 ## Kubernetes 拉取私有镜像
 
-如果 Harbor 项目为私有项目，Kubernetes 需要通过 `imagePullSecret` 提供拉取凭据。Secret 属于命名空间资源，每个需要拉取私有镜像的命名空间都要配置。
+如果 Harbor 项目为私有项目，Kubernetes 需要通过 `imagePullSecrets` 提供拉取凭据。Secret 属于命名空间资源，每个需要拉取私有镜像的命名空间都要配置。
 
-### 创建 imagePullSecret
+### 创建拉取凭据 Secret
 
 ```bash
 kubectl create secret docker-registry harbor-secret \
   --docker-server=harbor.example.com \
   --docker-username=developer \
   --docker-password=<password> \
+  --docker-email=<email@example.com> \
   -n default
 ```
 
@@ -109,7 +110,7 @@ spec:
     - name: harbor-secret
   containers:
     - name: nginx
-      image: harbor.example.com/base/nginx:alpine
+      image: harbor.example.com/base/nginx:1.27-alpine
 ```
 
 ### 在 Deployment 中引用
@@ -138,7 +139,7 @@ spec:
 
 ### 绑定到 ServiceAccount
 
-将 `imagePullSecret` 绑定到命名空间默认 ServiceAccount 后，该命名空间中新创建的 Pod 会自动携带拉取凭据，避免在每个工作负载中重复声明：
+将 `imagePullSecrets` 绑定到命名空间默认 ServiceAccount 后，该命名空间中新创建的 Pod 会自动携带拉取凭据，避免在每个工作负载中重复声明：
 
 ```bash
 kubectl patch serviceaccount default \
@@ -148,4 +149,4 @@ kubectl patch serviceaccount default \
 
 已有 Pod 不会因为 ServiceAccount 更新而自动重建，需要重新创建或滚动更新工作负载后才会使用新的拉取凭据。
 
-> `imagePullSecret` 中存储的是经过 base64 编码的认证信息，并不是加密密文。相关 YAML 不应提交到公开仓库，生产环境可结合 External Secrets、Vault 或 SealedSecrets 管理凭据。
+> `imagePullSecrets` 引用的 Secret 中存储的是经过 base64 编码的认证信息，并不是加密密文。相关 YAML 不应提交到公开仓库，生产环境可结合 External Secrets、Vault 或 SealedSecrets 管理凭据。

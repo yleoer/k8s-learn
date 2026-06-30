@@ -106,13 +106,15 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
 EXPOSE 80
 ```
 
-关键点：静态文件只需 `COPY`；`nginx:alpine` 自带 `wget`，可用于健康检查；nginx worker 自动以非 root 身份运行；静态文件已是最终产物，通常不需要多阶段构建。
+关键点：静态文件只需 `COPY`；`nginx:1.27-alpine` 自带 `wget`，可用于健康检查；nginx worker 自动以非 root 身份运行；静态文件已是最终产物，通常不需要多阶段构建。
 
 ### 构建、运行、验证
 
 ```bash
 docker build -t harbor.example.com/team/frontend:v1.0.0 .
 ```
+
+> 使用 BuildKit（Docker Engine 默认构建后端）时，`docker build` 等效于 `docker buildx build`。部分旧版文档使用 `DOCKER_BUILDKIT=1 docker build`，在新版本中已无需手动设置。
 
 ```bash
 docker run -d --name frontend \
@@ -125,7 +127,7 @@ docker ps --filter name=frontend
 ```
 
 <details>
-<summary>docker ps 示例</summary>
+<summary>docker ps 输出类似如下</summary>
 
 ```text
 $ docker ps --filter name=frontend
@@ -279,7 +281,7 @@ curl http://127.0.0.1:8081/api/hello
 ```
 
 ```text
-{"status":"ok","version":"1.0.0","time":"2026-06-16T10:30:00+00:00"}
+{"status":"ok","version":"1.0.0","time":"<RFC3339 时间>"}
 {"message":"Hello from PHP on K8s!"}
 ```
 
@@ -426,11 +428,11 @@ curl http://127.0.0.1:8082/api/hello
 ```
 
 ```text
-{"status":"ok","version":"1.0.0","time":"2026-06-16T10:30:00Z"}
+{"status":"ok","version":"1.0.0","time":"<RFC3339 时间>"}
 {"message":"Hello from Go on K8s!"}
 ```
 
-确认镜像大小：
+确认镜像大小，输出会随基础镜像版本、构建平台和本地 Docker image store 变化：
 
 ```bash
 docker images harbor.example.com/team/backend:v1.0.0

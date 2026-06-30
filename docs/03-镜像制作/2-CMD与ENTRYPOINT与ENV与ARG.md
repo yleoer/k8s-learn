@@ -83,7 +83,7 @@ CMD ["echo", "hello"]
 CMD ["sh", "-c", "echo app version: $APP_VERSION"]
 ```
 
-生产环境优先使用 Exec 格式——它直接以 PID 1 运行目标程序，能正确接收 `SIGTERM` 等信号，`docker stop` 可在超时内完成优雅退出。Shell 格式以 `/bin/sh` 作为 PID 1，目标程序只是它的子进程，信号不一定能转发到位。
+生产环境优先使用 Exec 格式——它直接以 PID 1 运行目标程序，能正确接收 `SIGTERM` 等信号，`docker stop` 可在超时内完成优雅退出。Shell 格式以 `/bin/sh` 作为 PID 1，目标程序只是它的子进程，信号不一定能转发到位。注意：如果目标程序本身不处理信号（例如简单的 shell 脚本），即使使用 Exec 格式也无法实现优雅退出，这需要应用程序配合实现信号处理逻辑。
 
 ## ENTRYPOINT：容器入口
 
@@ -123,11 +123,11 @@ docker run --rm --entrypoint sh demo:entry
 
 ```dockerfile
 # 方式一：只用 CMD（灵活，可被覆盖）
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 CMD ["nginx", "-g", "daemon off;"]
 
 # 方式二：ENTRYPOINT + CMD（固定入口，参数可替换）
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 ENTRYPOINT ["nginx"]
 CMD ["-g", "daemon off;"]
 ```
@@ -172,11 +172,11 @@ docker build --build-arg ALPINE_VERSION=3.21 -t demo:alpine321 .
 | 适合用途          | 版本号、下载地址、编译开关 | 应用运行配置（端口、环境名、日志级别） |
 | 运行时覆盖        | 不可覆盖                   | `docker run -e` 可覆盖                 |
 
-实践中两者常配合使用：ARG 接收构建时的版本号，然后赋值给 ENV 供运行时读取：
+实践中两者常配合使用：ARG 接收构建时的版本号，并赋值给 ENV 供运行时读取：
 
 ```dockerfile
 ARG VERSION=1.0.0
 ENV APP_VERSION=$VERSION
 ```
 
-> 不要用 `ARG` 传密码、Token、私钥——这些值会留在构建历史和中间层缓存中。敏感信息应在运行时通过 `docker run -e`、Kubernetes Secret 或挂载文件注入。
+> 不要用 `ARG` 或 `ENV` 传密码、Token、私钥。构建阶段应使用 BuildKit secret mount，运行阶段应通过 Kubernetes Secret、受控环境变量或挂载文件注入。

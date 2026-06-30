@@ -4,11 +4,11 @@
 
 ## COPY 与 ADD
 
-`COPY` 和 `ADD` 都用于把文件从构建上下文放入镜像，但语义不同：**默认用 `COPY`，只在确实需要自动解压本地 tar 包时改用 `ADD`**。
+`COPY` 和 `ADD` 都用于把文件从构建上下文放入镜像，但语义不同：**默认用 `COPY`，只在确实需要自动解压本地 tar 包或从远程 URL 获取内容时改用 `ADD`**。
 
-### ADD：自动解压 tar 包
+### ADD：自动解压 tar 包与远程获取
 
-`ADD` 的核心特性是：如果源文件是一个本地 tar 包，它会被自动解压到目标路径。其他场景和 `COPY` 行为一致。
+`ADD` 的核心特性是：如果源文件是一个本地 tar 包（包括 `.tar`、`.tar.gz`、`.tar.xz`、`.tar.bz2`），它会被自动解压到目标路径；它也支持从远程 URL 或 Git 仓库获取内容。普通文件复制优先使用 `COPY`，避免让 Dockerfile 同时承担下载、解包和复制等多种语义。
 
 先准备一个 tar 包：
 
@@ -18,7 +18,7 @@ tar czf index.tar.gz -C webroot .
 ```
 
 ```dockerfile
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 ADD ./index.tar.gz /usr/share/nginx/html/
 ```
 
@@ -27,23 +27,23 @@ ADD ./index.tar.gz /usr/share/nginx/html/
 ### COPY：普通文件复制
 
 ```dockerfile
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 COPY webroot/ /usr/share/nginx/html/
 ```
 
-`COPY` 的源路径如果以 `/` 结尾，表示复制目录**里面的内容**而非目录本身。`COPY webroot/ /usr/share/nginx/html/` 把 `webroot` 下的文件放入目标路径，不包含 `webroot` 这一层目录名。
+`COPY` 复制目录源时，会复制目录中的内容，而不是把源目录本身作为一层目录放入目标路径。`COPY webroot/ /usr/share/nginx/html/` 把 `webroot` 下的文件放入目标路径，不包含 `webroot` 这一层目录名。
 
-对比不加尾部斜杠：
+源路径尾部斜杠不会改变 Dockerfile 的目录复制语义：
 
 ```dockerfile
 COPY webroot /usr/share/nginx/html/
-# 结果: /usr/share/nginx/html/webroot/...
+# 结果: /usr/share/nginx/html/...
 
 COPY webroot/ /usr/share/nginx/html/
 # 结果: /usr/share/nginx/html/...（webroot 目录名被剥离）
 ```
 
-这一点容易出错，建议统一使用尾部 `/` 并将目标写为绝对路径。
+实际更容易出错的是目标路径。建议目标路径统一写为绝对路径，并按是否需要保留目录语义决定是否在末尾加 `/`。
 
 ### 文件权限控制
 
@@ -59,14 +59,14 @@ COPY --chown=1001:1001 --chmod=755 app /usr/local/bin/app
 
 - 普通文件、目录和编译产物 → `COPY`。
 - 本地 tar 包确实需要解压时 → `ADD`。
-- 远程 URL 下载 → 用 `RUN curl` 或 `RUN wget`，并在同一层清理，不要用 `ADD <url>`（它不提供缓存控制，下载的临时文件会在镜像中留痕）。
+- 远程 URL 下载 → 优先用 `RUN curl` 或 `RUN wget`，配合校验和验证并在同一层清理。确需使用 `ADD <url>` 时，应显式校验来源和内容。
 
 ## WORKDIR：工作目录
 
 `WORKDIR` 设置后续指令的执行路径，影响 `RUN`、`CMD`、`ENTRYPOINT`、`COPY` 和 `ADD` 的相对路径解析。
 
 ```dockerfile
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 WORKDIR /usr/share/nginx/html
 COPY webroot/ .
 ```

@@ -93,36 +93,23 @@ jobservice:
 
 自签证书也可以使用，但每个客户端节点都需要额外导入 CA 或配置跳过校验。集群规模扩大后，统一证书信任链比逐台配置 `insecure-registry` 更易维护。
 
-## 非 root 用户安装
+## 安装用户与目录权限
 
-非 root 用户执行 `install.sh` 时，`prepare` 脚本会通过 `docker run --rm -v` 生成 `common/` 目录下的配置文件。该步骤在容器内以 root 身份写入文件，可能导致宿主机上的普通用户无法读取 `common/config/registryctl/env` 等文件，进而使 Docker Compose 启动失败。
+Harbor 官方离线安装流程通常以具备 Docker 权限的运维账号执行 `sudo ./install.sh`。不建议为规避权限问题修改官方 `prepare` 脚本，也不应将数据目录设置为全局可写。
 
-处理方式是在 `prepare` 文件中，找到生成配置的 `docker run --rm -v` 命令，并在该命令后追加权限修正逻辑：
+安装前应提前创建数据目录，并将目录归属和权限调整为符合本机 Docker、备份和运维流程的最小权限。示例：
 
 ```bash
-sudo chown -R $USER:$USER $harbor_prepare_path
-find $harbor_prepare_path -type f -exec chmod 0755 {} \;
-sudo chmod 777 $data_path
+sudo mkdir -p /data/harbor
+sudo chown root:root /data/harbor
+sudo chmod 0750 /data/harbor
 ```
 
-修改后的片段示例如下，实际位置以 `prepare` 文件中的 `docker run --rm -v` 命令为准：
+如果使用普通用户管理安装目录，需要确保该用户能读取 Harbor 安装包解压后的文件，并通过 `sudo` 调用安装脚本：
 
 ```bash
-docker run --rm -v $harbor_prepare_path:/input \
-  -v $prepare_base_dir:/compose_location \
-  -v $config_dir:/config \
-  goharbor/prepare:$version prepare $@
-
-sudo chown -R $USER:$USER $harbor_prepare_path
-find $harbor_prepare_path -type f -exec chmod 0755 {} \;
-sudo chmod 777 $data_path
-```
-
-其中，`harbor_prepare_path` 是 Harbor 安装目录下由 `prepare` 使用的配置生成目录，`data_path` 对应 `harbor.yml` 中的 `data_volume`。追加后重新执行：
-
-```bash
-./prepare
-./install.sh
+sudo ./prepare
+sudo ./install.sh
 ```
 
 ## 安装并启动
@@ -131,14 +118,14 @@ sudo chmod 777 $data_path
 mkdir -p /data/harbor
 
 # 生成配置并检查语法
-./prepare
+sudo ./prepare
 
 # 安装并启动所有组件
-./install.sh
+sudo ./install.sh
 ```
 
 <details>
-<summary>./install.sh 示例输出（末尾）</summary>
+<summary>./install.sh 输出末尾类似如下</summary>
 
 ```text
 ✔ ----Harbor has been installed and started successfully.----
@@ -182,7 +169,7 @@ docker compose ps
 ```
 
 <details>
-<summary>示例输出</summary>
+<summary>docker compose ps 输出类似如下</summary>
 
 ```text
 NAME                STATUS

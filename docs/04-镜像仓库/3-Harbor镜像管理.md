@@ -25,16 +25,16 @@ docker login harbor.example.com
 
 ```bash
 # 拉取一个测试镜像
-docker pull nginx:alpine
+docker pull nginx:1.27-alpine
 
 # 打标签，指向 Harbor 中的 base 项目
-docker tag nginx:alpine harbor.example.com/base/nginx:alpine
+docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
 
 # 推送镜像
-docker push harbor.example.com/base/nginx:alpine
+docker push harbor.example.com/base/nginx:1.27-alpine
 ```
 
-推送完成后，可在 Harbor 控制台进入 `base` 项目查看 `nginx` 仓库和 `alpine` 标签。若推送失败，应检查项目是否存在、账号是否具备开发人员及以上权限，以及客户端是否信任 Harbor 地址。
+推送完成后，可在 Harbor 控制台进入 `base` 项目查看 `nginx` 仓库和 `1.27-alpine` 标签。若推送失败，应检查项目是否存在、账号是否具备开发人员及以上权限，以及客户端是否信任 Harbor 地址。
 
 ## 拉取验证
 
@@ -42,7 +42,7 @@ docker push harbor.example.com/base/nginx:alpine
 
 ```bash
 docker login harbor.example.com
-docker pull harbor.example.com/base/nginx:alpine
+docker pull harbor.example.com/base/nginx:1.27-alpine
 ```
 
 公开项目可以省略 `docker login` 执行拉取；私有项目必须登录，或由运行时通过预置凭据完成认证。
@@ -68,8 +68,8 @@ docker pull harbor.example.com/base/nginx:alpine
 修改后重启 Docker：
 
 ```bash
-systemctl daemon-reload
-systemctl restart docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
 docker login harbor.example.com
 ```
 
@@ -78,7 +78,7 @@ docker login harbor.example.com
 ```bash
 mkdir -p /etc/docker/certs.d/harbor.example.com
 cp ca.crt /etc/docker/certs.d/harbor.example.com/ca.crt
-systemctl restart docker
+sudo systemctl restart docker
 ```
 
 ## 配置 containerd 访问
@@ -124,7 +124,7 @@ sudo systemctl restart containerd
 验证 containerd 能否拉取镜像：
 
 ```bash
-sudo crictl pull harbor.example.com/base/nginx:alpine
+sudo crictl pull harbor.example.com/base/nginx:1.27-alpine
 sudo crictl images | grep harbor
 ```
 
@@ -143,4 +143,4 @@ sudo crictl images | grep harbor
 | 构建序号 | `20260617-001` | CI/CD 自动构建 |
 | 环境加版本 | `prod-v1.0.0` | 多环境版本区分 |
 
-生产发布应避免仅使用 `latest` 标签。`latest` 只是普通标签，不一定代表最新构建，也无法稳定定位到某一次发布内容。
+生产发布应避免仅使用 `latest` 标签。`latest` 只是普通标签，不一定代表最新构建，也无法稳定定位到某一次发布内容。注意：Docker Hub 的拉取速率限制（匿名用户每 6 小时 100 次、免费认证用户每 6 小时 200 次）让内网镜像缓存和私有仓库的价值更加突出。

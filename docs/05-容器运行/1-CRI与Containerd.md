@@ -28,6 +28,8 @@ CRI 抽象出两类核心能力：
 
 Kubernetes v1.24 正式移除了内置 dockershim。移除的是 kubelet 中面向 Docker Engine 的适配层，不是 Docker 构建出来的镜像。镜像符合 OCI 规范即可被 containerd 和 CRI-O 拉取并运行。
 
+containerd 自 v2.0 起引入了一些结构性变化：配置文件版本升级为 `version = 3`，CRI 插件 ID 从 `io.containerd.grpc.v1.cri` 变更为 `io.containerd.cri.v1.images` 和 `io.containerd.cri.v1.runtime`。Kubernetes 使用的 containerd 版本可能因发行版和集群版本而异。
+
 ## 工作链路
 
 ```mermaid
