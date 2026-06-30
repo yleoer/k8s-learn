@@ -70,13 +70,13 @@ docker compose version
 
 ## 镜像命名空间隔离
 
-Docker 与 Kubernetes 即使共享同一个底层 containerd，也运行在各自独立的管理视图中，镜像并不互通：
+Docker Engine 与 Kubernetes 使用不同的运行时入口和管理视图，镜像不会自动互通：
 
 - `docker images` 查看 Docker 守护进程管理的镜像。
 - `sudo crictl images` 查看 Kubernetes CRI 运行时中的镜像。
 - `sudo ctr -n k8s.io images ls` 直接查看 containerd `k8s.io` 命名空间下的镜像。
 
-**推荐做法**：通过镜像仓库中转，使 Kubernetes 拉取 Docker 构建的镜像：
+**推荐做法**：通过镜像仓库中转，使 Kubernetes 拉取 Docker 构建的镜像。已有 Deployment `myapp` 时，可更新其中名为 `myapp` 的容器镜像：
 
 ```bash
 docker build -t registry.example.com/demo/myapp:v1 .
@@ -105,3 +105,5 @@ spec:
       image: myapp:v1
       imagePullPolicy: IfNotPresent
 ```
+
+该方式只适合单节点或可控调度的实验场景。本地镜像必须存在于 Pod 实际调度到的节点上；多节点环境更建议通过镜像仓库分发。

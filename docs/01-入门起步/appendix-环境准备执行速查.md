@@ -8,22 +8,67 @@
 sudo apt update
 sudo apt upgrade -y
 sudo reboot
+```
 
+重启并重新登录后继续执行：
+
+```bash
 sudo swapoff -a
+
+sudo tee /etc/modules-load.d/k8s.conf >/dev/null <<'EOF'
+overlay
+br_netfilter
+EOF
+
 sudo modprobe overlay
 sudo modprobe br_netfilter
+
+sudo tee /etc/sysctl.d/k8s.conf >/dev/null <<'EOF'
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+
 sudo sysctl --system
 ```
 
 ## 所有节点：安装运行时与 Kubernetes 组件
 
 ```bash
+sudo apt update
+sudo apt install -y ca-certificates curl gpg
+sudo install -m 0755 -d /etc/apt/keyrings
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+
+sudo apt update
 sudo apt install -y containerd.io
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sudo systemctl enable --now containerd
 
+sudo tee /etc/crictl.yaml >/dev/null <<'EOF'
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' | \
+  sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt update
 sudo apt install -y kubelet kubeadm kubectl cri-tools
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
@@ -48,6 +93,29 @@ sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
 ```bash
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/v1_crd_projectcalico_org.yaml
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/tigera-operator.yaml
+
+cat > calico-custom-resources.yaml <<'EOF'
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    ipPools:
+      - blockSize: 26
+        name: default-ipv4-ippool
+        cidr: 10.244.0.0/16
+        encapsulation: VXLAN
+        natOutgoing: Enabled
+        nodeSelector: all()
+---
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
+EOF
+
 kubectl create -f calico-custom-resources.yaml
 ```
 
@@ -91,4 +159,6 @@ kubectl top nodes
 kubectl create deployment nginx --image=nginx:1.27
 kubectl expose deployment nginx --port=80 --type=NodePort
 kubectl get deploy,pod,svc -o wide
+NODE_PORT=$(kubectl get svc nginx -o jsonpath='{.spec.ports[0].nodePort}')
+curl "http://<node-ip>:${NODE_PORT}"
 ```
