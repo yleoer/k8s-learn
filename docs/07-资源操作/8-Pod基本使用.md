@@ -16,7 +16,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:1.25
+      image: nginx:1.27
       ports:
         - containerPort: 80
 ```
@@ -58,14 +58,14 @@ kubectl delete -f nginx-pod.yaml
 也可以使用 `run` 快速创建：
 
 ```bash
-kubectl run nginx --image=nginx:1.25
+kubectl run nginx --image=nginx:1.27
 kubectl get pod nginx -o yaml
 ```
 
 生成 YAML 但不提交：
 
 ```bash
-kubectl run nginx --image=nginx:1.25 --dry-run=client -o yaml
+kubectl run nginx --image=nginx:1.27 --dry-run=client -o yaml
 ```
 
 临时验证可以用 `run` 快速创建；需要反复保留的资源统一写入 YAML。

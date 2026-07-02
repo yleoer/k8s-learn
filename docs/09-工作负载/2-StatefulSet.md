@@ -20,7 +20,7 @@ StatefulSet 常用于以下场景：
 - 需要按固定顺序滚动更新
 - 集群成员之间需要通过固定名称相互发现
 
-典型应用包括 MySQL 主从集群、ZooKeeper、etcd、Kafka、Redis Cluster、Eureka 集群等。它们通常不只关心“有几个副本”，还关心“每个副本是谁”。
+典型应用包括 MySQL 主从集群、ZooKeeper、etcd、Kafka、Redis Cluster、Eureka 集群等。它们通常不只关心“有几个副本”，还关心“每个副本是谁”。其中 Eureka 属于特定 Spring Cloud / Netflix 技术栈语境；在 Kubernetes 内部服务发现中，应优先评估 Service 和 DNS 是否已经满足需求。
 
 StatefulSet 管理的 Pod 名称具有固定序号：
 
@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
           ports:
             - name: web
               containerPort: 80
@@ -174,7 +174,7 @@ spec:
               containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: example
+              value: example  # 学习环境示例；生产环境应使用 Secret: valueFrom.secretKeyRef
           volumeMounts:
             - name: data
               mountPath: /var/lib/mysql
@@ -306,7 +306,7 @@ web-2.nginx
 创建一个临时调试 Pod：
 
 ```bash
-kubectl run dns-test --image=busybox:1.36 --restart=Never -- sleep 3600
+kubectl run dns-test --image=busybox:1.36.1 --restart=Never -- sleep 3600
 ```
 
 进入容器后查询 DNS：
@@ -352,7 +352,7 @@ CoreDNS -> 固定 DNS 名称: web-0.nginx
 
 ```bash
 kubectl get svc nginx -o yaml
-kubectl get endpointslice -l kubernetes.io/service-name=nginx
+kubectl get endpointslices -l kubernetes.io/service-name=nginx
 kubectl get pod -l app=nginx --show-labels
 ```
 
@@ -363,7 +363,7 @@ kubectl get pod -l app=nginx --show-labels
 | 现象 | 可能原因 | 排查命令 |
 | --- | --- | --- |
 | `nslookup web-0.nginx` 失败 | CoreDNS 异常或名称写错 | `kubectl get pod -n kube-system -l k8s-app=kube-dns` |
-| Service 没有后端地址 | selector 与 Pod 标签不匹配 | `kubectl get endpointslice -l kubernetes.io/service-name=nginx` |
+| Service 没有后端地址 | selector 与 Pod 标签不匹配 | `kubectl get endpointslices -l kubernetes.io/service-name=nginx` |
 | 只能解析 Service，不能解析单个 Pod | StatefulSet 未配置正确 `serviceName` | `kubectl get sts web -o yaml` |
 | 可以解析但访问失败 | 容器端口、应用监听或网络策略问题 | `kubectl describe pod web-0` |
 | 访问旧 IP | DNS 缓存或 Pod 尚未 Ready | `kubectl get pod -o wide` |
@@ -372,7 +372,7 @@ Headless Service 的关键是标签匹配和 DNS 记录。先确认 Pod Ready，
 
 ### Eureka 集群示例
 
-Eureka 这类注册中心需要节点之间互相发现。使用 StatefulSet 可以让每个副本拥有固定名称，再把这些固定名称写入对等节点地址。
+Eureka 这类注册中心需要节点之间互相发现。使用 StatefulSet 可以让每个副本拥有固定名称，再把这些固定名称写入对等节点地址。该示例用于说明固定 DNS 对自组集群的价值，不表示所有 Kubernetes 应用都需要额外引入注册中心。
 
 下面示例只展示 StatefulSet 与 Headless Service 的组织方式，实际生产还需要补充镜像、探针、资源限制和配置管理：
 
@@ -523,7 +523,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 常见策略如下：
@@ -650,7 +650,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 修改镜像后，已有 Pod 仍会继续运行旧版本。只有手动删除某个 Pod 后，StatefulSet 才会按新模板创建替代 Pod：
@@ -717,7 +717,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 它会按顺序创建、删除和扩缩容 Pod。也可以改为 `Parallel`：
@@ -741,7 +741,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 两种策略对比如下：

@@ -251,8 +251,8 @@ Deployment 章节会进一步分析滚动更新、暂停、恢复和回滚细节
 可以使用 `run` 快速启动一个临时 Pod：
 
 ```bash
-kubectl run test-shell --image=busybox:1.36 -it --rm -- sh
-kubectl run nginx --image=nginx:1.25
+kubectl run test-shell --image=busybox:1.36.1 -it --rm -- sh
+kubectl run nginx --image=nginx:1.27
 ```
 
 `--rm` 表示退出后删除 Pod，适合临时测试 DNS、网络连通性和镜像拉取。

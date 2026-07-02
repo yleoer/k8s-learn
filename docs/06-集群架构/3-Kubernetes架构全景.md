@@ -86,7 +86,8 @@ Kubernetes 核心是编排框架，很多具体能力由可替换的插件提供
 | CNI | Pod 网络 | Calico、Cilium、Flannel |
 | Metrics | 资源指标采集 | Metrics Server |
 | CSI | 存储对接 | 云盘、NFS、CubeFS 等驱动 |
-| Ingress | 南北向流量接入 | Nginx Ingress、Istio Gateway |
+| Ingress Controller | Kubernetes Ingress 规则落地 | ingress-nginx、HAProxy Ingress |
+| Gateway API 实现 | GatewayClass、Gateway、HTTPRoute 等资源落地 | Istio、Envoy Gateway、Kong |
 
 这种“核心精干、插件扩展”的架构，使 Kubernetes 可以适配不同基础设施环境。
 

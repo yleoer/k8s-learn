@@ -53,7 +53,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
           ports:
             - name: http
               containerPort: 80
@@ -93,10 +93,10 @@ DaemonSet 创建 Pod 的过程可以概括为：
 | 1 | APIServer | 保存 DaemonSet 资源 |
 | 2 | DaemonSet Controller | 观察符合条件的节点 |
 | 3 | DaemonSet Controller | 为每个匹配节点创建 Pod |
-| 4 | Scheduler | 结合节点亲和性、污点容忍和资源需求完成调度 |
+| 4 | DaemonSet Controller / Scheduler | Controller 为 Pod 注入指向目标节点的 `nodeAffinity`；Scheduler 按该亲和性将 Pod 绑定到目标节点 |
 | 5 | kubelet | 在目标节点启动容器 |
 
-DaemonSet 控制器会持续对齐节点与 Pod 的关系。某个节点上的 DaemonSet Pod 被删除后，控制器会重新创建一个新的 Pod。
+DaemonSet 控制器会持续对齐节点与 Pod 的关系，并负责判断哪些节点应运行 DaemonSet Pod。某个节点上的 DaemonSet Pod 被删除后，控制器会重新创建一个新的 Pod。
 
 验证自愈：
 
@@ -216,7 +216,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 常见策略如下：
@@ -272,7 +272,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 字段说明：
@@ -331,7 +331,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.25
+          image: nginx:1.27
 ```
 
 修改 Pod 模板后，DaemonSet 不会自动删除旧 Pod。手动删除某个节点上的 Pod 后，新 Pod 才会按最新模板创建：
@@ -374,8 +374,8 @@ spec:
         node-role.example.com/logging: "true"
       containers:
         - name: agent
-          image: busybox:1.36
-          command: ["sh", "-c", "tail -f /dev/null"]
+          image: busybox:1.36.1
+          command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
 查看部署结果：
@@ -422,8 +422,8 @@ spec:
                       - "true"
       containers:
         - name: agent
-          image: busybox:1.36
-          command: ["sh", "-c", "tail -f /dev/null"]
+          image: busybox:1.36.1
+          command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
 节点亲和性支持 `In`、`NotIn`、`Exists`、`DoesNotExist` 等表达方式，适合按节点角色、机房、硬件能力或操作系统类型选择部署范围。
@@ -462,8 +462,8 @@ spec:
           effect: NoSchedule
       containers:
         - name: agent
-          image: busybox:1.36
-          command: ["sh", "-c", "tail -f /dev/null"]
+          image: busybox:1.36.1
+          command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
 如果希望日志或监控 Agent 覆盖控制平面节点，通常需要添加对应容忍。是否部署到控制平面节点应结合集群规模和安全策略决定。

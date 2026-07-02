@@ -110,7 +110,7 @@ kubectl exec -it <pod-name> -- sh
 - NetworkPolicy 阻断流量
 - 应用健康检查失败但进程未退出
 
-记录 Service 后，还需要结合 `kubectl get endpointslice` 排查服务发现问题。
+记录 Service 后，还需要结合 `kubectl get endpointslices` 排查服务发现问题。
 
 ## Unknown
 

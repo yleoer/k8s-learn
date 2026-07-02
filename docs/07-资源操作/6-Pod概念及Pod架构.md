@@ -1,6 +1,6 @@
 # Pod 概念及 Pod 架构
 
-Pod 是 Kubernetes 中最小的可部署计算单元，也是调度的基本对象。它由一个或多个容器组成，这些容器共享网络、存储等运行上下文，并被放置到同一个节点上运行。
+Pod 是 Kubernetes 中最小的可部署计算单元，也是调度的基本对象。它由一个或多个容器组成，这些容器共享网络、存储等运行上下文，并被放置到同一个节点上运行。本文只保留理解 kubectl 操作所需的最小边界，Pod spec 细节在第 08 章展开。
 
 ## Pod 与容器的关系
 
@@ -71,7 +71,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:1.25
+      image: nginx:1.27
       ports:
         - containerPort: 80
 ```

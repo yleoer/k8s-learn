@@ -1,6 +1,6 @@
 # Harbor 安装部署
 
-Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本章以 Harbor v2.14 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。
+Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本章固定以 Harbor v2.14.0 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。实际部署前应查看 Harbor Releases，选择当前大版本中合适的补丁版本。
 
 ## 运行环境
 

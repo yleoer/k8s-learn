@@ -96,7 +96,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: nginx:1.25
+      image: nginx:1.27
       resources:
         requests:
           cpu: 200m
@@ -105,8 +105,8 @@ spec:
           cpu: 1000m
           memory: 512Mi
     - name: sidecar
-      image: busybox:1.36
-      command: ["sh", "-c", "while true; do sleep 3600; done"]
+      image: busybox:1.36.1
+      command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
       resources:
         requests:
           cpu: 50m

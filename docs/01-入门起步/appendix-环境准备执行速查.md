@@ -76,6 +76,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 ## control-plane 节点：集群初始化
 
 ```bash
+# 中国内地访问 registry.k8s.io 较慢时可保留 --image-repository；其他环境通常移除该参数。
 sudo kubeadm init \
   --kubernetes-version v1.36.2 \
   --image-repository registry.aliyuncs.com/google_containers \
@@ -131,7 +132,7 @@ sudo kubeadm join <control-plane-ip>:6443 \
 ## control-plane 节点：安装 Metrics Server
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml
 kubectl -n kube-system rollout status deploy/metrics-server
 kubectl get apiservice v1beta1.metrics.k8s.io
 

@@ -187,7 +187,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: busybox:1.36
+      image: busybox:1.36.1
       command:
         - sh
         - -c

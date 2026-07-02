@@ -453,6 +453,6 @@ harbor.example.com/team/backend:v1.0.0   5c9706869b6c       17.1MB             0
 | HEALTHCHECK | `wget /` | `wget /healthz` | `wget /healthz` |
 | 配置注入 | 构建时 COPY | 环境变量 | 环境变量 |
 | 日志输出 | 自动 stdout | Monolog → `php://stdout` | 自动 stdout |
-| 最终体积 | ~45 MB | ~180 MB | ~19 MB |
+| 最终体积 | ~45 MB | ~180 MB | ~17-19 MB |
 
 三个范例对应不同语言和构建模式，但共同关注固定版本、非 root、健康检查、stdout 日志和资源限制。
