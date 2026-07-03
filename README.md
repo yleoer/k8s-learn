@@ -17,7 +17,7 @@ npm run docs:preview # 预览构建产物
 
 | 范围 | 章节 | 内容 |
 | --- | --- | --- |
-| 入门起步 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico、Metrics Server 和集群验证 |
+| 集群部署 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico、Metrics Server 和集群验证 |
 | 容器基础 | 02 | 容器核心概念、Docker 架构、镜像管理、容器操作、数据持久化和 Docker 命令速查 |
 | 镜像制作 | 03 | Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建和多架构镜像 |
 | 镜像仓库 | 04 | 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理和镜像供应链安全 |
@@ -26,13 +26,13 @@ npm run docs:preview # 预览构建产物
 | 资源操作 | 07 | kubectl、Namespace、Pod 基础操作、状态观察和问题记录 |
 | Pod 入门 | 08 | Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期和健康检查 |
 | 工作负载 | 09 | Deployment、StatefulSet、DaemonSet 和典型控制器行为 |
-| 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式和排查记录 |
+| 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress 和排查记录 |
 
 ## 后续补全清单
 
 以下内容已与 Kubernetes 官方文档主线对照，当前仅作为后续记录清单保留：
 
-- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Ingress、Gateway API 和 NetworkPolicy
+- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 和 NetworkPolicy
 - 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
 - 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
 - 任务管理：Job、CronJob 和任务型工作负载
@@ -54,9 +54,9 @@ docs/
 │   ├── config.mjs                 # 站点配置（自动生成导航与侧边栏）
 │   └── theme/
 │       └── Mermaid.vue            # Mermaid 图表组件
-├── 01-入门起步/                   # 章节目录（编号-标题）
+├── 01-cluster-deployment/         # 章节目录（编号-标题）
 │   ├── index.md                   # 章节入口
-│   ├── 1-环境规划与版本选择.md     # 文档文件（编号-标题）
+│   ├── 1-environment-planning-and-preparation.md
 │   └── ...
 ├── 02-容器基础/
 ├── 03-镜像制作/

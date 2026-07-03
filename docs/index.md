@@ -8,9 +8,9 @@ hero:
 
 features:
   - icon: 🚀
-    title: 01 · 入门起步
+    title: 01 · 集群部署
     details: 环境规划、Ubuntu 节点准备、containerd、kubeadm、Calico、Metrics Server 和集群验证。
-    link: /01-入门起步/
+    link: /01-cluster-deployment/
   - icon: 📦
     title: 02 · 容器基础
     details: 容器运行模型、Docker 架构、镜像管理、容器操作、数据持久化和命令速查。
@@ -45,7 +45,7 @@ features:
     link: /09-工作负载/
   - icon: 🔎
     title: 10 · 服务发现
-    details: Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式和排查记录。
+    details: Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress 和排查记录。
     link: /10-服务发现/
 ---
 
@@ -59,7 +59,7 @@ features:
 
 以下内容先保留为后续补全清单：
 
-- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Ingress、Gateway API 和 NetworkPolicy
+- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 和 NetworkPolicy
 - 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
 - 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
 - 任务管理：Job、CronJob 和任务型工作负载

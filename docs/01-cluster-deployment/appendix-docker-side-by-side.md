@@ -1,6 +1,8 @@
 # Docker 并行使用
 
-Kubernetes v1.24 起已移除内置的 dockershim，本阶段集群运行时统一使用 containerd。即便如此，仍可以在节点上单独安装 Docker Engine，将其作为镜像构建或本地调试的独立工具使用，而不影响 Kubernetes 的正常运行。
+Kubernetes v1.24 起已移除内置的 dockershim，本阶段集群运行时统一使用 containerd。
+
+即便如此，仍可以在节点上单独安装 Docker Engine，将其作为镜像构建或本地调试的独立工具使用，而不影响 Kubernetes 的正常运行。
 
 ## 适用场景
 
@@ -76,6 +78,8 @@ Docker Engine 与 Kubernetes 使用不同的运行时入口和管理视图，镜
 - `sudo crictl images` 查看 Kubernetes CRI 运行时中的镜像。
 - `sudo ctr -n k8s.io images ls` 直接查看 containerd `k8s.io` 命名空间下的镜像。
 
+**本地导入的镜像只存在于导入节点上的 containerd `k8s.io` 命名空间中**。Docker 的 `registry-mirrors` 配置只影响 Docker 守护进程的镜像拉取，不影响 containerd 的镜像拉取；反之，containerd 的 `hosts.toml` 加速配置也只影响 CRI 运行时，Docker 不会受益。需要在 containerd 中配置镜像加速时，参照第 2 章「可选：配置镜像加速」小节。
+
 **推荐做法**：通过镜像仓库中转，使 Kubernetes 拉取 Docker 构建的镜像。已有 Deployment `myapp` 时，可更新其中名为 `myapp` 的容器镜像：
 
 ```bash
@@ -92,18 +96,27 @@ sudo ctr -n k8s.io images import myapp-v1.tar
 sudo crictl images | grep myapp
 ```
 
-通过本地导入方式使用镜像时，Pod 配置中将拉取策略设置为 `IfNotPresent`，避免 Kubernetes 尝试从远端仓库重新拉取：
+通过本地导入方式使用镜像时，将拉取策略设置为 `IfNotPresent`，避免 Kubernetes 尝试从远端仓库重新拉取。以下使用 Deployment 资源为例：
 
-```yaml
-apiVersion: v1
-kind: Pod
+```yaml [deployment.yaml]
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: myapp-local
 spec:
-  containers:
-    - name: myapp
-      image: myapp:v1
-      imagePullPolicy: IfNotPresent
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:v1
+          imagePullPolicy: IfNotPresent
 ```
 
 该方式只适合单节点或可控调度的实验场景。本地镜像必须存在于 Pod 实际调度到的节点上；多节点环境更建议通过镜像仓库分发。

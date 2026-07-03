@@ -1,12 +1,13 @@
 # 集群初始化与集群插件
 
-本文依次完成 control-plane 初始化、kubectl 配置、Calico 网络插件安装、worker 节点接入和 Metrics Server 部署。全部步骤完成后，集群中所有节点应进入 `Ready` 状态，Pod 网络正常互通，并可通过 `kubectl top` 查看基础资源指标。
+本文依次完成 control-plane 初始化、kubectl 配置、Calico 网络插件安装、worker 节点接入和 Metrics Server 部署。
+
+全部步骤完成后，集群中所有节点应进入 `Ready` 状态，Pod 网络正常互通，并可通过 `kubectl top` 查看基础资源指标。
 
 ## 初始化 control-plane
 
-::: warning
-**本小节命令仅在 `master` 节点执行，不要在 worker 节点运行 `kubeadm init`。**
-:::
+> [!WARNING]
+> **本小节命令仅在 `master` 节点执行，不要在 worker 节点运行 `kubeadm init`。**
 
 初始化前，先列出并提前拉取 kubeadm 所需的控制平面镜像，以便确认镜像可达性、提前发现网络问题：
 
@@ -15,10 +16,10 @@ sudo kubeadm config images list
 sudo kubeadm config images pull
 ```
 
-<details>
-<summary>kubeadm config images list 示例输出</summary>
+::: details 镜像版本类似如下
 
-```text
+```bash
+$ sudo kubeadm config images list
 registry.k8s.io/kube-apiserver:v1.36.2
 registry.k8s.io/kube-controller-manager:v1.36.2
 registry.k8s.io/kube-scheduler:v1.36.2
@@ -28,9 +29,9 @@ registry.k8s.io/pause:3.10.2
 registry.k8s.io/etcd:3.6.8-0
 ```
 
-</details>
+:::
 
-若访问 `registry.k8s.io` 较慢，可指定国内镜像仓库：
+若访问 `registry.k8s.io` 较慢，可在 kubeadm 命令指定国内镜像仓库：
 
 ```bash
 sudo kubeadm config images pull \
@@ -41,7 +42,7 @@ sudo kubeadm config images pull \
 
 ```bash
 sudo kubeadm init \
-  --kubernetes-version v1.36.2 \
+  --kubernetes-version "$(kubeadm version -o short)" \
   --pod-network-cidr 10.244.0.0/16 \
   --service-cidr 10.96.0.0/12 \
   --cri-socket unix:///run/containerd/containerd.sock
@@ -49,19 +50,18 @@ sudo kubeadm init \
 
 关键参数说明：
 
-- `--kubernetes-version`：建议与已安装的 kubeadm 小版本保持一致。
-- `--image-repository`：指定控制平面组件的镜像拉取地址。
+- `--kubernetes-version`：建议与已安装的 kubeadm 小版本保持一致，用 `kubeadm version` 确认版本后填入对应值。
 - `--pod-network-cidr`：Pod 网段，本文配置应与后续 Calico IPPool 的 CIDR 完全一致，否则 Pod 网络可能无法正常工作。
 - `--service-cidr`：Service 虚拟 IP 网段。
 - `--cri-socket`：显式指定 containerd 的 CRI socket 路径，避免多运行时环境下的歧义。
 
-初始化成功后，**务必保存输出末尾的 `kubeadm join ...` 命令**，后续 worker 节点加入集群时需要用到。
+> [!TIP]
+> 初始化成功后，**务必保存输出末尾的 `kubeadm join ...` 命令**，后续 worker 节点加入集群时需要用到。
 
 ## 配置 kubectl
 
-::: warning
-**本小节命令仅在 `master` 节点执行。**
-:::
+> [!WARNING]
+> **本小节命令仅在 `master` 节点执行。**
 
 将集群访问凭证复制到当前用户的默认配置路径：
 
@@ -93,11 +93,25 @@ kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/tigera-operator.yaml
 ```
 
+如果 `raw.githubusercontent.com` 无法访问，可先将 YAML 下载到本地后再 apply，无需在集群节点上连接该域名：
+
+```bash
+# 在可以访问 GitHub 的机器上执行
+curl -fsSL -o calico-crd.yaml https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/v1_crd_projectcalico_org.yaml
+curl -fsSL -o tigera-operator.yaml https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/tigera-operator.yaml
+
+# 将这两个文件传输到 control-plane 节点后 apply
+kubectl create -f calico-crd.yaml
+kubectl create -f tigera-operator.yaml
+```
+
+本文通过 Tigera Operator 安装 Calico，而非直接 apply Calico 的 DaemonSet 清单。Operator 模式将 Calico 组件的生命周期（部署、配置、升级、扩缩）统一管理，后续调整网络参数或升级 Calico 版本时只需修改 `Installation` 资源，Operator 自行完成组件更新。
+
 这里不直接使用 Calico 默认的 `custom-resources.yaml`，而是手动声明 `Installation` 资源，目的是将 `ipPools.cidr` 明确设置为与 `kubeadm init` 中 `--pod-network-cidr` 一致的网段。若两者不一致，Pod 可能被分配到错误网段，节点也可能长时间停留在 `NotReady` 状态。
 
 创建 `calico-custom-resources.yaml`：
 
-```yaml
+```yaml [calico-custom-resources.yaml]
 apiVersion: operator.tigera.io/v1
 kind: Installation
 metadata:
@@ -140,7 +154,12 @@ kubectl get pods -n calico-system
 kubectl get nodes -o wide
 ```
 
-若 Calico 未能正常启动，按以下顺序排查 Operator 和 Installation 状态：
+若 Calico 未能正常启动，先区分 Operator 管理的状态资源和配置资源：
+
+- `TigeraStatus`：Tigera Operator 写入的状态资源，用于汇总 Calico 相关组件的可用性、部署进度和异常信息。
+- `Installation`：Tigera Operator 的核心配置资源，记录 Calico 安装方式、网络模式、IPPool、封装方式和组件参数等期望状态。
+
+按以下顺序排查 Operator 和 Installation 状态：
 
 ```bash
 kubectl get tigerastatus
@@ -168,11 +187,28 @@ kubectl delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0
 
 所有 Calico Pod 进入 `Running` 状态后，节点将从 `NotReady` 变更为 `Ready`。
 
+### CIDR 一致性检查
+
+集群网络就绪后，核查 kubeadm 记录的 Pod CIDR 与 Calico IPPool 是否完全一致。
+
+查看 kubeadm 配置中记录的网络参数：
+
+```bash
+kubectl -n kube-system get cm kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' | grep -A 5 networking
+```
+
+查看 Calico IPPool 的 CIDR 配置：
+
+```bash
+kubectl get ippool -o yaml
+```
+
+两处 CIDR 应完全相同，例如均为 `10.244.0.0/16`。若存在差异，需重新安装 Calico 并修正配置。
+
 ## 加入 worker 节点
 
-::: warning
-本小节命令在各 worker 节点上分别执行。
-:::
+> [!WARNING]
+> 本小节命令在各 worker 节点上分别执行。
 
 在每台 worker 节点上执行 kubeadm init 输出的 join 命令：
 
@@ -200,11 +236,10 @@ kubectl get pods -A
 
 Metrics Server 从各节点 kubelet 采集 CPU、内存等资源指标，并通过 `metrics.k8s.io` API 暴露给 `kubectl top` 和 HPA。它只提供资源指标管道，不替代 Prometheus、日志系统或完整监控告警平台。
 
-::: warning
-**本小节命令仅在 `master` 节点执行。**
-:::
+> [!WARNING]
+> **本小节命令仅在 `master` 节点执行。**
 
-部署官方组件清单。本文固定使用 Metrics Server v0.8.0；升级 Kubernetes 或 Metrics Server 时，应先查看 Metrics Server 发布说明和兼容矩阵。
+部署官方组件清单。本文固定使用 Metrics Server v0.8.0。
 
 ```bash
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml
@@ -224,6 +259,9 @@ kubectl get apiservice v1beta1.metrics.k8s.io
 kubectl top nodes
 kubectl top pods -A
 ```
+
+> [!NOTE]
+> kubeadm 实验环境中 kubelet 默认使用自签证书，kubelet serving certificate 通常不包含节点 IP 地址，Metrics Server 连接 kubelet 时报 `x509` 证书校验错误。如果 `kubectl top` 报错，跳转到下方「Metrics Server 证书问题」处理后再回来验证。
 
 如果 `APIService` 长时间处于 `False`，或 `kubectl top` 报错，需要先查看 Metrics Server 日志：
 
@@ -263,9 +301,10 @@ kubectl describe node "$(hostname)" | grep -i taints
 
 ## kubectl 自动补全
 
-**Bash** 可将补全脚本写入 `~/.bashrc`：
+**Bash** 可将补全脚本和别名写入 `~/.bashrc`：
 
 ```bash
+echo 'alias k=kubectl' >> ~/.bashrc
 echo 'source <(kubectl completion bash)' >> ~/.bashrc
 echo 'complete -o default -F __start_kubectl k' >> ~/.bashrc
 source ~/.bashrc
@@ -290,26 +329,7 @@ plugins=(git kubectl)
 source ~/.zshrc
 ```
 
-## CIDR 一致性检查
-
-集群就绪后，建议核查 kubeadm 记录的 Pod CIDR 与 Calico IPPool 是否完全一致。
-
-查看 kubeadm 配置中记录的网络参数：
-
-```bash
-kubectl -n kube-system get cm kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' | grep -A 5 networking
-```
-
-查看 Calico IPPool 的 CIDR 配置：
-
-```bash
-kubectl get ippool -o yaml
-```
-
-两处 CIDR 应完全相同，例如均为 `10.244.0.0/16`。若存在差异，需重新安装 Calico 并修正配置。
-
-<details>
-<summary>最终 nodes 和 pods 输出类似如下</summary>
+::: details 最终 nodes 和 pods 输出类似如下
 
 ```text
 $ kubectl get no -o wide
@@ -319,29 +339,29 @@ work01   Ready    <none>          17d     v1.36.2   192.168.2.109   <none>      
 work02   Ready    <none>          17d     v1.36.2   192.168.2.110   <none>        Ubuntu 24.04.4 LTS   6.8.0-124-generic (amd64)   containerd://2.2.4
 
 $ kubectl get po -A
-NAMESPACE          NAME                                       READY   STATUS    RESTARTS        AGE
-calico-apiserver   calico-apiserver-5b89d6564d-6qgwv          1/1     Running   0               3d21h
-calico-apiserver   calico-apiserver-5b89d6564d-bkw8x          1/1     Running   0               3d21h
-calico-system      calico-kube-controllers-75f665b4f6-gmcq9   1/1     Running   0               3d21h
-calico-system      calico-node-6xv5x                          1/1     Running   0               3d20h
-calico-system      calico-node-8m5m6                          1/1     Running   1 (3d12h ago)   3d20h
-calico-system      calico-node-t4mxk                          1/1     Running   0               3d20h
-calico-system      calico-typha-7f8ffbb8-bjdrk                1/1     Running   0               3d21h
-calico-system      calico-typha-7f8ffbb8-ssnhh                1/1     Running   1 (3d12h ago)   3d21h
-calico-system      csi-node-driver-jtn4l                      2/2     Running   2 (3d12h ago)   3d21h
-calico-system      csi-node-driver-kh22j                      2/2     Running   0               3d21h
-calico-system      csi-node-driver-tqs2z                      2/2     Running   0               3d21h
-default            nginx-6797d5487-rzm2r                      1/1     Running   1 (3d12h ago)   3d19h
-kube-system        coredns-589f44dc88-g44wq                   1/1     Running   0               3d21h
-kube-system        coredns-589f44dc88-rskr5                   1/1     Running   0               3d21h
-kube-system        etcd-master                                1/1     Running   0               3d21h
-kube-system        kube-apiserver-master                      1/1     Running   0               3d21h
-kube-system        kube-controller-manager-master             1/1     Running   2 (45h ago)     3d21h
-kube-system        kube-proxy-qqjkm                           1/1     Running   0               3d21h
-kube-system        kube-proxy-qr8gw                           1/1     Running   0               3d21h
-kube-system        kube-proxy-qzxnt                           1/1     Running   1 (3d12h ago)   3d21h
-kube-system        kube-scheduler-master                      1/1     Running   2 (45h ago)     3d21h
-tigera-operator    tigera-operator-579877d476-xz84d           1/1     Running   3 (45h ago)     3d21h
+NAMESPACE          NAME                                       READY   STATUS    RESTARTS       AGE
+calico-apiserver   calico-apiserver-5b89d6564d-6qgwv          1/1     Running   4 (67m ago)    20d
+calico-apiserver   calico-apiserver-5b89d6564d-bkw8x          1/1     Running   4 (67m ago)    20d
+calico-system      calico-kube-controllers-75f665b4f6-gmcq9   1/1     Running   4 (67m ago)    20d
+calico-system      calico-node-6xv5x                          1/1     Running   4 (67m ago)    20d
+calico-system      calico-node-8m5m6                          1/1     Running   5 (68m ago)    20d
+calico-system      calico-node-t4mxk                          1/1     Running   4 (68m ago)    20d
+calico-system      calico-typha-7f8ffbb8-bjdrk                1/1     Running   4 (68m ago)    20d
+calico-system      calico-typha-7f8ffbb8-ssnhh                1/1     Running   5 (68m ago)    20d
+calico-system      csi-node-driver-jtn4l                      2/2     Running   10 (68m ago)   20d
+calico-system      csi-node-driver-kh22j                      2/2     Running   8 (68m ago)    20d
+calico-system      csi-node-driver-tqs2z                      2/2     Running   8 (67m ago)    20d
+kube-system        coredns-589f44dc88-g44wq                   1/1     Running   4 (67m ago)    20d
+kube-system        coredns-589f44dc88-rskr5                   1/1     Running   4 (67m ago)    20d
+kube-system        etcd-master                                1/1     Running   4 (67m ago)    20d
+kube-system        kube-apiserver-master                      1/1     Running   5 (67m ago)    20d
+kube-system        kube-controller-manager-master             1/1     Running   10 (67m ago)   20d
+kube-system        kube-proxy-qqjkm                           1/1     Running   4 (67m ago)    20d
+kube-system        kube-proxy-qr8gw                           1/1     Running   4 (68m ago)    20d
+kube-system        kube-proxy-qzxnt                           1/1     Running   5 (68m ago)    20d
+kube-system        kube-scheduler-master                      1/1     Running   10 (67m ago)   20d
+kube-system        metrics-server-564b7c8ccc-kfz5r            1/1     Running   1 (68m ago)    4d13h
+tigera-operator    tigera-operator-579877d476-xz84d           1/1     Running   13 (68m ago)   20d
 ```
 
-</details>
+:::

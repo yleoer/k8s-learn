@@ -103,7 +103,7 @@ function escapeRegExp(value) {
 }
 
 const courseParts = [
-  { text: '入门起步', label: '一 · 入门起步', from: 1, to: 1, flat: true },
+  { text: '集群部署', label: '一 · 集群部署', from: 1, to: 1, flat: true },
   { text: '容器基石', label: '二 · 容器基石', from: 2, to: 5 },
   { text: 'K8s 核心', label: '三 · K8s 核心资源', from: 6, to: 17 },
   { text: '综合实战', label: '四 · 综合实战', from: 18, to: 19 },
@@ -172,6 +172,43 @@ function shortChapterTitle(title) {
     (value, [search, replacement]) => value.replace(search, replacement),
     title,
   )
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function codeBlockTitlePlugin(md) {
+  const fence = md.renderer.rules.fence
+
+  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const title = token.info.match(/\[(.+?)\]/)?.[1]
+    let codeGroupDepth = 0
+
+    for (let index = 0; index < idx; index += 1) {
+      if (tokens[index].type === 'container_code-group_open') {
+        codeGroupDepth += 1
+      } else if (tokens[index].type === 'container_code-group_close') {
+        codeGroupDepth = Math.max(0, codeGroupDepth - 1)
+      }
+    }
+
+    const inCodeGroup = codeGroupDepth > 0
+
+    if (!title || inCodeGroup) {
+      return fence?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
+    }
+
+    const rendered = fence?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
+
+    return `<div class="vp-code-title">${escapeHtml(title)}</div>${rendered}`
+  }
 }
 
 function chapterSidebar(chapter, part) {
@@ -263,6 +300,8 @@ export default defineConfig({
   ],
   markdown: {
     config(md) {
+      codeBlockTitlePlugin(md)
+
       const fence = md.renderer.rules.fence
 
       md.renderer.rules.fence = (tokens, idx, options, env, self) => {

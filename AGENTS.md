@@ -19,6 +19,64 @@
 
 文档使用 Markdown 编写。标题层级要清晰，代码块请标注语言类型，例如 `bash`、`yaml`、`mermaid`。内容应以学习记录、概念梳理和可操作示例为主，避免冗长说明。
 
+命令输出、版本输出、示例响应等补充性内容，统一使用 VitePress `details` 容器折叠展示。标题使用“版本输出类似如下”“输出类似如下”等说明性文本，不写成已经实际执行的结果，除非确实来自本地或集群验证。格式如下：
+
+````md
+::: details 版本输出类似如下
+
+```text
+kubeadm version: &version.Info{Major:"1", Minor:"36", ..., GitVersion:"v1.36.2", ...}
+Client Version: v1.36.2
+Kustomize Version: v5.8.1
+Kubernetes v1.36.2
+crictl version v1.36.0
+```
+
+:::
+````
+
+完整 YAML、Shell、Dockerfile、TOML 等示例如果对应实际文件或建议保存为文件，应在代码块语言后添加文件名标签。文件名使用示例上下文中的真实或推荐名称，避免使用无意义的 `example.yaml`。格式如下：
+
+````md
+```yaml [deployment.yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+```
+````
+
+提示、建议、风险和注意事项统一使用 GitHub 风格警报，不使用 VitePress 专属的 `::: warning`、`::: tip` 等容器。按语义选择以下格式：
+
+```md
+> [!NOTE]
+> 强调用户在快速浏览文档时也不应忽略的重要信息。
+
+> [!TIP]
+> 有助于用户更顺利达成目标的建议性信息。
+
+> [!IMPORTANT]
+> 对用户达成目标至关重要的信息。
+
+> [!WARNING]
+> 因为可能存在风险，所以需要用户立即关注的关键内容。
+
+> [!CAUTION]
+> 行为可能带来的负面影响。
+```
+
 ### 文档定位与内容边界
 
 本项目是个人学习记录，不是教程、课程或培训材料。正文不要加入“学习目标”“前置知识”“适合读者”“课程安排”“面试题”等教学化结构，也不要使用“掌握”“熟悉”“了解”“初学者”等教程式表达。项目标题、首页说明中可以保留“学习记录”“个人学习过程”等定位性表述。
@@ -97,7 +155,7 @@
 提交描述中使用简短中文列表列出每一项改动，例如：
 
 ```md
-- 调整 01 入门起步目录结构
+- 调整 01 集群部署目录结构
 - 补充 containerd 镜像加速说明
 - 更新 VitePress 字体配置
 ```

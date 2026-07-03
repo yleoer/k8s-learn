@@ -1,6 +1,6 @@
 # 运行时与组件安装
 
-本文记录所有节点上的 containerd、crictl、kubelet、kubeadm 与 kubectl 安装过程。Kubernetes 通过 CRI（Container Runtime Interface）与容器运行时通信，本文档环境统一采用 containerd 作为运行时。
+本文记录所有节点上的 containerd、crictl、kubelet、kubeadm 与 kubectl 安装过程。
 
 ## 添加 Docker APT 源
 
@@ -22,7 +22,7 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 ```
 
-国内网络环境可按需替换为清华大学镜像源：
+国内网络环境可替换为清华大学镜像源：
 
 ```bash
 curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu/gpg | \
@@ -50,7 +50,7 @@ containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 ```
 
-> kubeadm 在未显式设置 `cgroupDriver` 时默认使用 `systemd`，containerd 侧应与 kubelet 保持一致。若两侧 cgroup driver 不匹配，kubelet 可能无法稳定运行。
+> kubeadm 默认使用 `systemd`，containerd 应与 kubelet 保持一致。若两侧 cgroup driver 不匹配，kubelet 可能无法稳定运行。
 
 启动服务并设置开机自启：
 
@@ -62,29 +62,30 @@ sudo systemctl status containerd --no-pager
 
 ## 可选：配置镜像加速
 
-若当前网络可稳定访问 `docker.io`、`registry.k8s.io`、`quay.io` 等上游仓库，可跳过镜像加速配置，直接进入 crictl 配置。
+若本地网络可稳定访问 `docker.io`、`registry.k8s.io`、`quay.io` 等上游仓库，可跳过镜像加速配置，直接进入 Kubernetes APT 源配置。
 
 containerd 支持通过 `/etc/containerd/certs.d/<registry>/hosts.toml` 为各镜像仓库独立配置加速地址、私有仓库证书或自定义 TLS 策略。要使该机制生效，需先在配置文件中指定 `config_path`，否则 `hosts.toml` 文件不会被读取。
 
-不同版本的 containerd 配置路径有所差异，先确认当前配置中实际的 registry 段：
+不同版本的 containerd 配置路径有所差异，先通过 `containerd --version` 确认当前安装的大版本，再核对配置中实际的 registry 段：
 
 ```bash
+containerd --version
 grep -n "registry" -A 8 /etc/containerd/config.toml
 ```
 
-containerd 1.x 对应的局部 TOML 配置：
+::: code-group
 
-```toml
+```toml [containerd 1.x]
 [plugins."io.containerd.grpc.v1.cri".registry]
   config_path = "/etc/containerd/certs.d"
 ```
 
-containerd 2.x 对应的局部 TOML 配置：
-
-```toml
+```toml [containerd 2.x]
 [plugins.'io.containerd.cri.v1.images'.registry]
   config_path = "/etc/containerd/certs.d"
 ```
+
+:::
 
 创建各仓库的配置目录：
 
@@ -126,28 +127,9 @@ server = "https://registry.k8s.io"
 EOF
 ```
 
-## 配置 crictl
+`hosts.toml` 中 `server` 声明该仓库的原始上游地址，`[host."..."]` 列表是按声明顺序尝试的候选端点。将原始地址同时列入 `host` 列表，是为了在加速端点全部失效时仍能回退到上游直连；containerd 依次尝试各端点，全部失败才报拉取错误。
 
-crictl 是符合 CRI 规范的命令行调试工具，用于在不依赖 kubelet 的情况下直接管理容器和镜像。配置其 socket 路径，使其连接到 containerd：
-
-```bash
-sudo tee /etc/crictl.yaml >/dev/null <<'EOF'
-runtime-endpoint: unix:///run/containerd/containerd.sock
-image-endpoint: unix:///run/containerd/containerd.sock
-timeout: 10
-debug: false
-EOF
-```
-
-重启 containerd 后验证 crictl 可正常拉取镜像：
-
-```bash
-sudo systemctl restart containerd
-sudo crictl pull registry.k8s.io/pause:3.10.2
-sudo crictl images
-```
-
-## 安装 Kubernetes 组件
+## 添加 Kubernetes APT 源
 
 添加 Kubernetes v1.36 APT 源：
 
@@ -163,24 +145,62 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
   sudo tee /etc/apt/sources.list.d/kubernetes.list
 ```
 
-国内网络环境可替换为阿里云镜像源：
+国内网络环境可替换为清华大学镜像源：
 
 ```bash
-curl -fsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.36/deb/Release.key | \
+curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/kubernetes/core:/stable:/v1.36/deb/Release.key | \
   sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.36/deb/ /' | \
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/kubernetes/core:/stable:/v1.36/deb/ /' | \
   sudo tee /etc/apt/sources.list.d/kubernetes.list
 ```
+
+## 安装并配置 crictl
+
+crictl 是符合 CRI 规范的命令行调试工具，用于在不依赖 kubelet 的情况下直接管理容器和镜像。在集群尚未初始化时，它是验证 containerd 安装是否正确、镜像加速是否生效的唯一 CRI 层入口；集群运行后，当 Pod 卡在创建或镜像拉取阶段，也需要用它绕过 kubelet 直接检查运行时状态。
+
+crictl 由 `cri-tools` 软件包提供，配置前先确认命令是否可用；若尚未安装，则先安装对应软件包：
+
+```bash
+if ! command -v crictl >/dev/null 2>&1; then
+  sudo apt update
+  sudo apt install -y cri-tools
+fi
+
+crictl --version
+```
+
+配置 crictl 的 socket 路径，使其连接到 containerd。虽然 crictl 可以尝试默认端点，仍建议显式写入 runtime endpoint，避免多运行时环境或默认端点探测带来的歧义：
+
+```bash
+sudo tee /etc/crictl.yaml >/dev/null <<'EOF'
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+```
+
+重启 containerd 后验证 crictl 可正常连接运行时并拉取镜像：
+
+```bash
+sudo systemctl restart containerd
+sudo crictl info
+sudo crictl pull registry.k8s.io/pause:3.10.2
+sudo crictl images
+```
+
+## 安装 Kubernetes 组件
 
 安装组件并锁定版本，防止 `apt upgrade` 时意外升级导致版本漂移：
 
 ```bash
 sudo apt update
-sudo apt install -y kubelet kubeadm kubectl cri-tools
+sudo apt install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
+>  [!TIP]
 > 使用 `sudo apt-mark unhold kubelet kubeadm kubectl` 解除锁定。
 
 安装完成后确认各组件版本：
@@ -192,8 +212,7 @@ kubelet --version
 crictl --version
 ```
 
-<details>
-<summary>版本输出类似如下</summary>
+::: details 版本输出类似如下
 
 ```text
 kubeadm version: &version.Info{Major:"1", Minor:"36", ..., GitVersion:"v1.36.2", ...}
@@ -203,4 +222,6 @@ Kubernetes v1.36.2
 crictl version v1.36.0
 ```
 
-</details>
+:::
+
+至此，所有节点均已具备运行时与 Kubernetes 组件。下一篇在 control-plane 节点执行 `kubeadm init` 初始化集群，并完成网络插件与 Metrics Server 的安装。
