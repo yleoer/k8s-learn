@@ -10,7 +10,7 @@ features:
   - icon: 🚀
     title: 01 · 集群部署
     details: 环境规划、Ubuntu 节点准备、containerd、kubeadm、Calico、Metrics Server 和集群验证。
-    link: /01-cluster-deployment/
+    link: /01-集群部署/
   - icon: 📦
     title: 02 · 容器基础
     details: 容器运行模型、Docker 架构、镜像管理、容器操作、数据持久化和命令速查。

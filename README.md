@@ -54,9 +54,9 @@ docs/
 │   ├── config.mjs                 # 站点配置（自动生成导航与侧边栏）
 │   └── theme/
 │       └── Mermaid.vue            # Mermaid 图表组件
-├── 01-cluster-deployment/         # 章节目录（编号-标题）
+├── 01-集群部署/                   # 章节目录（编号-标题）
 │   ├── index.md                   # 章节入口
-│   ├── 1-environment-planning-and-preparation.md
+│   ├── 1-环境规划与基础准备.md
 │   └── ...
 ├── 02-容器基础/
 ├── 03-镜像制作/
