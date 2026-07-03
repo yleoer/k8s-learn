@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readdirSync } from 'node:fs'
 
 const configDir = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(configDir, '../..')
@@ -23,62 +23,7 @@ function chapterPath(chapter, index) {
 }
 
 function lessonPath(lesson) {
-  return lesson.linkName
-}
-
-function readMarkdownTitle(filePath) {
-  let content = ''
-
-  try {
-    content = readFileSync(filePath, 'utf8')
-  } catch {
-    return ''
-  }
-
-  let fenceMarker = ''
-  let bestTitle = null
-
-  for (const line of content.split(/\r?\n/)) {
-    const trimmed = line.trim()
-
-    if (fenceMarker) {
-      if (trimmed.startsWith(fenceMarker)) {
-        fenceMarker = ''
-      }
-
-      continue
-    }
-
-    const fence = trimmed.match(/^(`{3,}|~{3,})/)
-
-    if (fence) {
-      fenceMarker = fence[1]
-      continue
-    }
-
-    const heading = line.match(/^(#{1,6})\s+(.+)$/)
-
-    if (!heading) {
-      continue
-    }
-
-    const level = heading[1].length
-    const text = heading[2].trim().replace(/\s+#+\s*$/, '').trim()
-
-    if (!text) {
-      continue
-    }
-
-    if (level === 1) {
-      return text
-    }
-
-    if (!bestTitle || level < bestTitle.level) {
-      bestTitle = { level, text }
-    }
-  }
-
-  return bestTitle?.text ?? ''
+  return `${sanitizeSegment(lesson.no)}-${sanitizeSegment(lesson.title)}`
 }
 
 function parseChapterDir(name) {
@@ -91,11 +36,10 @@ function parseChapterDir(name) {
   return {
     num: match[1],
     title: match[2],
-    dirName: name,
   }
 }
 
-function parseLessonFile(name, filePath) {
+function parseLessonFile(name) {
   const match = name.match(/^(\d+)-(.+)\.md$/)
 
   if (!match) {
@@ -104,13 +48,12 @@ function parseLessonFile(name, filePath) {
 
   return {
     no: match[1],
-    title: readMarkdownTitle(filePath) || match[2],
-    linkName: name.replace(/\.md$/, ''),
+    title: match[2],
     dur: '',
   }
 }
 
-function parseAppendixFile(name, filePath) {
+function parseAppendixFile(name) {
   const match = name.match(/^appendix-(.+)\.md$/)
 
   if (!match) {
@@ -118,7 +61,7 @@ function parseAppendixFile(name, filePath) {
   }
 
   return {
-    text: readMarkdownTitle(filePath) || `附录：${match[1]}`,
+    text: `附录：${match[1]}`,
     linkName: `appendix-${match[1]}`,
     order: name,
   }
@@ -131,23 +74,22 @@ function readCourseFromDocs() {
     .filter(Boolean)
     .sort((a, b) => Number(a.num) - Number(b.num))
     .map((chapter) => {
-      const chapterDir = resolve(docsRoot, chapter.dirName)
+      const chapterDir = resolve(docsRoot, `${chapter.num}-${chapter.title}`)
       const lessons = readdirSync(chapterDir, { withFileTypes: true })
         .filter((entry) => entry.isFile())
-        .map((entry) => parseLessonFile(entry.name, resolve(chapterDir, entry.name)))
+        .map((entry) => parseLessonFile(entry.name))
         .filter(Boolean)
         .sort((a, b) => {
           return Number(a.no) - Number(b.no)
         })
       const appendixes = readdirSync(chapterDir, { withFileTypes: true })
         .filter((entry) => entry.isFile())
-        .map((entry) => parseAppendixFile(entry.name, resolve(chapterDir, entry.name)))
+        .map((entry) => parseAppendixFile(entry.name))
         .filter(Boolean)
         .sort((a, b) => (a.order > b.order ? 1 : -1))
 
       return {
         ...chapter,
-        title: readMarkdownTitle(resolve(chapterDir, 'index.md')) || chapter.title,
         lessons,
         appendixes,
       }
@@ -174,7 +116,7 @@ const courseParts = [
 ]
 
 const courseChapters = course.map((chapter, index) => {
-  const dir = chapter.dirName ?? chapterPath(chapter, index)
+  const dir = chapterPath(chapter, index)
   const num = chapter.num ?? String(index + 1).padStart(2, '0')
   const defaultItems = [
     ...chapter.lessons.map((lesson) => ({
