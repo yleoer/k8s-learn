@@ -75,7 +75,7 @@ docker run -d --name nginx-demo -p 8080:80 nginx:demo
 curl http://127.0.0.1:8080
 ```
 
-每条 `docker build` 执行时，Docker 会将 Dockerfile 所在目录作为构建上下文（build context）发送给 daemon。这个目录下的所有文件默认都会包含在上下文中，因此需要 `.dockerignore` 排除无关内容（详见第 4 节）。
+每次执行 `docker build`，Docker 会把命令指定的目录（示例末尾的 `.`）作为构建上下文（build context）发送给 daemon；Dockerfile 默认位于上下文根目录，也可以用 `-f` 指定其他路径。上下文目录中的所有文件默认都会被打包发送，因此需要 `.dockerignore` 排除无关内容（详见 [镜像分层与体积优化](./4-镜像分层与体积优化.md)）。
 
 ## FROM：选择基础镜像
 
@@ -162,8 +162,10 @@ LABEL org.opencontainers.image.description="Demo application image"
 
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD curl -f http://127.0.0.1:80/healthz || exit 1
+  CMD wget -qO- http://127.0.0.1:80/ || exit 1
 ```
+
+检查命令在容器内部执行，必须使用镜像内实际存在的工具：Alpine 系镜像（如 `nginx:1.27-alpine`）自带 busybox `wget`，默认没有 `curl`。检查路径也应指向应用真实提供的端点——静态站点检查 `/`，后端服务通常暴露专门的 `/healthz`。
 
 | 参数             | 含义                             | 默认值 |
 | ---------------- | -------------------------------- | ------ |

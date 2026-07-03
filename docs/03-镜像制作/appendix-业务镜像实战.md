@@ -34,9 +34,9 @@ frontend/
 
 ```text
 .git
-node_modules
-*.log
-.DS_Store
+**/node_modules
+**/*.log
+**/.DS_Store
 README.md
 ```
 
@@ -156,8 +156,8 @@ php-app/
 
 ```text
 .git
-*.log
-.DS_Store
+**/*.log
+**/.DS_Store
 README.md
 vendor/
 ```
@@ -242,10 +242,8 @@ RUN printf '%s\n' \
       > /etc/apache2/conf-available/app.conf \
     && a2enconf app
 
-COPY --from=vendor /app/vendor/ /var/www/vendor/
-COPY public/ /var/www/html/
-
-RUN chown -R www-data:www-data /var/www
+COPY --from=vendor --chown=www-data:www-data /app/vendor/ /var/www/vendor/
+COPY --chown=www-data:www-data public/ /var/www/html/
 
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD wget -qO- http://127.0.0.1:80/healthz || exit 1
@@ -260,7 +258,7 @@ EXPOSE 80
 - **依赖路径**：`public/index.php` 通过 `../vendor/autoload.php` 加载依赖，因此 `vendor/` 需要复制到 `/var/www/vendor/`。
 - **请求路由**：Apache 默认只按真实文件路径查找资源，`FallbackResource /index.php` 可将 `/healthz`、`/api/hello` 等路径交给入口文件处理。
 - **合并 RUN**：`apt-get install`、`docker-php-ext-install` 和清理步骤在同一层完成。
-- **运行身份**：Apache 子进程以 `www-data` 运行，`chown` 确保站点文件可读。
+- **运行身份**：Apache 子进程以 `www-data` 运行，复制时用 `--chown` 设置属主，避免 `RUN chown -R` 把全部文件再复制进一个新层；若站点代码运行期无需写入，保留 root 属主、仅保证可读也是常见做法。
 - **opcache**：PHP 字节码缓存可减少重复解析开销。
 - **日志输出**：Monolog Handler 设置为 `php://stdout`，由容器运行时统一收集。
 
@@ -304,8 +302,8 @@ backend/
 
 ```text
 .git
-*.log
-.DS_Store
+**/*.log
+**/.DS_Store
 README.md
 ```
 
@@ -384,7 +382,7 @@ LABEL maintainer="platform@example.com"
 LABEL org.opencontainers.image.title="backend"
 LABEL org.opencontainers.image.version="1.0.0"
 
-RUN apk add --no-cache ca-certificates tzdata wget
+RUN apk add --no-cache ca-certificates tzdata
 
 ENV APP_PORT=8080 \
     APP_VERSION=1.0.0
@@ -408,7 +406,7 @@ CMD ["/app/server"]
 - **静态编译**：`CGO_ENABLED=0` 不依赖 glibc；`-ldflags="-s -w"` 去除调试符号。
 - **缓存优化**：`go.mod/go.sum` 先复制 → `go mod download` → 最后 `COPY . .`，源码改动时依赖下载层被缓存。
 - **非 root**：创建 `app` 用户并以 `USER app` 运行，配合 `COPY --chown` 赋予文件所有权。
-- **运行时依赖**：`ca-certificates`（HTTPS）、`tzdata`（时区）、`wget`（健康检查）是 Alpine 最小镜像的常见补充。
+- **运行时依赖**：`ca-certificates`（HTTPS）、`tzdata`（时区）是 Alpine 最小镜像的常见补充；健康检查用的 `wget` 由 Alpine 自带的 busybox 提供，无需额外安装。
 - **Exec 格式 CMD**：信号直接送达 Go 进程，`docker stop` 可触发 `SIGTERM` 优雅退出。
 
 ### 构建、运行、验证
@@ -453,6 +451,6 @@ harbor.example.com/team/backend:v1.0.0   5c9706869b6c       17.1MB             0
 | HEALTHCHECK | `wget /` | `wget /healthz` | `wget /healthz` |
 | 配置注入 | 构建时 COPY | 环境变量 | 环境变量 |
 | 日志输出 | 自动 stdout | Monolog → `php://stdout` | 自动 stdout |
-| 最终体积 | ~45 MB | ~180 MB | ~17-19 MB |
+| 最终体积 | ~45 MB | ~500 MB | ~17-19 MB |
 
 三个范例对应不同语言和构建模式，但共同关注固定版本、非 root、健康检查、stdout 日志和资源限制。

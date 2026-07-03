@@ -26,6 +26,9 @@ env=production port=8080
 
 ```bash
 docker run --rm -e APP_ENV=staging demo:env
+```
+
+```text
 env=staging port=8080
 ```
 
@@ -54,7 +57,6 @@ docker build -t demo:cmd .
 
 ```bash
 docker run --rm demo:cmd # 输出 hello from cmd
-
 ```
 
 运行时覆盖：

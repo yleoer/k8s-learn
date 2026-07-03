@@ -59,7 +59,7 @@ COPY --chown=1001:1001 --chmod=755 app /usr/local/bin/app
 
 - 普通文件、目录和编译产物 → `COPY`。
 - 本地 tar 包确实需要解压时 → `ADD`。
-- 远程 URL 下载 → 优先用 `RUN curl` 或 `RUN wget`，配合校验和验证并在同一层清理。确需使用 `ADD <url>` 时，应显式校验来源和内容。
+- 远程 URL 下载 → 优先用 `RUN curl` 或 `RUN wget`，配合校验和验证并在同一层清理。确需使用 `ADD <url>` 时，用 BuildKit 的 `--checksum` 校验内容，例如 `ADD --checksum=sha256:<hash> https://example.com/pkg.tar.gz /tmp/`。
 
 ## WORKDIR：工作目录
 
@@ -95,7 +95,7 @@ CMD ["/app/app"]
 要点：
 
 - 先创建用户和组，再 `COPY` 文件并设置 `--chown`，最后通过 `USER` 切换运行身份。
-- 用户名 `USER app` 和 UID `USER 1001` 均可，UID 在跨系统时更一致。
+- 用户名 `USER app` 和 UID `USER 1001` 均可。面向 Kubernetes 的镜像建议用数字 UID：Pod 开启 `runAsNonRoot` 校验时，kubelet 只能根据数字 UID 判断是否非 root，以用户名声明的镜像会因无法验证而拒绝启动（除非 Pod spec 显式指定 `runAsUser`）。
 - 切换用户后，应用只能访问该用户有权限的路径。日志目录、临时文件目录、挂载的数据卷都要提前设置好权限。
 - 如果 Dockerfile 先以 root 安装依赖，再通过 `USER` 切换身份，而安装目录仅 root 可写，运行时可能出现权限错误。此时应在安装阶段设置所有权，或将运行时数据写入当前用户有权限的路径。
 
