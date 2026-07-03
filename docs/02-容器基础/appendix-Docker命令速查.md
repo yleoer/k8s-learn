@@ -225,7 +225,8 @@ docker image prune -a
 
 ```bash
 docker container prune
-docker volume prune
+docker volume prune       # 默认只清理未被使用的匿名卷
+docker volume prune -a    # 包含命名卷，可能删除业务数据
 docker network prune
 docker system prune
 docker system prune -a

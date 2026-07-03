@@ -32,8 +32,8 @@ flowchart LR
   daemon --> volumes["卷 / 挂载"]
   daemon --> containerd["containerd"]
   containerd --> runc["runc"]
-  runc --> kernel["Linux Kernel\nnamespaces / cgroups"]
-  daemon <--> registry["Registry\nDocker Hub / Harbor"]
+  runc --> kernel["Linux Kernel<br/>namespaces / cgroups"]
+  daemon <--> registry["Registry<br/>Docker Hub / Harbor"]
 ```
 
 以 `docker run nginx:1.27-alpine` 为例，调用过程可以拆分为以下步骤：
@@ -55,7 +55,7 @@ flowchart LR
 docker version
 ```
 
-输出通常分为 `Client` 和 `Server` 两部分。若只有客户端信息，通常说明 Docker Daemon 未启动，或当前用户没有访问 Docker Socket 的权限。
+输出通常分为 `Client` 和 `Server` 两部分。`Server` 部分除 Docker Engine 版本外，还会列出 containerd、runc 组件的版本和 `OS/Arch`，与前文的调用链路对应。若只有客户端信息，通常说明 Docker Daemon 未启动，或当前用户没有访问 Docker Socket 的权限。
 
 查看 Docker 运行环境：
 
@@ -122,10 +122,10 @@ sudo crictl pods
 sudo ctr -n k8s.io containers ls
 ```
 
-查看 kubelet 使用的运行时端点：
+确认运行时名称、版本，以及 kubelet 使用的运行时端点：
 
 ```bash
-sudo crictl info | grep -E 'runtimeName|runtimeVersion'
+sudo crictl version
 ps -ef | grep kubelet | grep container-runtime-endpoint
 ```
 
@@ -152,11 +152,12 @@ newgrp docker
 Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 ```
 
-可按顺序检查 Docker 服务状态、Socket 权限和当前用户组：
+可按顺序检查 Docker 服务状态、服务日志、Socket 权限和当前用户组：
 
 ```bash
 sudo systemctl status docker --no-pager
 sudo systemctl start docker
+sudo journalctl -u docker -xe --no-pager
 ls -l /var/run/docker.sock
 id
 ```

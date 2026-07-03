@@ -15,34 +15,7 @@ docker ps
 docker images
 ```
 
-`docker version` 重点关注以下字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| `Client Version` | Docker 客户端版本 |
-| `Server Version` | Docker Engine 服务端版本 |
-| `containerd` | 底层 containerd 版本 |
-| `runc` | 底层 OCI runtime 版本 |
-| `OS/Arch` | 操作系统与 CPU 架构 |
-
-`docker info` 重点关注以下字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| `Containers` | 当前容器数量 |
-| `Images` | 本地镜像数量 |
-| `Storage Driver` | 镜像与容器层使用的存储驱动 |
-| `Logging Driver` | 日志驱动类型 |
-| `Cgroup Driver` | cgroup 驱动类型，Kubernetes 节点上通常建议使用 `systemd` |
-| `Docker Root Dir` | Docker 数据目录，Linux 默认通常为 `/var/lib/docker` |
-| `Registry Mirrors` | 镜像加速器地址 |
-
-如果 Docker 命令无法连接 Daemon，优先检查服务状态与日志：
-
-```bash
-sudo systemctl status docker --no-pager
-sudo journalctl -u docker -xe --no-pager
-```
+这四条命令分别验证客户端与服务端是否连通、运行环境配置是否符合预期、容器与镜像对象是否可见。`docker version` 和 `docker info` 的输出结构、常见字段含义，以及无法连接 Daemon 时的排查步骤，已在上一篇 [Docker 架构与运行时](./2-Docker架构与运行时.md) 中说明，此处不再重复。
 
 ## 搜索镜像
 
@@ -97,7 +70,7 @@ docker images
 docker image ls
 ```
 
-传统 Docker Engine 输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起全新安装默认启用 containerd image store，较新的 Docker Desktop 也自 v4.34 起默认使用 containerd image store，此时输出可能显示为如下格式：
+Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起，CLI 默认改用新的输出格式，即使服务端仍在使用传统存储驱动也是如此：
 
 ```text
 IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
@@ -115,7 +88,7 @@ redis:8-alpine       3a02d38405dc        114MB             0B
 | `IMAGE` | 镜像名称和标签 |
 | `ID` | 镜像短 ID，用于快速识别镜像对象 |
 | `DISK USAGE` | 镜像在本机占用的磁盘空间（包含解压后的层数据） |
-| `CONTENT SIZE` | containerd content store 中压缩内容对象的大小；当实际存储位置不在本地 Docker image store 时可能显示为 `0B` |
+| `CONTENT SIZE` | 本地保留的镜像压缩内容（推送、拉取时传输的 blob）大小；本地未保留压缩内容时显示为 `0B` |
 | `EXTRA` | 附加状态标记，`U` 表示镜像正在被容器使用或引用 |
 
 如果希望获得更稳定、便于脚本处理的输出，可以使用 `--format`：
@@ -200,6 +173,6 @@ docker load -i nginx.alpine.tar
 
 `docker save` 与 `docker load` 会保留镜像层和标签信息，适合在离线环境、内网环境或受限网络中传输镜像。它们操作的是镜像，不是容器运行状态。
 
-`docker save` 默认使用 Docker 传统格式，生成 tar 包中保留镜像层和清单。如果希望输出 OCI 格式归档，可使用 `docker save --format oci`。
+Docker Engine v25 起，`docker save` 生成的 tar 包采用 OCI image layout 布局，同时保留 `manifest.json` 等文件兼容传统 Docker 格式，无需额外参数。Docker Engine v29 起还可以通过 `--platform` 参数只导出多平台镜像中的指定平台。
 
 如果需要导出容器文件系统快照，可以使用 `docker export` 和 `docker import`，但这类方式不会完整保留镜像历史、标签和元数据，不适合作为标准镜像交付方式。
