@@ -13,19 +13,19 @@ features:
     link: /01-集群部署/
   - icon: 📦
     title: 02 · 容器基础
-    details: 容器运行模型、Docker 架构、镜像管理、容器操作、数据持久化和命令速查。
+    details: 容器运行模型、Docker 架构、镜像管理、容器操作、数据持久化、容器网络、Docker Compose 和命令速查。
     link: /02-容器基础/
   - icon: 🧱
     title: 03 · 镜像制作
-    details: Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建和多架构镜像。
+    details: Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建、多架构镜像和 BuildKit 构建挂载。
     link: /03-镜像制作/
   - icon: 🗄️
     title: 04 · 镜像仓库
-    details: 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理和镜像供应链安全。
+    details: 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理、镜像供应链安全和漏洞扫描。
     link: /04-镜像仓库/
   - icon: 🔧
     title: 05 · 容器运行
-    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置、镜像缓存和运行时排障记录。
+    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置、镜像缓存、多运行时、镜像懒加载和排障记录。
     link: /05-容器运行/
   - icon: ⚙️
     title: 06 · 集群架构
@@ -37,7 +37,7 @@ features:
     link: /07-资源操作/
   - icon: 🧩
     title: 08 · Pod 入门
-    details: Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期和健康检查。
+    details: Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期、健康检查、Sidecar 容器、静态 Pod 和 Pod 调试。
     link: /08-Pod入门/
   - icon: 🧬
     title: 09 · 工作负载
@@ -45,7 +45,7 @@ features:
     link: /09-工作负载/
   - icon: 🔎
     title: 10 · 服务发现
-    details: Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress 和排查记录。
+    details: Service、EndpointSlice、DNS、流量策略、Headless Service、代理模式、Ingress、控制器选型与 Gateway API 迁移。
     link: /10-服务发现/
 ---
 
@@ -59,7 +59,11 @@ features:
 
 以下内容先保留为后续补全清单：
 
-- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 和 NetworkPolicy
+- 沙箱运行时实测：Kata Containers 与 gVisor 的节点安装、RuntimeClass 验证和沙箱内行为观察
+- 镜像懒加载实测：远程 snapshotter 部署、镜像格式转换和冷启动收益验证
+- Harbor 漏洞扫描实测：Trivy 扫描结果、阻止拉取策略与 CVE 允许清单的联动验证
+- Gateway API 迁移实测：实现部署、ingress2gateway 转换结果验证和流量切换记录
+- 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 完整资源模型和 NetworkPolicy
 - 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
 - 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
 - 任务管理：Job、CronJob 和任务型工作负载

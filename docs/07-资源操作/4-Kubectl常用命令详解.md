@@ -14,11 +14,11 @@ kubectl get nodes
 
 常见用途如下：
 
-| 命令 | 作用 |
-| --- | --- |
-| `kubectl cluster-info` | 查看控制面访问地址 |
-| `kubectl version` | 查看客户端和服务端版本 |
-| `kubectl get nodes` | 查看工作节点状态 |
+| 命令                     | 作用          |
+|------------------------|-------------|
+| `kubectl cluster-info` | 查看控制面访问地址   |
+| `kubectl version`      | 查看客户端和服务端版本 |
+| `kubectl get nodes`    | 查看工作节点状态    |
 
 如果 `kubectl version` 只能看到客户端版本，通常说明 kubectl 没有成功连接到 APIServer。
 
@@ -32,11 +32,11 @@ kubectl config current-context
 kubectl config use-context <context-name>
 ```
 
-| 命令 | 作用 |
-| --- | --- |
-| `get-contexts` | 查看 kubeconfig 中的所有上下文 |
-| `current-context` | 查看当前正在使用的上下文 |
-| `use-context` | 切换到指定上下文 |
+| 命令                | 作用                    |
+|-------------------|-----------------------|
+| `get-contexts`    | 查看 kubeconfig 中的所有上下文 |
+| `current-context` | 查看当前正在使用的上下文          |
+| `use-context`     | 切换到指定上下文              |
 
 上下文切换会影响后续所有 kubectl 命令，因此生产环境操作前必须确认当前上下文，避免误操作到错误的集群。
 
@@ -151,13 +151,13 @@ kubectl logs nginx --previous
 
 常用参数如下：
 
-| 参数 | 作用 |
-| --- | --- |
-| `-c` | 指定 Pod 中的容器名称 |
-| `--tail` | 查看最后若干行日志 |
-| `-f` | 持续追踪日志 |
-| `--previous` | 查看上一次容器实例的日志 |
-| `--since` | 查看最近一段时间的日志 |
+| 参数           | 作用            |
+|--------------|---------------|
+| `-c`         | 指定 Pod 中的容器名称 |
+| `--tail`     | 查看最后若干行日志     |
+| `-f`         | 持续追踪日志        |
+| `--previous` | 查看上一次容器实例的日志  |
+| `--since`    | 查看最近一段时间的日志   |
 
 当 Pod 处于 `CrashLoopBackOff` 时，`--previous` 尤其有用：当前容器可能刚启动就退出，上一轮的日志往往更接近真实的失败原因。
 
@@ -173,6 +173,16 @@ kubectl exec nginx -- env
 ```
 
 `--` 后面的内容是在容器内执行的命令。很多精简镜像没有 `bash`，此时可以改用 `sh`。
+
+## 注入调试容器
+
+`exec` 依赖容器镜像中存在可执行的 shell。distroless 等精简镜像连 `sh` 都没有时，可以使用 `kubectl debug` 向运行中的 Pod 注入一个临时调试容器（ephemeral container，Kubernetes v1.25 起稳定）：
+
+```bash
+kubectl debug -it <pod-name> --image=busybox:1.36.1 --target=<container-name>
+```
+
+`--target` 表示与目标容器共享进程命名空间，便于在调试容器内用 `ps` 观察目标进程，该参数需要容器运行时支持。临时容器加入后不能修改或移除，会随 Pod 一起删除，因此它适合排障观察，不适合承载业务逻辑。
 
 ## 文件拷贝
 
@@ -202,6 +212,13 @@ kubectl get events
 kubectl get events -n dev
 kubectl get events --sort-by=.metadata.creationTimestamp
 kubectl get events --field-selector type=Warning
+```
+
+kubectl 还提供专用的 `events` 子命令，适合聚焦单个资源的事件：
+
+```bash
+kubectl events --for pod/<pod-name>
+kubectl events --types=Warning
 ```
 
 常见事件可以帮助判断 Pod 是否调度失败、镜像是否拉取失败、健康检查是否失败、卷是否挂载失败、节点资源是否不足。
@@ -237,12 +254,12 @@ kubectl rollout restart deployment/nginx
 
 资源操作阶段只需要知道它们的用途：
 
-| 命令 | 作用 |
-| --- | --- |
-| `rollout status` | 查看发布是否完成 |
-| `rollout history` | 查看历史版本 |
-| `rollout undo` | 回滚到上一版本 |
-| `rollout restart` | 触发滚动重启 |
+| 命令                | 作用       |
+|-------------------|----------|
+| `rollout status`  | 查看发布是否完成 |
+| `rollout history` | 查看历史版本   |
+| `rollout undo`    | 回滚到上一版本  |
+| `rollout restart` | 触发滚动重启   |
 
 Deployment 章节会进一步分析滚动更新、暂停、恢复和回滚细节。
 

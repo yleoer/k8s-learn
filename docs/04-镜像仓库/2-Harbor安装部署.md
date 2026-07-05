@@ -1,16 +1,16 @@
 # Harbor 安装部署
 
-Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本章固定以 Harbor v2.14.0 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。实际部署前应查看 Harbor Releases，选择当前大版本中合适的补丁版本。
+Harbor 是 CNCF 托管的企业级开源镜像仓库，常用于内网镜像分发、权限隔离、漏洞扫描和跨站点复制。本文固定以 Harbor v2.14.0 离线安装包为例，在单台 Linux 服务器上完成 Docker Compose 部署。实际部署前应查看 Harbor Releases，选择当前大版本中合适的补丁版本。
 
 ## 运行环境
 
-| 项目 | 最低配置 | 建议配置 |
-| --- | --- | --- |
-| CPU | 2 核 | 4 核及以上 |
-| 内存 | 4 GiB | 8 GiB 及以上 |
-| 磁盘 | 40 GiB | 160 GiB 及以上，数据目录独立挂载 |
-| Docker Engine | 20.10 以上 | 使用发行版官方或 Docker 官方稳定版本 |
-| Docker Compose | 2.3 以上 | 使用 `docker compose` 插件形式 |
+| 项目             | 最低配置     | 建议配置                     |
+|----------------|----------|--------------------------|
+| CPU            | 2 核      | 4 核及以上                   |
+| 内存             | 4 GiB    | 8 GiB 及以上                |
+| 磁盘             | 40 GiB   | 160 GiB 及以上，数据目录独立挂载     |
+| Docker Engine  | 20.10 以上 | 使用发行版官方或 Docker 官方稳定版本   |
+| Docker Compose | 2.3 以上   | 使用 `docker compose` 插件形式 |
 
 服务器主机名和 IP 应保持稳定，内网 DNS 或 `/etc/hosts` 需要提前配置 Harbor 域名的正向解析。若使用 HTTPS，还需要准备与 `hostname` 匹配的证书和私钥。
 
@@ -45,7 +45,7 @@ vim harbor.yml
 
 HTTP 方式的 `harbor.yml` 示例：
 
-```yaml
+```yaml [harbor.yml]
 hostname: harbor.example.com
 http:
   port: 80
@@ -59,13 +59,13 @@ jobservice:
   max_job_workers: 10
 ```
 
-| 字段 | 必填 | 说明 |
-| --- | --- | --- |
-| `hostname` | 是 | Harbor 对外访问地址，必须使用客户端可访问的域名或 IP，不应使用 `127.0.0.1` 或 `localhost` |
-| `harbor_admin_password` | 是 | 管理员 `admin` 的初始密码，使用本地安全密码，安装完成后应立即修改 |
-| `data_volume` | 是 | 镜像数据、数据库和任务数据的存储目录，建议使用独立磁盘 |
-| `http.port` | 否 | HTTP 访问端口，默认 `80` |
-| `https` | 否 | HTTPS 证书配置，生产环境建议启用 |
+| 字段                      | 必填 | 说明                                                             |
+|-------------------------|----|----------------------------------------------------------------|
+| `hostname`              | 是  | Harbor 对外访问地址，必须使用客户端可访问的域名或 IP，不应使用 `127.0.0.1` 或 `localhost` |
+| `harbor_admin_password` | 是  | 管理员 `admin` 的初始密码，仅在 Harbor 首次启动时生效，后续以 Web 控制台中修改的密码为准        |
+| `data_volume`           | 是  | 镜像数据、数据库和任务数据的存储目录，建议使用独立磁盘                                    |
+| `http.port`             | 否  | HTTP 访问端口，默认 `80`                                              |
+| `https`                 | 否  | HTTPS 证书配置，生产环境建议启用                                            |
 
 ## HTTP 与 HTTPS
 
@@ -73,7 +73,7 @@ jobservice:
 
 生产环境应配置权威 CA 证书或内部统一签发的受信任证书。启用 HTTPS 时，`harbor.yml` 可按下面的结构保留 HTTP 监听并补充 HTTPS 证书路径：
 
-```yaml
+```yaml [harbor.yml]
 hostname: harbor.example.com
 http:
   port: 80
@@ -115,8 +115,6 @@ sudo ./install.sh
 ## 安装并启动
 
 ```bash
-mkdir -p /data/harbor
-
 # 生成配置并检查语法
 sudo ./prepare
 
@@ -124,14 +122,19 @@ sudo ./prepare
 sudo ./install.sh
 ```
 
-<details>
-<summary>./install.sh 输出末尾类似如下</summary>
+默认安装不包含 Trivy 漏洞扫描组件，`harbor.yml` 中的 `trivy` 配置段只有在安装该组件后才会生效。需要漏洞扫描能力时，使用 `--with-trivy` 执行安装：
+
+```bash
+sudo ./install.sh --with-trivy
+```
+
+::: details ./install.sh 输出末尾类似如下
 
 ```text
 ✔ ----Harbor has been installed and started successfully.----
 ```
 
-</details>
+:::
 
 安装失败时可优先检查以下项目：
 
@@ -150,17 +153,18 @@ ss -lntp | grep -E ':80|:443'
 
 安装完成后，Harbor 通过 Docker Compose 管理以下主要容器：
 
-| 组件 | 作用 |
-| --- | --- |
-| `nginx` | 反向代理，作为 Harbor 的统一入口 |
-| `harbor-core` | 核心 API，处理 Web 请求、认证和项目逻辑 |
-| `harbor-db` | PostgreSQL 数据库，存储项目、用户、策略和任务数据 |
-| `harbor-jobservice` | 异步任务执行器，负责复制、垃圾回收、扫描等任务 |
-| `harbor-portal` | Web 控制台前端 |
-| `registry` | Registry 服务，负责镜像层和清单的存储与分发 |
-| `registryctl` | Registry 控制组件，辅助配置和管理 Registry |
-| `redis` | 会话缓存和任务队列 |
-| `trivy-adapter` | 漏洞扫描适配器，启用 Trivy 时出现 |
+| 组件                  | 作用                             |
+|---------------------|--------------------------------|
+| `nginx`             | 反向代理，作为 Harbor 的统一入口           |
+| `harbor-core`       | 核心 API，处理 Web 请求、认证和项目逻辑       |
+| `harbor-db`         | PostgreSQL 数据库，存储项目、用户、策略和任务数据 |
+| `harbor-jobservice` | 异步任务执行器，负责复制、垃圾回收、扫描等任务        |
+| `harbor-log`        | 日志收集组件，基于 rsyslog 汇总其他容器的日志    |
+| `harbor-portal`     | Web 控制台前端                      |
+| `registry`          | Registry 服务，负责镜像层和清单的存储与分发     |
+| `registryctl`       | Registry 控制组件，辅助配置和管理 Registry |
+| `redis`             | 会话缓存和任务队列                      |
+| `trivy-adapter`     | 漏洞扫描适配器，启用 Trivy 时出现           |
 
 ## 查看运行状态
 
@@ -168,8 +172,7 @@ ss -lntp | grep -E ':80|:443'
 docker compose ps
 ```
 
-<details>
-<summary>docker compose ps 输出类似如下</summary>
+::: details docker compose ps 输出类似如下
 
 ```text
 NAME                STATUS
@@ -184,7 +187,7 @@ registry            running
 registryctl         running
 ```
 
-</details>
+:::
 
 主要组件均为 `running` 时，表示服务已正常启动。若某个组件反复重启，可通过 `docker compose logs <service>` 查看对应日志。
 
@@ -197,7 +200,7 @@ registryctl         running
 密码：  <harbor-admin-password>
 ```
 
-首次登录后应立即进入 **系统管理 → 用户管理** 修改 `admin` 密码，并根据业务边界创建项目和用户。
+首次登录后应立即通过右上角账号菜单中的 **修改密码** 更新 `admin` 密码，并根据业务边界创建项目和用户。**系统管理 → 用户管理** 中的重置密码功能只能作用于其他用户，不能重置当前登录账号自身的密码。
 
 ## 启停管理
 

@@ -32,7 +32,7 @@ frontend/
 
 ### .dockerignore
 
-```text
+```text [.dockerignore]
 .git
 **/node_modules
 **/*.log
@@ -42,9 +42,7 @@ README.md
 
 ### 静态文件
 
-`src/index.html`：
-
-```html
+```html [src/index.html]
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -63,9 +61,7 @@ README.md
 </html>
 ```
 
-`src/style.css`：
-
-```css
+```css [src/style.css]
 body {
   font-family: system-ui, sans-serif;
   display: flex;
@@ -84,15 +80,13 @@ body {
 }
 ```
 
-`src/app.js`：
-
-```javascript
+```javascript [src/app.js]
 document.getElementById('version').textContent = 'v1.0.0';
 ```
 
 ### Dockerfile
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM nginx:1.27-alpine
 LABEL maintainer="platform@example.com"
 LABEL org.opencontainers.image.title="frontend"
@@ -114,6 +108,7 @@ EXPOSE 80
 docker build -t harbor.example.com/team/frontend:v1.0.0 .
 ```
 
+> [!NOTE]
 > 使用 BuildKit（Docker Engine 默认构建后端）时，`docker build` 等效于 `docker buildx build`。部分旧版文档使用 `DOCKER_BUILDKIT=1 docker build`，在新版本中已无需手动设置。
 
 ```bash
@@ -126,8 +121,7 @@ curl -s http://127.0.0.1:8080 | grep '<h1>'
 docker ps --filter name=frontend
 ```
 
-<details>
-<summary>docker ps 输出类似如下</summary>
+::: details docker ps 输出类似如下
 
 ```text
 $ docker ps --filter name=frontend
@@ -135,7 +129,7 @@ CONTAINER ID   IMAGE                                     COMMAND                
 f0b201388ff8   harbor.example.com/team/frontend:v1.0.0   "/docker-entrypoint.…"   12 seconds ago   Up 11 seconds (health: starting)   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   frontend
 ```
 
-</details>
+:::
 
 ## 范例二：PHP Web 应用
 
@@ -154,7 +148,7 @@ php-app/
 
 ### .dockerignore
 
-```text
+```text [.dockerignore]
 .git
 **/*.log
 **/.DS_Store
@@ -162,11 +156,12 @@ README.md
 vendor/
 ```
 
+> [!NOTE]
 > `vendor/` 在 `.dockerignore` 中排除，因为它会在构建阶段由 Composer 重新安装，放入构建上下文只会拖慢速度。
 
 ### composer.json
 
-```json
+```json [composer.json]
 {
   "name": "example/php-app",
   "require": {
@@ -178,15 +173,16 @@ vendor/
 
 ### public/index.php
 
-```php
+```php [public/index.php]
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
 $log = new Logger('app');
-$log->pushHandler(new StreamHandler('php://stdout', Logger::INFO));
+$log->pushHandler(new StreamHandler('php://stdout', Level::Info));
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -213,7 +209,7 @@ echo json_encode(['error' => 'not found']);
 
 ### Dockerfile
 
-```dockerfile
+```dockerfile [Dockerfile]
 # === 依赖安装阶段 ===
 FROM composer:2 AS vendor
 WORKDIR /app
@@ -278,10 +274,14 @@ curl http://127.0.0.1:8081/healthz
 curl http://127.0.0.1:8081/api/hello
 ```
 
+::: details 响应类似如下
+
 ```text
 {"status":"ok","version":"1.0.0","time":"<RFC3339 时间>"}
 {"message":"Hello from PHP on K8s!"}
 ```
+
+:::
 
 ## 范例三：Go 后端微服务
 
@@ -300,7 +300,7 @@ backend/
 
 ### .dockerignore
 
-```text
+```text [.dockerignore]
 .git
 **/*.log
 **/.DS_Store
@@ -309,7 +309,7 @@ README.md
 
 ### main.go
 
-```go
+```go [main.go]
 package main
 
 import (
@@ -353,7 +353,7 @@ func getEnv(key, fallback string) string {
 
 ### go.mod
 
-```text
+```text [go.mod]
 module github.com/example/backend
 
 go 1.23
@@ -367,7 +367,7 @@ touch go.sum
 
 ### Dockerfile
 
-```dockerfile
+```dockerfile [Dockerfile]
 # === 构建阶段 ===
 FROM golang:1.23-alpine AS builder
 WORKDIR /src
@@ -425,10 +425,14 @@ curl http://127.0.0.1:8082/healthz
 curl http://127.0.0.1:8082/api/hello
 ```
 
+::: details 响应类似如下
+
 ```text
 {"status":"ok","version":"1.0.0","time":"<RFC3339 时间>"}
 {"message":"Hello from Go on K8s!"}
 ```
+
+:::
 
 确认镜像大小，输出会随基础镜像版本、构建平台和本地 Docker image store 变化：
 
@@ -436,21 +440,25 @@ curl http://127.0.0.1:8082/api/hello
 docker images harbor.example.com/team/backend:v1.0.0
 ```
 
+::: details 输出类似如下
+
 ```text
 IMAGE                                    ID             DISK USAGE   CONTENT SIZE   EXTRA
 harbor.example.com/team/backend:v1.0.0   5c9706869b6c       17.1MB             0B    U
 ```
 
+:::
+
 ## 三个范例对照
 
-| 对比项 | 前端 | PHP | Go |
-| --- | --- | --- | --- |
-| 基础镜像 | `nginx:1.27-alpine` | `php:8.3-apache` | `alpine:3.20` |
-| 构建阶段数 | 1 | 2（composer → php） | 2（golang → alpine） |
-| 非 root 方式 | nginx 自动处理 | Apache `www-data` | `USER app` |
-| HEALTHCHECK | `wget /` | `wget /healthz` | `wget /healthz` |
-| 配置注入 | 构建时 COPY | 环境变量 | 环境变量 |
-| 日志输出 | 自动 stdout | Monolog → `php://stdout` | 自动 stdout |
-| 最终体积 | ~45 MB | ~500 MB | ~17-19 MB |
+| 对比项         | 前端                  | PHP                      | Go                 |
+|-------------|---------------------|--------------------------|--------------------|
+| 基础镜像        | `nginx:1.27-alpine` | `php:8.3-apache`         | `alpine:3.20`      |
+| 构建阶段数       | 1                   | 2（composer → php）        | 2（golang → alpine） |
+| 非 root 方式   | nginx 自动处理          | Apache `www-data`        | `USER app`         |
+| HEALTHCHECK | `wget /`            | `wget /healthz`          | `wget /healthz`    |
+| 配置注入        | 构建时 COPY            | 环境变量                     | 环境变量               |
+| 日志输出        | 自动 stdout           | Monolog → `php://stdout` | 自动 stdout          |
+| 最终体积        | ~45 MB              | ~500 MB                  | ~17-19 MB          |
 
 三个范例对应不同语言和构建模式，但共同关注固定版本、非 root、健康检查、stdout 日志和资源限制。

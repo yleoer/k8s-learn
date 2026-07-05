@@ -34,15 +34,15 @@ web-2
 
 ### 与 Deployment 对比
 
-| 对比项 | Deployment | StatefulSet |
-| --- | --- | --- |
-| 主要场景 | 无状态服务 | 有状态服务 |
-| Pod 名称 | 随机后缀 | 固定序号 |
-| 创建顺序 | 并行创建为主 | 默认按序创建 |
-| 删除顺序 | 按控制器策略处理 | 默认按序号倒序删除 |
-| 网络标识 | 不稳定 | 结合 Headless Service 稳定 |
-| 存储关系 | 多副本通常共享模板 | 每个副本可拥有独立 PVC |
-| 常见应用 | Web、API、网关 | 数据库、注册中心、协调组件 |
+| 对比项    | Deployment | StatefulSet            |
+|--------|------------|------------------------|
+| 主要场景   | 无状态服务      | 有状态服务                  |
+| Pod 名称 | 随机后缀       | 固定序号                   |
+| 创建顺序   | 并行创建为主     | 默认按序创建                 |
+| 删除顺序   | 按控制器策略处理   | 默认按序号倒序删除              |
+| 网络标识   | 不稳定        | 结合 Headless Service 稳定 |
+| 存储关系   | 多副本通常共享模板  | 每个副本可拥有独立 PVC          |
+| 常见应用   | Web、API、网关 | 数据库、注册中心、协调组件          |
 
 StatefulSet 不是为了替代 Deployment。只要应用可以做到无状态化，应优先使用 Deployment。只有当副本身份、启动顺序或数据绑定关系成为业务逻辑的一部分时，才需要 StatefulSet。
 
@@ -98,24 +98,26 @@ kubectl get pod -l app=nginx -o wide
 kubectl get svc nginx
 ```
 
-`spec.serviceName` 必须指向一个已存在或即将创建的 Headless Service 名称。StatefulSet 会基于该 Service 为 Pod 生成稳定 DNS 名称。
+`spec.serviceName` 必须指向负责这组 Pod 网络标识的 Headless Service。该 Service 需要在 StatefulSet 之前由用户创建，StatefulSet 不会自动创建它；控制器会基于该 Service 为每个 Pod 生成稳定 DNS 名称。
 
 ### 核心字段
 
-| 字段 | 说明 |
-| --- | --- |
-| `apiVersion` | StatefulSet 使用 `apps/v1` |
-| `kind` | 资源类型，固定为 `StatefulSet` |
-| `metadata.name` | StatefulSet 名称，也会作为 Pod 名称前缀 |
-| `spec.serviceName` | 用于生成稳定网络标识的 Headless Service 名称 |
-| `spec.replicas` | 期望副本数量，默认值为 1 |
-| `spec.selector` | 匹配 StatefulSet 管理的 Pod |
-| `spec.template` | Pod 模板 |
-| `spec.volumeClaimTemplates` | 为每个 Pod 创建独立 PVC 的模板 |
-| `spec.updateStrategy` | 更新策略，默认是 `RollingUpdate` |
-| `spec.podManagementPolicy` | Pod 管理方式，默认是 `OrderedReady` |
+| 字段                          | 说明                                  |
+|-----------------------------|-------------------------------------|
+| `apiVersion`                | StatefulSet 使用 `apps/v1`            |
+| `kind`                      | 资源类型，固定为 `StatefulSet`              |
+| `metadata.name`             | StatefulSet 名称，也会作为 Pod 名称前缀        |
+| `spec.serviceName`          | 用于生成稳定网络标识的 Headless Service 名称     |
+| `spec.replicas`             | 期望副本数量，默认值为 1                       |
+| `spec.selector`             | 匹配 StatefulSet 管理的 Pod              |
+| `spec.template`             | Pod 模板                              |
+| `spec.volumeClaimTemplates` | 为每个 Pod 创建独立 PVC 的模板                |
+| `spec.ordinals.start`       | Pod 起始序号，默认从 0 开始编号                 |
+| `spec.minReadySeconds`      | 新 Pod Ready 后需保持的最短秒数，达到后才视为可用，默认 0 |
+| `spec.updateStrategy`       | 更新策略，默认是 `RollingUpdate`            |
+| `spec.podManagementPolicy`  | Pod 管理方式，默认是 `OrderedReady`         |
 
-`spec.selector.matchLabels` 必须匹配 `spec.template.metadata.labels`。创建成功后，selector 通常不能修改，因此标签需要提前规划。
+`spec.selector.matchLabels` 必须匹配 `spec.template.metadata.labels`，否则创建请求会被 API 拒绝。创建成功后 selector 不可修改，因此标签需要提前规划。
 
 ### 创建顺序
 
@@ -144,7 +146,43 @@ web-2   Pending
 web-2   Running
 ```
 
-如果 `web-0` 因镜像拉取、资源不足或探针失败长时间无法 Ready，`web-1` 和 `web-2` 可能不会继续创建。排查时应先处理序号更小的 Pod。
+如果 `web-0` 因镜像拉取、资源不足或探针失败长时间无法 Ready，`web-1` 和 `web-2` 不会继续创建。排查时应先处理序号更小的 Pod。
+
+### 起始序号
+
+StatefulSet 默认从 0 开始编号，序号范围是 0 到 `replicas - 1`。`spec.ordinals.start` 可以修改起始序号，设置后序号范围变为 `start` 到 `start + replicas - 1`。该字段自 Kubernetes v1.31 起为稳定特性。
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ordinal-web
+spec:
+  serviceName: ordinal-web
+  replicas: 3
+  ordinals:
+    start: 10
+  selector:
+    matchLabels:
+      app: ordinal-web
+  template:
+    metadata:
+      labels:
+        app: ordinal-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+```
+
+该 StatefulSet 创建的 Pod 为 `ordinal-web-10`、`ordinal-web-11`、`ordinal-web-12`。与其他示例一样，实际创建前需要先按最小示例的方式创建与 `serviceName` 同名的 Headless Service。
+
+起始序号常见用途：
+
+- 让编号从 1 开始，与应用自身的成员编号约定对齐。
+- 在 StatefulSet 之间渐进迁移副本：源 StatefulSet 逐步缩容，目标 StatefulSet 以衔接的起始序号扩容，两侧序号不重叠，Pod 名称对应的稳定身份得以保留。这也是官方给出的跨集群迁移分片方式。
+
+`spec.ordinals.start` 只改变编号，不改变 `OrderedReady` 按序创建、逆序删除的行为；分区滚动更新中 `partition` 比较的也是 Pod 实际序号，自定义起始序号后应按实际序号区间设置。每个 Pod 的序号还会写入 `apps.kubernetes.io/pod-index` 标签，可用于按序号筛选 Pod。
 
 ### 独立存储
 
@@ -199,11 +237,10 @@ data-mysql-2
 
 每个 PVC 与对应序号的 Pod 绑定。`mysql-1` 被删除重建后，仍会挂载 `data-mysql-1`，从而保留该副本的数据。
 
-::: warning 注意
+> [!WARNING]
+> 删除 StatefulSet 默认不会删除 `volumeClaimTemplates` 创建的 PVC。这个设计可以避免误删控制器时连带删除业务数据。清理测试环境时，需要单独确认 PVC 是否需要删除。
 
-删除 StatefulSet 默认不会删除 `volumeClaimTemplates` 创建的 PVC。这个设计可以避免误删控制器时连带删除业务数据。清理测试环境时，需要单独确认 PVC 是否需要删除。
-
-:::
+Kubernetes v1.32 起，`spec.persistentVolumeClaimRetentionPolicy` 字段正式可用，可以分别通过 `whenDeleted` 和 `whenScaled` 控制删除 StatefulSet 或缩容时是否自动删除对应 PVC，取值为 `Retain` 或 `Delete`，默认均为 `Retain`。该策略只作用于删除和缩容场景，节点故障后 Pod 重建仍会复用原有 PVC。
 
 ### 常用查看命令
 
@@ -266,12 +303,14 @@ spec:
 kubectl get svc nginx
 ```
 
-示例输出：
+::: details 输出类似如下
 
 ```text
 NAME    TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
 nginx   ClusterIP   None         <none>        80/TCP    1m
 ```
+
+:::
 
 `CLUSTER-IP` 显示为 `None`，表示这是 Headless Service。
 
@@ -309,12 +348,11 @@ web-2.nginx
 kubectl run dns-test --image=busybox:1.36.1 --restart=Never -- sleep 3600
 ```
 
-进入容器后查询 DNS：
+查询 DNS：
 
 ```bash
-kubectl exec -it dns-test -- sh
-nslookup web-0.nginx
-nslookup web-1.nginx.default.svc.cluster.local
+kubectl exec -it dns-test -- nslookup web-0.nginx
+kubectl exec -it dns-test -- nslookup web-1.nginx.default.svc.cluster.local
 ```
 
 也可以直接访问指定副本：
@@ -360,13 +398,13 @@ kubectl get pod -l app=nginx --show-labels
 
 ### 常见问题
 
-| 现象 | 可能原因 | 排查命令 |
-| --- | --- | --- |
-| `nslookup web-0.nginx` 失败 | CoreDNS 异常或名称写错 | `kubectl get pod -n kube-system -l k8s-app=kube-dns` |
-| Service 没有后端地址 | selector 与 Pod 标签不匹配 | `kubectl get endpointslices -l kubernetes.io/service-name=nginx` |
-| 只能解析 Service，不能解析单个 Pod | StatefulSet 未配置正确 `serviceName` | `kubectl get sts web -o yaml` |
-| 可以解析但访问失败 | 容器端口、应用监听或网络策略问题 | `kubectl describe pod web-0` |
-| 访问旧 IP | DNS 缓存或 Pod 尚未 Ready | `kubectl get pod -o wide` |
+| 现象                        | 可能原因                            | 排查命令                                                             |
+|---------------------------|---------------------------------|------------------------------------------------------------------|
+| `nslookup web-0.nginx` 失败 | CoreDNS 异常或名称写错                 | `kubectl get pod -n kube-system -l k8s-app=kube-dns`             |
+| Service 没有后端地址            | selector 与 Pod 标签不匹配            | `kubectl get endpointslices -l kubernetes.io/service-name=nginx` |
+| 只能解析 Service，不能解析单个 Pod   | StatefulSet 未配置正确 `serviceName` | `kubectl get sts web -o yaml`                                    |
+| 可以解析但访问失败                 | 容器端口、应用监听或网络策略问题                | `kubectl describe pod web-0`                                     |
+| 访问旧 IP                    | DNS 缓存或 Pod 尚未 Ready            | `kubectl get pod -o wide`                                        |
 
 Headless Service 的关键是标签匹配和 DNS 记录。先确认 Pod Ready，再确认 Service selector，最后确认 DNS 查询结果，通常可以快速定位问题。
 
@@ -422,11 +460,8 @@ spec:
 
 这里的关键不是具体镜像，而是 `eureka-0.eureka`、`eureka-1.eureka`、`eureka-2.eureka` 这些稳定地址。应用可以把它们作为集群成员列表，从而避免 Pod 重建后名称变化导致节点发现失败。
 
-::: tip 提示
-
-对于真实业务配置，建议将成员列表放入 ConfigMap 或启动参数模板中，不要把环境差异直接写死在工作负载 YAML 中。
-
-:::
+> [!TIP]
+> 对于真实业务配置，建议将成员列表放入 ConfigMap 或启动参数模板中，不要把环境差异直接写死在工作负载 YAML 中。
 
 ## StatefulSet 更新扩缩容
 
@@ -497,7 +532,7 @@ data-web-2
 kubectl delete pvc data-web-2
 ```
 
-生产环境删除 PVC 前必须确认数据已经备份或不再需要。
+生产环境删除 PVC 前必须确认数据已经备份或不再需要。如果希望缩容时自动清理对应 PVC，可以评估 `persistentVolumeClaimRetentionPolicy` 中的 `whenScaled: Delete` 策略。
 
 ### 更新策略
 
@@ -526,17 +561,19 @@ spec:
           image: nginx:1.27
 ```
 
+本节示例聚焦更新与管理策略字段，未重复展示与 `serviceName` 同名的 Headless Service。实际创建这些 StatefulSet 前，需要按最小示例的方式先创建对应 Service。
+
 常见策略如下：
 
-| 策略 | 行为 | 适用场景 |
-| --- | --- | --- |
-| `RollingUpdate` | Pod 模板变化后自动滚动更新 | 大多数 StatefulSet |
-| `OnDelete` | 模板变化后不自动更新，手动删除 Pod 才重建 | 需要人工确认每个节点更新的场景 |
+| 策略              | 行为                      | 适用场景            |
+|-----------------|-------------------------|-----------------|
+| `RollingUpdate` | Pod 模板变化后自动滚动更新         | 大多数 StatefulSet |
+| `OnDelete`      | 模板变化后不自动更新，手动删除 Pod 才重建 | 需要人工确认每个节点更新的场景 |
 
 Kubernetes 当前默认使用 `RollingUpdate`。更新镜像示例：
 
 ```bash
-kubectl set image sts web nginx=nginx:1.26
+kubectl set image sts web nginx=nginx:1.28
 kubectl rollout status sts web
 ```
 
@@ -547,6 +584,18 @@ web-2 -> web-1 -> web-0
 ```
 
 每个 Pod 会先删除旧实例，再创建新实例。新 Pod Ready 后，才继续处理下一个序号。
+
+### 最短就绪时间
+
+`spec.minReadySeconds` 定义新建 Pod 在没有任何容器崩溃的前提下，保持 Running 且 Ready 的最短秒数，达到后才被视为可用。默认值为 0，即 Ready 即视为可用。该字段自 Kubernetes v1.25 起为稳定特性。
+
+它同时影响更新节奏和扩缩容门槛：
+
+- 滚动更新时，控制器在新 Pod Ready 后还会额外等待 `minReadySeconds`，再继续处理前一个序号的 Pod。
+- `OrderedReady` 策略下扩缩容时，前序 Pod 必须达到可用状态而不只是 Ready，后续 Pod 才会继续处理。
+- `status.availableReplicas` 统计的是 Ready 至少 `minReadySeconds` 的 Pod 数量。
+
+探针只能确认应用当下响应正常。对启动后需要预热缓存、加载数据或建立复制关系的有状态应用，`minReadySeconds` 为每一步变更增加了观察窗口，避免更新推进过快导致集群成员来不及稳定。
 
 ### 分段更新
 
@@ -577,54 +626,88 @@ spec:
           image: nginx:1.26
 ```
 
-假设 StatefulSet 有 5 个副本：
+这个 StatefulSet 有 5 个副本：
 
 ```text
-web-0
-web-1
-web-2
-web-3
-web-4
+partition-web-0
+partition-web-1
+partition-web-2
+partition-web-3
+partition-web-4
 ```
 
-当 `partition: 3` 时，只有序号大于等于 3 的 Pod 会更新：
+当 `partition: 3` 时，更新 Pod 模板后只有序号大于等于 3 的 Pod 会更新：
 
 ```text
-web-3
-web-4
+partition-web-3
+partition-web-4
 ```
 
-低序号 Pod 会继续运行旧版本：
+低序号 Pod 会继续运行旧版本。即使这些 Pod 被删除，也会按旧版本模板重建：
 
 ```text
-web-0
-web-1
-web-2
+partition-web-0
+partition-web-1
+partition-web-2
 ```
 
-修改 `partition`：
+更新镜像并观察各 Pod 的镜像版本：
 
 ```bash
-kubectl patch sts web -p '{"spec":{"updateStrategy":{"type":"RollingUpdate","rollingUpdate":{"partition":3}}}}'
-kubectl set image sts web nginx=nginx:1.26
-kubectl rollout status sts web
-```
-
-观察镜像版本：
-
-```bash
-kubectl get pod -l app=nginx -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+kubectl set image sts partition-web nginx=nginx:1.27
+kubectl rollout status sts partition-web
+kubectl get pod -l app=partition-web -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
 ```
 
 确认高序号 Pod 运行正常后，可以逐步降低 partition：
 
 ```bash
-kubectl patch sts web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":2}}}}'
-kubectl patch sts web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":1}}}}'
-kubectl patch sts web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":0}}}}'
+kubectl patch sts partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":2}}}}'
+kubectl patch sts partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":1}}}}'
+kubectl patch sts partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":0}}}}'
 ```
 
-`partition: 0` 表示所有 Pod 都应更新到新版本。
+`partition` 默认值为 0，表示所有 Pod 都应更新到新版本。如果 `partition` 大于 `spec.replicas`，Pod 模板更新不会传播到任何 Pod。
+
+### 并发更新数量
+
+滚动更新默认一次只处理一个 Pod。`spec.updateStrategy.rollingUpdate.maxUnavailable` 可以放宽更新期间允许不可用的 Pod 数量，取值为绝对数或期望副本数的百分比（百分比向上取整），不能为 0，默认值为 1：
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: burst-web
+spec:
+  serviceName: burst-web
+  replicas: 5
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2
+  selector:
+    matchLabels:
+      app: burst-web
+  template:
+    metadata:
+      labels:
+        app: burst-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+```
+
+> [!WARNING]
+> 截至 Kubernetes v1.36，该字段仍处于 Beta 且默认关闭，需要在控制面开启 `MaxUnavailableStatefulSet` feature gate 才会生效；未开启时更新期间最多一个 Pod 不可用。v1.35.0 到 v1.35.3 曾默认开启，v1.35.4 起改回默认关闭，跨补丁版本升级时应确认集群的实际状态。
+
+使用时需要注意两点：
+
+- 配额统计覆盖 0 到 `replicas - 1` 的全部序号，任何原因不可用的 Pod 都会占用 `maxUnavailable` 名额，而不只是正在更新的 Pod。
+- 默认的 `OrderedReady` 管理策略仍按序号逐个等待 Ready，`maxUnavailable` 大于 1 通常需要配合 `podManagementPolicy: Parallel` 才能真正并发替换多个 Pod。
+
+对成员之间有主从或选主关系的应用，放大并发更新数量前应确认应用能容忍同时失去多个成员。
 
 ### OnDelete 策略
 
@@ -656,9 +739,9 @@ spec:
 修改镜像后，已有 Pod 仍会继续运行旧版本。只有手动删除某个 Pod 后，StatefulSet 才会按新模板创建替代 Pod：
 
 ```bash
-kubectl set image sts web nginx=nginx:1.26
-kubectl delete pod web-2
-kubectl get pod web-2 -w
+kubectl set image sts ondelete-web nginx=nginx:1.28
+kubectl delete pod ondelete-web-2
+kubectl get pod ondelete-web-2 -w
 ```
 
 这种方式适合强依赖人工确认的组件，例如每更新一个节点都需要先确认集群状态、数据同步状态或业务指标。
@@ -746,18 +829,15 @@ spec:
 
 两种策略对比如下：
 
-| 策略 | 行为 | 适用场景 |
-| --- | --- | --- |
-| `OrderedReady` | 按序号顺序创建和删除，等待前一个 Ready | 需要有序启动或有序退场的应用 |
-| `Parallel` | 并行创建和删除 Pod | 副本之间没有启动顺序依赖的应用 |
+| 策略             | 行为                     | 适用场景            |
+|----------------|------------------------|-----------------|
+| `OrderedReady` | 按序号顺序创建和删除，等待前一个 Ready | 需要有序启动或有序退场的应用  |
+| `Parallel`     | 并行创建和删除 Pod            | 副本之间没有启动顺序依赖的应用 |
 
 `podManagementPolicy` 主要影响扩缩容过程，不会改变滚动更新时按序号倒序更新的基本行为。
 
-::: warning 注意
-
-`podManagementPolicy` 创建后通常不应随意调整。选择 `Parallel` 前，需要确认应用不依赖固定启动顺序，也不要求前一个成员 Ready 后再加入下一个成员。
-
-:::
+> [!WARNING]
+> `podManagementPolicy` 在 StatefulSet 创建后不可修改。选择 `Parallel` 前，需要确认应用不依赖固定启动顺序，也不要求前一个成员 Ready 后再加入下一个成员。
 
 ### 删除 StatefulSet
 
@@ -781,3 +861,9 @@ kubectl get pvc
 ```
 
 有状态资源的清理顺序需要谨慎，尤其不能把删除控制器等同于删除数据。
+
+## 参考
+
+- [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+- [StatefulSet API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/stateful-set-v1/)
+- [Feature Gates](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)

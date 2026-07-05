@@ -49,13 +49,13 @@ kubectl get job --sort-by=.metadata.name
 
 常用查看方式如下：
 
-| 命令 | 作用 |
-| --- | --- |
-| `kubectl get pod` | 查看当前 Namespace 的 Pod |
-| `kubectl get pod -A` | 查看所有 Namespace 的 Pod |
-| `kubectl get pod -o wide` | 查看更多运行信息 |
-| `kubectl get pod nginx -o yaml` | 查看完整资源定义 |
-| `kubectl get deploy -l app=nginx` | 按标签查询 Deployment |
+| 命令                                | 作用                   |
+|-----------------------------------|----------------------|
+| `kubectl get pod`                 | 查看当前 Namespace 的 Pod |
+| `kubectl get pod -A`              | 查看所有 Namespace 的 Pod |
+| `kubectl get pod -o wide`         | 查看更多运行信息             |
+| `kubectl get pod nginx -o yaml`   | 查看完整资源定义             |
+| `kubectl get deploy -l app=nginx` | 按标签查询 Deployment     |
 
 ## 查看详情
 
@@ -78,18 +78,22 @@ kubectl apply -f nginx-deploy.yaml
 kubectl edit deployment nginx
 kubectl replace -f nginx-deploy.yaml
 kubectl scale deployment nginx --replicas=3
-kubectl set image deployment/nginx nginx=nginx:1.26
+kubectl set image deployment/nginx nginx=nginx:1.28
+kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
 ```
 
 几种方式的区别如下：
 
-| 命令 | 特点 | 适用场景 |
-| --- | --- | --- |
-| `apply` | 声明式创建或更新 | 推荐用于 YAML 管理 |
-| `edit` | 在线编辑当前资源 | 临时修改和排查 |
-| `replace` | 用文件替换已有资源 | 明确知道完整资源定义时使用 |
-| `scale` | 调整副本数 | Deployment、StatefulSet 等扩缩容 |
-| `set image` | 修改容器镜像 | 快速发版或测试 |
+| 命令          | 特点        | 适用场景                        |
+|-------------|-----------|-----------------------------|
+| `apply`     | 声明式创建或更新  | 推荐用于 YAML 管理                |
+| `edit`      | 在线编辑当前资源  | 临时修改和排查                     |
+| `replace`   | 用文件替换已有资源 | 明确知道完整资源定义时使用               |
+| `scale`     | 调整副本数     | Deployment、StatefulSet 等扩缩容 |
+| `set image` | 修改容器镜像    | 快速发版或测试                     |
+| `patch`     | 按补丁更新部分字段 | 脚本化修改单个或少量字段                |
+
+`patch` 默认使用 strategic merge patch，也可以通过 `--type` 指定 JSON merge patch 或 JSON patch。
 
 生产环境更推荐把资源配置写入 YAML 并使用 `apply`，这样配置的每次变更都能纳入版本管理。
 

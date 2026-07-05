@@ -14,18 +14,19 @@ flowchart TB
   pod --> vol["Volume"]
 ```
 
-> 早期 Kubernetes（含 dockershim）的实现中会为每个 Pod 注入一个 `pause` 容器（infra container）来持有网络命名空间。containerd 等现代 CRI 运行时不再呈现独立的 pause 容器进程，而是直接在 Pod sandbox 层完成网络命名空间的创建和持有。用户通过 `crictl ps` 或 `ctr -n k8s.io containers ls` 看到的是业务容器和可能的隐式沙箱对象，不应按旧习惯去找一个叫 `pause` 的独立容器。
+> [!NOTE]
+> 每个 Pod 中会先创建一个基础设施容器（`pause` 容器）：它持有 Pod 的网络命名空间等共享环境，使业务容器崩溃或重启时不丢失网络配置。使用 containerd 时，`pause` 容器就是 CRI 中 Pod sandbox 的实现，因此 `crictl ps` 只列出业务容器，sandbox 需要用 `crictl pods` 查看；`ctr -n k8s.io containers ls` 中则能直接看到运行 `pause` 镜像的容器。第 01 章预拉取的 `registry.k8s.io/pause:3.10.2` 就是本环境使用的 sandbox 镜像。
 
 ## Pod 共享的资源
 
 同一个 Pod 内的容器处在同一个运行边界内，常见共享内容如下：
 
-| 资源 | 说明 |
-| --- | --- |
-| 网络命名空间 | 共享 Pod IP 和端口空间 |
-| 存储卷 | 通过 Volume 在容器之间共享文件 |
-| 生命周期边界 | Pod 作为整体被调度、创建和删除 |
-| 本地通信 | 容器之间可以通过 `localhost` 通信 |
+| 资源     | 说明                      |
+|--------|-------------------------|
+| 网络命名空间 | 共享 Pod IP 和端口空间         |
+| 存储卷    | 通过 Volume 在容器之间共享文件     |
+| 生命周期边界 | Pod 作为整体被调度、创建和删除       |
+| 本地通信   | 容器之间可以通过 `localhost` 通信 |
 
 由于共享网络命名空间，同一个 Pod 内的两个容器不能监听相同的端口。
 
@@ -78,23 +79,23 @@ spec:
 
 字段含义：
 
-| 字段 | 说明 |
-| --- | --- |
-| `apiVersion` | API 版本，Pod 通常为 `v1` |
-| `kind` | 资源类型，这里是 `Pod` |
-| `metadata` | 资源元数据，如名称、标签、Namespace |
-| `spec` | 期望状态，描述容器、镜像、端口、卷等配置 |
-| `status` | 当前状态，由 Kubernetes 维护，通常不手写 |
+| 字段           | 说明                         |
+|--------------|----------------------------|
+| `apiVersion` | API 版本，Pod 为 `v1`          |
+| `kind`       | 资源类型，这里是 `Pod`             |
+| `metadata`   | 资源元数据，如名称、标签、Namespace     |
+| `spec`       | 期望状态，描述容器、镜像、端口、卷等配置       |
+| `status`     | 当前状态，由 Kubernetes 维护，通常不手写 |
 
 ## 裸 Pod 与控制器
 
 可以直接创建 Pod，但生产中很少直接使用裸 Pod。更常见的做法是使用 Deployment、StatefulSet、DaemonSet 等控制器创建和管理 Pod。
 
-| 创建方式 | 特点 |
-| --- | --- |
-| 裸 Pod | 简单直接，但缺少副本管理和更新能力 |
-| Deployment | 适合无状态应用，支持副本、滚动更新和回滚 |
-| StatefulSet | 适合有状态应用，提供稳定身份和存储 |
-| DaemonSet | 适合每个节点运行一个 Pod 的场景 |
+| 创建方式        | 特点                   |
+|-------------|----------------------|
+| 裸 Pod       | 简单直接，但缺少副本管理和更新能力    |
+| Deployment  | 适合无状态应用，支持副本、滚动更新和回滚 |
+| StatefulSet | 适合有状态应用，提供稳定身份和存储    |
+| DaemonSet   | 适合每个节点运行一个 Pod 的场景   |
 
 这里直接记录 Pod，是为了明确最小可部署单元的边界；后续文档会使用 Deployment 等控制器来管理 Pod。

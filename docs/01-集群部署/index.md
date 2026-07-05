@@ -1,6 +1,8 @@
 # 集群部署
 
-本章目标是搭建一套可运行、可验证、便于反复调整的 Kubernetes 实验集群。整个过程以 kubeadm 为安装工具、containerd 为容器运行时、Calico 为 CNI 网络插件、Metrics Server 为资源指标组件，形成从主机准备到集群验证的完整部署链路。后续 Pod、Service、Ingress、存储、调度和可观测性等记录均基于这一实验环境展开。
+本章是全书的起点，从零准备主机环境，搭建一套可运行、可验证、便于反复调整的 Kubernetes 实验集群。
+
+本章以 kubeadm 为安装工具、containerd 为容器运行时、Calico 为 CNI 网络插件、Metrics Server 为资源指标组件，形成从主机准备到集群验证的完整部署链路。后续 Pod、Service、Ingress、存储、调度和可观测性等记录均基于这一实验环境展开。
 
 ## 部署脉络
 
@@ -17,7 +19,7 @@
 - **kubeadm** 负责节点初始化、控制平面组件部署、集群引导、证书管理和版本升级等集群生命周期操作。
 - **containerd** 是集群的 CRI 运行时，负责为 kubelet 创建 Pod sandbox、拉取镜像并管理容器进程。
 - **Calico** 承担 Pod 网络与节点间通信的实现。它解决的是 CNI 网络插件层的问题。
-- **kube-proxy** 以 DaemonSet 运行在各节点，负责 Service 的负载均衡实现，通过 iptables 或 IPVS 规则将 Service 流量转发到后端 Pod。
+- **kube-proxy** 以 DaemonSet 运行在各节点，负责 Service 的负载均衡实现，默认通过 iptables 规则将 Service 流量转发到后端 Pod，也可配置为 nftables 模式；IPVS 模式自 v1.35 起已弃用。
 - **CoreDNS** 为集群内的 Service 与 Pod 提供 DNS 解析，使 Pod 可以通过 DNS 名称访问其他 Service。
 - **Metrics Server** 提供 `metrics.k8s.io` 资源指标 API，使 `kubectl top`、HPA 和 VPA 能够获取节点与 Pod 的 CPU、内存用量。
 

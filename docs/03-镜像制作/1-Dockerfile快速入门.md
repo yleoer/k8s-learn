@@ -4,22 +4,23 @@ Dockerfile 是一个纯文本文件，按行声明构建步骤。构建指令会
 
 ## 常用指令
 
-| 指令          | 作用                                                 |
-| ------------- | ---------------------------------------------------- |
+| 指令            | 作用                                    |
+|---------------|---------------------------------------|
 | `FROM`        | 指定基础镜像并创建构建阶段，通常是第一条指令；仅 `ARG` 可在其前声明 |
-| `RUN`         | 在构建阶段执行 shell 命令                            |
-| `LABEL`       | 添加镜像元数据（维护者、版本、源码地址等）           |
-| `ENV`         | 设置环境变量，构建阶段和运行阶段均可见               |
+| `RUN`         | 在构建阶段执行命令，产生新的镜像层                     |
+| `LABEL`       | 添加镜像元数据（维护者、版本、源码地址等）                 |
+| `ENV`         | 设置环境变量，构建阶段和运行阶段均可见                   |
 | `ARG`         | 设置构建参数，仅在构建阶段可见                       |
-| `COPY`        | 复制文件或目录到镜像                                 |
+| `COPY`        | 复制文件或目录到镜像                            |
 | `ADD`         | 复制文件到镜像，额外支持自动解压本地 tar 包和从远程 URL 获取内容 |
-| `WORKDIR`     | 设置后续指令的工作目录                               |
-| `USER`        | 设置运行容器时使用的用户                             |
-| `EXPOSE`      | 声明容器计划监听的端口（仅文档作用，不实际发布端口） |
-| `HEALTHCHECK` | 定义检查容器是否健康的方式                           |
+| `WORKDIR`     | 设置后续指令的工作目录                           |
+| `USER`        | 设置当前阶段后续指令和容器运行时使用的用户                 |
+| `EXPOSE`      | 声明容器计划监听的端口（仅文档作用，不实际发布端口）            |
+| `HEALTHCHECK` | 定义检查容器是否健康的方式                         |
 | `CMD`         | 容器启动时的默认命令，可被 `docker run` 覆盖         |
-| `ENTRYPOINT`  | 容器入口命令，`CMD` 的内容会作为它的默认参数         |
+| `ENTRYPOINT`  | 容器入口命令，`CMD` 的内容会作为它的默认参数             |
 
+> [!NOTE]
 > `MAINTAINER` 已废弃，改用 `LABEL maintainer="..."`。
 
 ## 第一个镜像
@@ -33,7 +34,7 @@ mkdir -p html
 echo '<h1>Hello nginx</h1>' > html/index.html
 ```
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM nginx:1.27-alpine
 COPY ./html /usr/share/nginx/html
 EXPOSE 80
@@ -45,8 +46,7 @@ EXPOSE 80
 docker build -t nginx:demo .
 ```
 
-<details>
-<summary>docker build 输出类似如下</summary>
+::: details docker build 输出类似如下
 
 ```text
 $ docker build -t nginx:demo .
@@ -66,7 +66,7 @@ $ docker build -t nginx:demo .
  => => naming to docker.io/library/nginx:demo                                                                                               0.0s
 ```
 
-</details>
+:::
 
 运行验证：
 
@@ -95,7 +95,7 @@ FROM alpine:3.20
 
 `RUN` 在构建阶段执行命令，常用于安装依赖、创建用户、下载文件等操作。每条 `RUN` 会生成一个新的镜像层。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 LABEL maintainer="yleoer"
 RUN adduser -D yleoer
@@ -135,7 +135,7 @@ RUN apt-get update \
 
 `LABEL` 用来给镜像添加结构化元数据，例如维护者、版本、源码地址、构建时间等，便于仓库、扫描工具和平台识别。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 LABEL maintainer="yleoer" version="demo"
 LABEL multiple="true"
@@ -167,12 +167,13 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
 
 检查命令在容器内部执行，必须使用镜像内实际存在的工具：Alpine 系镜像（如 `nginx:1.27-alpine`）自带 busybox `wget`，默认没有 `curl`。检查路径也应指向应用真实提供的端点——静态站点检查 `/`，后端服务通常暴露专门的 `/healthz`。
 
-| 参数             | 含义                             | 默认值 |
-| ---------------- | -------------------------------- | ------ |
-| `--interval`     | 每次检查的间隔时间               | 30s    |
-| `--timeout`      | 单次检查的超时时间               | 30s    |
-| `--retries`      | 连续失败多少次后判定为 unhealthy | 3      |
-| `--start-period` | 容器启动后等待多久再开始检查     | 0s     |
+| 参数                 | 含义                                   | 默认值 |
+|--------------------|--------------------------------------|-----|
+| `--interval`       | 每次检查的间隔时间                            | 30s |
+| `--timeout`        | 单次检查的超时时间                            | 30s |
+| `--retries`        | 连续失败多少次后判定为 unhealthy                | 3   |
+| `--start-period`   | 启动初始化期时长，此期间的检查失败不计入 `--retries`     | 0s  |
+| `--start-interval` | 启动初始化期内的检查间隔（Docker Engine 25.0 及以上） | 5s  |
 
 健康状态会显示在 `docker ps` 的 `STATUS` 列：
 
@@ -187,7 +188,7 @@ Kubernetes 不会自动读取 Docker 镜像中的 `HEALTHCHECK` 指令转换为 
 
 - 固定基础镜像版本，不依赖 `latest`。
 - 变更少的内容放前面，充分发挥缓存复用。
-- 敏感信息（密码、Token、私钥）不通过 `ARG` 或 `ENV` 写入镜像；构建阶段使用 BuildKit secret mount，运行阶段通过 Secret 或挂载文件注入。
+- 敏感信息（密码、Token、私钥）不通过 `ARG` 或 `ENV` 写入镜像；构建阶段使用 BuildKit secret mount（见 [BuildKit 构建挂载与 heredoc](./6-BuildKit构建挂载与heredoc.md)），运行阶段通过 Secret 或挂载文件注入。
 - 一个容器只运行一个主要进程，便于管理、监控和排障。
 - 按运行方式评估是否添加 `HEALTHCHECK`，并优先使用非 root 用户。
 - 构建完成后用 `docker scout` 或 Harbor / Trivy 扫描已知漏洞。

@@ -17,7 +17,7 @@ mkdir -p webroot && echo '<h1>hello</h1>' > webroot/index.html
 tar czf index.tar.gz -C webroot .
 ```
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM nginx:1.27-alpine
 ADD ./index.tar.gz /usr/share/nginx/html/
 ```
@@ -26,7 +26,7 @@ ADD ./index.tar.gz /usr/share/nginx/html/
 
 ### COPY：普通文件复制
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM nginx:1.27-alpine
 COPY webroot/ /usr/share/nginx/html/
 ```
@@ -65,7 +65,7 @@ COPY --chown=1001:1001 --chmod=755 app /usr/local/bin/app
 
 `WORKDIR` 设置后续指令的执行路径，影响 `RUN`、`CMD`、`ENTRYPOINT`、`COPY` 和 `ADD` 的相对路径解析。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM nginx:1.27-alpine
 WORKDIR /usr/share/nginx/html
 COPY webroot/ .
@@ -81,9 +81,9 @@ COPY webroot/ .
 
 ## USER：运行用户
 
-`USER` 设定容器启动后进程使用的身份。默认以 root 运行，生产环境应优先切换到非 root 用户。
+`USER` 设定当前构建阶段后续指令（含 `RUN`）以及容器运行时进程使用的身份。基础镜像未声明时默认以 root 运行，生产环境应优先切换到非 root 用户。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
@@ -103,7 +103,7 @@ CMD ["/app/app"]
 
 以下 Dockerfile 把 COPY、WORKDIR、USER 组合起来，展示一个典型的可执行文件部署流程：
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 
 # 创建运行时用户

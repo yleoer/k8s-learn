@@ -6,7 +6,7 @@
 
 `ENV` 设置的环境变量在构建阶段和容器运行阶段均可见，适合注入应用运行所需的配置。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 ENV APP_ENV=production \
     APP_PORT=8080
@@ -15,21 +15,13 @@ CMD echo "env=$APP_ENV port=$APP_PORT"
 
 ```bash
 docker build -t demo:env .
-docker run --rm demo:env
-```
-
-```text
-env=production port=8080
+docker run --rm demo:env # 输出 env=production port=8080
 ```
 
 启动容器时可通过 `-e` 覆盖：
 
 ```bash
-docker run --rm -e APP_ENV=staging demo:env
-```
-
-```text
-env=staging port=8080
+docker run --rm -e APP_ENV=staging demo:env # 输出 env=staging port=8080
 ```
 
 多变量建议用多行写法，可读性更好：
@@ -44,7 +36,7 @@ ENV APP_ENV=production \
 
 `CMD` 定义容器启动时执行的默认命令。如果 `docker run` 后面跟了命令，`CMD` 将被覆盖。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 CMD ["echo", "hello from cmd"]
 ```
@@ -91,7 +83,7 @@ CMD ["sh", "-c", "echo app version: $APP_VERSION"]
 
 `ENTRYPOINT` 定义容器入口，比 `CMD` 更难被覆盖——`docker run` 后的参数会追加到 `ENTRYPOINT` 之后，而不是替换它。适合固定主程序的场景。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 ENTRYPOINT ["echo"]
 CMD ["hello"]
@@ -115,11 +107,11 @@ docker run --rm --entrypoint sh demo:entry
 
 ## CMD 与 ENTRYPOINT 的配合
 
-| 组合                 | 效果                                   | 典型场景                 |
-| -------------------- | -------------------------------------- | ------------------------ |
-| 只用 `CMD`           | 默认命令，`docker run <args>` 直接覆盖 | 通用工具镜像、一次性任务 |
-| 只用 `ENTRYPOINT`    | 固定入口，`docker run <args>` 追加参数 | 简化 CLI 调用            |
-| `ENTRYPOINT` + `CMD` | 固定主程序 + 可替换的默认参数          | **最常见的生产写法**     |
+| 组合                   | 效果                            | 典型场景         |
+|----------------------|-------------------------------|--------------|
+| 只用 `CMD`             | 默认命令，`docker run <args>` 直接覆盖 | 通用工具镜像、一次性任务 |
+| 只用 `ENTRYPOINT`      | 固定入口，`docker run <args>` 追加参数 | 简化 CLI 调用    |
+| `ENTRYPOINT` + `CMD` | 固定主程序 + 可替换的默认参数              | **最常见的生产写法** |
 
 常见模式的对比：
 
@@ -136,13 +128,14 @@ CMD ["-g", "daemon off;"]
 
 方式二的效果是 `docker run --rm nginx:prod -T` 会在 `nginx` 之后拼接 `-T`，而不是替换整个命令。
 
+> [!TIP]
 > 复杂启动逻辑（环境检查、配置模板渲染、权限修正）建议放到独立的入口脚本（如 `entrypoint.sh`），不要全部塞进 Dockerfile 指令中。
 
 ## ARG：构建参数
 
 `ARG` 只在构建阶段可见，容器运行时默认不可用。适合控制镜像版本、下载地址、编译开关等。
 
-```dockerfile
+```dockerfile [Dockerfile]
 FROM alpine:3.20
 ARG APP_USER=appuser
 ARG APP_UID=1001
@@ -156,7 +149,7 @@ docker build --build-arg APP_USER=myapp --build-arg APP_UID=2000 -t demo:arg .
 
 ARG 也可用于控制基础镜像版本：
 
-```dockerfile
+```dockerfile [Dockerfile]
 ARG ALPINE_VERSION=3.20
 FROM alpine:${ALPINE_VERSION}
 ```
@@ -167,12 +160,12 @@ docker build --build-arg ALPINE_VERSION=3.21 -t demo:alpine321 .
 
 ### ARG 与 ENV 的区别
 
-| 对比项            | ARG                        | ENV                                    |
-| ----------------- | -------------------------- | -------------------------------------- |
-| 可见阶段          | 仅构建阶段                 | 构建阶段和运行阶段                     |
-| 容器内 `env` 可见 | 默认不可见                 | 可见                                   |
-| 适合用途          | 版本号、下载地址、编译开关 | 应用运行配置（端口、环境名、日志级别） |
-| 运行时覆盖        | 不可覆盖                   | `docker run -e` 可覆盖                 |
+| 对比项          | ARG           | ENV                 |
+|--------------|---------------|---------------------|
+| 可见阶段         | 仅构建阶段         | 构建阶段和运行阶段           |
+| 容器内 `env` 可见 | 默认不可见         | 可见                  |
+| 适合用途         | 版本号、下载地址、编译开关 | 应用运行配置（端口、环境名、日志级别） |
+| 运行时覆盖        | 不可覆盖          | `docker run -e` 可覆盖 |
 
 实践中两者常配合使用：ARG 接收构建时的版本号，并赋值给 ENV 供运行时读取：
 
@@ -181,4 +174,5 @@ ARG VERSION=1.0.0
 ENV APP_VERSION=$VERSION
 ```
 
+> [!CAUTION]
 > 不要用 `ARG` 或 `ENV` 传密码、Token、私钥。构建阶段应使用 BuildKit secret mount，运行阶段应通过 Kubernetes Secret、受控环境变量或挂载文件注入。

@@ -4,10 +4,10 @@ Kubernetes 通过 kubelet 对容器执行健康探针：`startupProbe`、`livene
 
 ## 三种探针
 
-| 探针 | 解决的问题 | 失败后的结果 |
-| --- | --- | --- |
-| `startupProbe` | 应用是否已经完成启动 | 失败超过阈值后重启容器 |
-| `livenessProbe` | 应用是否仍然存活 | 失败超过阈值后重启容器 |
+| 探针               | 解决的问题      | 失败后的结果                             |
+|------------------|------------|------------------------------------|
+| `startupProbe`   | 应用是否已经完成启动 | 失败超过阈值后重启容器                        |
+| `livenessProbe`  | 应用是否仍然存活   | 失败超过阈值后重启容器                        |
 | `readinessProbe` | 应用是否可以接收流量 | 失败后标记为 NotReady，Service 不再将其作为可用后端 |
 
 慢启动应用应优先配置 startupProbe。长期运行的服务建议配置 readinessProbe。livenessProbe 只检查应用是否需要重启，不应依赖数据库、缓存或第三方外部接口。
@@ -16,7 +16,7 @@ Kubernetes 通过 kubelet 对容器执行健康探针：`startupProbe`、`livene
 
 `startupProbe` 用于保护启动较慢的应用。在 startupProbe 成功之前，livenessProbe 和 readinessProbe 不会按运行期逻辑影响容器。
 
-```yaml
+```yaml [startup-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -53,7 +53,7 @@ kubectl describe pod startup-probe-demo
 
 `livenessProbe` 用于判断容器是否仍然存活。探针连续失败后，kubelet 会重启容器。
 
-```yaml
+```yaml [liveness-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -88,7 +88,7 @@ kubectl describe pod liveness-probe-demo
 
 `readinessProbe` 用于判断 Pod 是否可以接收业务流量。探针失败后，Pod 不会被重启，但会变为 NotReady，Service 不再将其作为可用后端。
 
-```yaml
+```yaml [readiness-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -124,41 +124,18 @@ kubectl describe pod readiness-probe-demo
 
 ## 四种检查方式
 
-| 方式 | 说明 | 适用场景 |
-| --- | --- | --- |
-| `exec` | 在容器内执行命令，退出码为 0 表示成功 | 自定义脚本、本地文件或进程检查 |
-| `tcpSocket` | 对指定端口建立 TCP 连接 | 只能判断端口是否可连接 |
-| `httpGet` | 发送 HTTP GET 请求，根据状态码判断 | Web 服务、HTTP 健康接口 |
-| `grpc` | 使用 gRPC Health Checking 协议 | gRPC 服务健康检查 |
+| 方式          | 说明                         | 适用场景             |
+|-------------|----------------------------|------------------|
+| `exec`      | 在容器内执行命令，退出码为 0 表示成功       | 自定义脚本、本地文件或进程检查  |
+| `tcpSocket` | 对指定端口建立 TCP 连接             | 只能判断端口是否可连接      |
+| `httpGet`   | 发送 HTTP GET 请求，根据状态码判断     | Web 服务、HTTP 健康接口 |
+| `grpc`      | 使用 gRPC Health Checking 协议 | gRPC 服务健康检查      |
 
-HTTP readiness 示例：
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: http-readiness-demo
-  labels:
-    app: http-readiness-demo
-spec:
-  containers:
-    - name: nginx
-      image: nginx:stable-alpine
-      ports:
-        - containerPort: 80
-      readinessProbe:
-        httpGet:
-          path: /
-          port: 80
-        initialDelaySeconds: 5
-        periodSeconds: 5
-        timeoutSeconds: 2
-        failureThreshold: 2
-```
+HTTP 方式的完整写法见上文 readinessProbe 示例。
 
 TCP liveness 示例：
 
-```yaml
+```yaml [tcp-liveness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -179,7 +156,7 @@ spec:
 
 exec 示例：
 
-```yaml
+```yaml [exec-liveness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -203,7 +180,7 @@ spec:
 
 gRPC 示例：
 
-```yaml
+```yaml [grpc-readiness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -215,24 +192,24 @@ spec:
       args:
         - grpc-health-checking
       ports:
-        - containerPort: 50051
+        - containerPort: 5000
       readinessProbe:
         grpc:
-          port: 50051
+          port: 5000
         periodSeconds: 5
 ```
 
-gRPC 探针要求应用实现标准的 gRPC Health Checking 协议，响应为 `SERVING` 时视为检查通过。
+gRPC 探针要求应用实现标准的 gRPC Health Checking 协议，响应为 `SERVING` 时视为检查通过。示例中 `agnhost grpc-health-checking` 默认监听 `5000` 端口。
 
 ## 时间参数
 
-| 字段 | 含义 |
-| --- | --- |
-| `initialDelaySeconds` | 容器启动后等待多久开始第一次检查 |
-| `periodSeconds` | 每隔多久执行一次检查 |
-| `timeoutSeconds` | 单次检查最多等待多久 |
-| `failureThreshold` | 连续失败多少次才判定失败 |
-| `successThreshold` | 连续成功多少次才判定为成功 |
+| 字段                    | 默认值  | 含义               |
+|-----------------------|------|------------------|
+| `initialDelaySeconds` | `0`  | 容器启动后等待多久开始第一次检查 |
+| `periodSeconds`       | `10` | 每隔多久执行一次检查       |
+| `timeoutSeconds`      | `1`  | 单次检查最多等待多久       |
+| `failureThreshold`    | `3`  | 连续失败多少次才判定失败     |
+| `successThreshold`    | `1`  | 连续成功多少次才判定为成功    |
 
 失败判定可粗略估算为：
 
@@ -240,4 +217,4 @@ gRPC 探针要求应用实现标准的 gRPC Health Checking 协议，响应为 `
 initialDelaySeconds + periodSeconds * failureThreshold
 ```
 
-readinessProbe 可以将 `successThreshold` 设为大于 `1`，要求连续成功多次后才恢复 Ready 状态。
+readinessProbe 可以将 `successThreshold` 设为大于 `1`，要求连续成功多次后才恢复 Ready 状态。livenessProbe 和 startupProbe 的 `successThreshold` 必须为 `1`。

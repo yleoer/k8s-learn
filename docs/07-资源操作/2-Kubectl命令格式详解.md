@@ -20,18 +20,18 @@ kubectl delete service nginx
 
 各部分含义如下：
 
-| 部分 | 含义 | 示例 |
-| --- | --- | --- |
-| `command` | 要执行的操作 | `get`、`create`、`apply`、`delete` |
-| `TYPE` | 资源类型 | `pod`、`deployment`、`service` |
-| `NAME` | 资源名称，可省略 | `nginx` |
-| `flags` | 命令选项 | `-n`、`-o yaml`、`--show-labels` |
+| 部分        | 含义       | 示例                              |
+|-----------|----------|---------------------------------|
+| `command` | 要执行的操作   | `get`、`create`、`apply`、`delete` |
+| `TYPE`    | 资源类型     | `pod`、`deployment`、`service`    |
+| `NAME`    | 资源名称，可省略 | `nginx`                         |
+| `flags`   | 命令选项     | `-n`、`-o yaml`、`--show-labels`  |
 
-不指定 `NAME` 时，通常表示查询当前 Namespace 下该类型的所有资源；指定 `NAME` 时，表示操作某一个具体资源。
+资源类型大小写不敏感；资源名称大小写敏感。不指定 `NAME` 时，通常表示查询当前 Namespace 下该类型的所有资源；指定 `NAME` 时，表示操作某一个具体资源。
 
 ## 资源类型写法
 
-Kubernetes 资源类型通常可以使用完整名称、复数名称或短名称：
+Kubernetes 资源类型可以使用单数名称、复数名称或简称：
 
 ```bash
 kubectl get pod
@@ -41,15 +41,15 @@ kubectl get po
 
 常见资源简称如下：
 
-| 完整资源 | 常用简称 | 说明 |
-| --- | --- | --- |
-| `pods` | `po` | Pod 资源 |
+| 完整资源          | 常用简称     | 说明            |
+|---------------|----------|---------------|
+| `pods`        | `po`     | Pod 资源        |
 | `deployments` | `deploy` | Deployment 资源 |
-| `services` | `svc` | Service 资源 |
-| `namespaces` | `ns` | Namespace 资源 |
-| `configmaps` | `cm` | ConfigMap 资源 |
-| `secrets` | 无 | Secret 资源 |
-| `nodes` | `no` | Node 资源 |
+| `services`    | `svc`    | Service 资源    |
+| `namespaces`  | `ns`     | Namespace 资源  |
+| `configmaps`  | `cm`     | ConfigMap 资源  |
+| `secrets`     | 无        | Secret 资源     |
+| `nodes`       | `no`     | Node 资源       |
 
 如果忘记资源名称或简称，可以使用 `api-resources` 查询：
 
@@ -84,27 +84,27 @@ kubectl get pod nginx -o json
 kubectl get pod -o name
 ```
 
-| 输出格式 | 适用场景 |
-| --- | --- |
+| 输出格式   | 适用场景                   |
+|--------|------------------------|
 | `wide` | 查看更多摘要字段，如 Pod IP、Node |
-| `yaml` | 查看完整资源定义，适合查看字段和备份配置 |
-| `json` | 适合脚本或工具进一步处理 |
-| `name` | 只输出资源类型和名称，适合批量操作 |
+| `yaml` | 查看完整资源定义，适合查看字段和备份配置   |
+| `json` | 适合脚本或工具进一步处理           |
+| `name` | 只输出资源类型和名称，适合批量操作      |
 
 ## 常用全局参数
 
 以下参数适用于大多数 kubectl 命令：
 
-| 参数 | 作用 |
-| --- | --- |
-| `-n, --namespace` | 指定 Namespace |
-| `-A, --all-namespaces` | 查询所有 Namespace 的资源 |
-| `-o` | 指定输出格式 |
-| `--show-labels` | 显示资源标签 |
-| `-l, --selector` | 按标签筛选资源 |
-| `--field-selector` | 按字段筛选资源 |
-| `--kubeconfig` | 指定 kubeconfig 文件路径 |
-| `--context` | 指定 kubeconfig 中的上下文 |
+| 参数                     | 作用                  |
+|------------------------|---------------------|
+| `-n, --namespace`      | 指定 Namespace        |
+| `-A, --all-namespaces` | 查询所有 Namespace 的资源  |
+| `-o`                   | 指定输出格式              |
+| `--show-labels`        | 显示资源标签              |
+| `-l, --selector`       | 按标签筛选资源             |
+| `--field-selector`     | 按字段筛选资源             |
+| `--kubeconfig`         | 指定 kubeconfig 文件路径  |
+| `--context`            | 指定 kubeconfig 中的上下文 |
 
 示例：
 

@@ -21,7 +21,7 @@ sudo systemctl status containerd --no-pager
 
 ## 安装 Docker Engine
 
-Docker APT 源已在前序章节添加，直接安装所需组件即可：
+Docker APT 源已在本章 [运行时与组件安装](./2-运行时与组件安装.md) 中添加，直接安装所需组件即可：
 
 ```bash
 sudo apt update
@@ -78,7 +78,7 @@ Docker Engine 与 Kubernetes 使用不同的运行时入口和管理视图，镜
 - `sudo crictl images` 查看 Kubernetes CRI 运行时中的镜像。
 - `sudo ctr -n k8s.io images ls` 直接查看 containerd `k8s.io` 命名空间下的镜像。
 
-**本地导入的镜像只存在于导入节点上的 containerd `k8s.io` 命名空间中**。Docker 的 `registry-mirrors` 配置只影响 Docker 守护进程的镜像拉取，不影响 containerd 的镜像拉取；反之，containerd 的 `hosts.toml` 加速配置也只影响 CRI 运行时，Docker 不会受益。需要在 containerd 中配置镜像加速时，参照第 2 章「可选：配置镜像加速」小节。
+**本地导入的镜像只存在于导入节点上的 containerd `k8s.io` 命名空间中**。Docker 的 `registry-mirrors` 配置只影响 Docker 守护进程的镜像拉取，不影响 containerd 的镜像拉取；反之，containerd 的 `hosts.toml` 加速配置也只影响 CRI 运行时，Docker 不会受益。需要在 containerd 中配置镜像加速时，参照本章 [运行时与组件安装](./2-运行时与组件安装.md) 中「可选：配置镜像加速」小节。
 
 **推荐做法**：通过镜像仓库中转，使 Kubernetes 拉取 Docker 构建的镜像。已有 Deployment `myapp` 时，可更新其中名为 `myapp` 的容器镜像：
 

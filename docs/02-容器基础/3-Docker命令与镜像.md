@@ -25,7 +25,7 @@ docker images
 docker search redis
 ```
 
-输出类似如下：
+::: details 输出类似如下
 
 ```text
 NAME                   DESCRIPTION                                      STARS     OFFICIAL
@@ -33,6 +33,8 @@ redis                  Redis is an open source key-value store that…   14000  
 bitnami/redis          Bitnami Redis Docker Image                      300
 redis/redis-stack      Redis Stack with JSON, Search, Timeseries…      250
 ```
+
+:::
 
 `OFFICIAL [OK]` 表示该镜像为 Docker 官方维护镜像。生产环境选择镜像时，应优先考虑来源可信、维护活跃、版本标签清晰、漏洞扫描结果可接受的镜像。
 
@@ -70,7 +72,9 @@ docker images
 docker image ls
 ```
 
-Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起，CLI 默认改用新的输出格式，即使服务端仍在使用传统存储驱动也是如此：
+Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起，CLI 默认改用新的输出格式，即使服务端仍在使用传统存储驱动也是如此。
+
+::: details 新版输出类似如下
 
 ```text
 IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
@@ -81,15 +85,17 @@ nginx:latest         936fef290c8f        161MB             0B    U
 redis:8-alpine       3a02d38405dc        114MB             0B
 ```
 
+:::
+
 字段含义如下：
 
-| 字段 | 说明 |
-| --- | --- |
-| `IMAGE` | 镜像名称和标签 |
-| `ID` | 镜像短 ID，用于快速识别镜像对象 |
-| `DISK USAGE` | 镜像在本机占用的磁盘空间（包含解压后的层数据） |
+| 字段             | 说明                                               |
+|----------------|--------------------------------------------------|
+| `IMAGE`        | 镜像名称和标签                                          |
+| `ID`           | 镜像短 ID，用于快速识别镜像对象                                |
+| `DISK USAGE`   | 镜像在本机占用的磁盘空间（包含解压后的层数据）                          |
 | `CONTENT SIZE` | 本地保留的镜像压缩内容（推送、拉取时传输的 blob）大小；本地未保留压缩内容时显示为 `0B` |
-| `EXTRA` | 附加状态标记，`U` 表示镜像正在被容器使用或引用 |
+| `EXTRA`        | 附加状态标记，`U` 表示镜像正在被容器使用或引用                        |
 
 如果希望获得更稳定、便于脚本处理的输出，可以使用 `--format`：
 
@@ -173,6 +179,6 @@ docker load -i nginx.alpine.tar
 
 `docker save` 与 `docker load` 会保留镜像层和标签信息，适合在离线环境、内网环境或受限网络中传输镜像。它们操作的是镜像，不是容器运行状态。
 
-Docker Engine v25 起，`docker save` 生成的 tar 包采用 OCI image layout 布局，同时保留 `manifest.json` 等文件兼容传统 Docker 格式，无需额外参数。Docker Engine v29 起还可以通过 `--platform` 参数只导出多平台镜像中的指定平台。
+Docker Engine v25 起，`docker save` 生成的 tar 包采用 OCI image layout 布局，同时保留 `manifest.json` 等文件兼容传统 Docker 格式，无需额外参数。Docker Engine v28 起，在启用 containerd image store 的环境中，`docker save` 与 `docker load` 支持 `--platform` 参数，可以只导出或导入多平台镜像中的指定平台。
 
 如果需要导出容器文件系统快照，可以使用 `docker export` 和 `docker import`，但这类方式不会完整保留镜像历史、标签和元数据，不适合作为标准镜像交付方式。

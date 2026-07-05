@@ -88,16 +88,16 @@ docker run -d \
 
 常用参数如下：
 
-| 参数 | 作用 |
-| --- | --- |
-| `-d` | 后台运行容器 |
-| `--name` | 指定容器名称 |
+| 参数                         | 作用                      |
+|----------------------------|-------------------------|
+| `-d`                       | 后台运行容器                  |
+| `--name`                   | 指定容器名称                  |
 | `--restart unless-stopped` | Docker 启动后自动拉起容器，手动停止除外 |
-| `--memory` | 限制容器可用内存 |
-| `--cpus` | 限制容器可用 CPU |
-| `-p` | 端口映射，格式为宿主机端口:容器端口 |
-| `-v` | 挂载文件、目录或 volume |
-| `-e` | 设置环境变量 |
+| `--memory`                 | 限制容器可用内存                |
+| `--cpus`                   | 限制容器可用 CPU              |
+| `-p`                       | 端口映射，格式为宿主机端口:容器端口      |
+| `-v`                       | 挂载文件、目录或 volume         |
+| `-e`                       | 设置环境变量                  |
 
 ## 查看与进入
 
@@ -169,6 +169,37 @@ docker volume create nginx-data-restore
 docker run --rm -v nginx-data-restore:/data -v "$PWD/backup:/backup" alpine tar xzf /backup/nginx-data.tgz -C /data
 ```
 
+## 网络与 Compose
+
+管理容器网络：
+
+```bash
+docker network ls
+docker network create app-net
+docker network inspect app-net
+docker network connect app-net nginx-demo
+docker network disconnect app-net nginx-demo
+docker network prune
+```
+
+指定网络运行容器并按名称互访：
+
+```bash
+docker run -d --name web --network app-net nginx:1.27-alpine
+docker run --rm --network app-net busybox:1.36.1 wget -qO- http://web
+```
+
+Compose 项目管理：
+
+```bash
+docker compose up -d
+docker compose ps
+docker compose logs -f web
+docker compose exec web sh
+docker compose config
+docker compose down
+```
+
 ## 验证与排障
 
 验证服务访问：
@@ -236,12 +267,12 @@ docker system prune -a
 
 ## 常见问题
 
-| 问题 | 分析 |
-| --- | --- |
-| 端口被占用 | 宿主机端口只能被一个进程监听。遇到 `bind: address already in use` 时，先用 `sudo ss -lntup` 查看端口占用，再更换宿主机端口或停止已有服务 |
-| 挂载路径错误 | bind mount 使用宿主机真实路径，路径写错或目录为空时，容器内看到的内容也会异常。应先确认宿主机路径存在，再用 `docker inspect` 查看实际挂载结果 |
-| 容器内应用启动失败 | 镜像拉取成功不代表应用可以正常启动。应通过 `docker ps -a` 查看退出状态，再用 `docker logs` 查看应用报错 |
-| 镜像架构不匹配 | x86_64、arm64 等架构不一致时，容器可能启动失败或运行异常。可用 `docker image inspect` 查看镜像架构，并确认主机 CPU 架构是否匹配 |
-| 文件权限不足 | 容器进程可能不是 root 用户，挂载文件或目录权限不足会导致读取、写入失败。应检查宿主机文件权限、属主属组，以及容器内进程运行用户 |
-| 环境变量缺失 | 很多镜像依赖环境变量完成初始化，例如密码、数据目录或启动模式。应对照镜像说明补齐 `-e` 参数，并用 `docker inspect` 确认变量是否传入 |
-| 宿主机防火墙未放行 | 容器启动正常但外部无法访问时，问题可能在宿主机防火墙或云安全组。应先本机 `curl 127.0.0.1:<port>` 验证，再检查防火墙规则和安全组策略 |
+| 问题        | 分析                                                                                            |
+|-----------|-----------------------------------------------------------------------------------------------|
+| 端口被占用     | 宿主机端口只能被一个进程监听。遇到 `bind: address already in use` 时，先用 `sudo ss -lntup` 查看端口占用，再更换宿主机端口或停止已有服务 |
+| 挂载路径错误    | bind mount 使用宿主机真实路径，路径写错或目录为空时，容器内看到的内容也会异常。应先确认宿主机路径存在，再用 `docker inspect` 查看实际挂载结果         |
+| 容器内应用启动失败 | 镜像拉取成功不代表应用可以正常启动。应通过 `docker ps -a` 查看退出状态，再用 `docker logs` 查看应用报错                           |
+| 镜像架构不匹配   | x86_64、arm64 等架构不一致时，容器可能启动失败或运行异常。可用 `docker image inspect` 查看镜像架构，并确认主机 CPU 架构是否匹配          |
+| 文件权限不足    | 容器进程可能不是 root 用户，挂载文件或目录权限不足会导致读取、写入失败。应检查宿主机文件权限、属主属组，以及容器内进程运行用户                            |
+| 环境变量缺失    | 很多镜像依赖环境变量完成初始化，例如密码、数据目录或启动模式。应对照镜像说明补齐 `-e` 参数，并用 `docker inspect` 确认变量是否传入                 |
+| 宿主机防火墙未放行 | 容器启动正常但外部无法访问时，问题可能在宿主机防火墙或云安全组。应先本机 `curl 127.0.0.1:<port>` 验证，再检查防火墙规则和安全组策略                |
