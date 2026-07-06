@@ -1,6 +1,6 @@
 # Docker Compose 基础
 
-服务的容器数量一多，`docker run` 的参数就会越来越长，网络、卷和启动顺序也要靠人工维护。Docker Compose 用一个 `compose.yaml` 文件声明整组服务，通过 `docker compose` 命令统一创建、更新和销毁。第 04 章的 Harbor 就是用 Compose 部署的多容器应用。
+服务的容器数量一多，`docker run` 的参数就会越来越长，网络、卷和启动顺序也要靠人工维护。Docker Compose 用一个 `compose.yaml` 文件声明整组服务，通过 `docker compose` 命令统一创建、更新和销毁。
 
 ## Compose 形态
 

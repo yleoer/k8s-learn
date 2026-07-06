@@ -24,9 +24,9 @@ docker network ls
 
 ```text
 NETWORK ID     NAME      DRIVER    SCOPE
-5c47b1f237db   bridge    bridge    local
-d0f32bb1cd4c   host      host      local
-3c1f3f01d2ab   none      null      local
+96935c98f21a   bridge    bridge    local
+44e231265795   host      host      local
+3f2987d9cbdf   none      null      local
 ```
 
 :::
@@ -63,7 +63,7 @@ docker run --rm busybox:1.36.1 wget -qO- --timeout=3 http://web-default
 | 动态加入退出 | 需要重建容器                | `docker network connect` 可对运行中容器操作 |
 | 网络配置   | 全局一份                  | 每个网络可独立配置                          |
 
-自定义网络的内置 DNS 监听在容器内的 `127.0.0.11`；默认 bridge 的容器只是复制宿主机的 `/etc/resolv.conf`。同一自定义网络内的容器彼此暴露所有端口，`-p` 只用于对宿主机和外部发布端口。
+自定义网络的内置 DNS 监听在容器内的 `127.0.0.11`；默认 bridge 的容器只是复制宿主机的 `/etc/resolv.conf`。同一自定义网络内的容器可以直接访问对方监听的端口，`-p` 只用于把容器端口发布到宿主机或其他网络访问入口。
 
 ## host 网络
 
@@ -100,14 +100,64 @@ docker network connect net-b multi
 docker inspect multi --format '{{json .NetworkSettings.Networks}}'
 ```
 
-`--network-alias` 为容器在某个网络中添加额外 DNS 名称，多个容器可以共享同一别名，实现简单的名称级负载分担：
+`--network-alias` 为容器在某个网络中添加额外 DNS 名称。多个容器可以共享同一别名，调用方访问这个别名时会解析到多个后端容器地址。下面用两个 nginx 容器分别返回不同内容，观察别名解析和访问结果。
 
 ```bash
-docker run -d --name web1 --network app-net --network-alias web-pool nginx:1.27-alpine
-docker run -d --name web2 --network app-net --network-alias web-pool nginx:1.27-alpine
+docker network create alias-net
+
+docker run -d --name web-a \
+> --network alias-net \
+> --network-alias web-pool \
+> nginx:1.27-alpine \
+> sh -c 'printf "web-a\n" > /usr/share/nginx/html/index.html && nginx -g "daemon off;"'
+
+docker run -d --name web-b \
+> --network alias-net \
+> --network-alias web-pool \
+> nginx:1.27-alpine \
+> sh -c 'printf "web-b\n" > /usr/share/nginx/html/index.html && nginx -g "daemon off;"'
 ```
 
-`EXPOSE` 与 `-p` 的区别需要明确：Dockerfile 中的 `EXPOSE` 只是镜像作者与使用者之间的文档约定，不发布任何端口；`-p` 才把容器端口发布到宿主机，`-P` 把所有 `EXPOSE` 声明的端口发布到宿主机随机高位端口。
+查看两个后端容器在该网络中的地址和别名：
+
+```bash
+docker inspect web-a web-b --format '{{.Name}} {{range $network, $conf := .NetworkSettings.Networks}}network={{$network}} ip={{$conf.IPAddress}} aliases={{json $conf.Aliases}}{{end}}'
+```
+
+::: details 输出类似如下
+
+```text
+/web-a network=alias-net ip=172.21.0.2 aliases=["web-pool"]
+/web-b network=alias-net ip=172.21.0.3 aliases=["web-pool"]
+```
+
+:::
+
+通过别名访问服务：
+
+```bash
+docker run --rm --network alias-net busybox:1.36.1 sh -c 'for i in 1 2 3 4; do wget -qO- http://web-pool; done'
+```
+
+::: details 输出类似如下
+
+```text
+web-a
+web-b
+web-b
+web-b
+```
+
+:::
+
+实际返回顺序取决于 Docker DNS 返回的地址顺序和客户端解析行为，`--network-alias` 不做健康检查，也不提供 Kubernetes Service 那样的服务抽象。它适合本地验证或简单的名称兼容场景；需要稳定负载均衡时，应使用反向代理、Docker Compose 服务名或后续 Kubernetes Service。
+
+清理示例资源：
+
+```bash
+docker rm -f web-a web-b
+docker network rm alias-net
+```
 
 容器访问宿主机服务时，约定使用 `host.docker.internal` 主机名。Docker Desktop 自动解析该名称，Linux 上需要显式映射到宿主机网关：
 
@@ -131,7 +181,7 @@ docker network prune                    # 删除所有未被使用的网络
 
 - 服务间互访一律创建自定义 bridge 网络并使用容器名，不依赖默认 bridge 和容器 IP——容器重建后 IP 会变化。
 - host 网络是性能与隔离的取舍，使用前确认端口占用和安全边界。
-- `EXPOSE` 不发布端口，对外访问必须 `-p`；同一自定义网络内互访不需要 `-p`。
+- 同一自定义网络内互访不需要 `-p`；只有需要从宿主机或外部网络访问容器端口时才需要发布端口。
 - 排查连通性时按顺序确认：两个容器是否在同一网络、目标名称能否解析、目标端口是否在监听。
 - Kubernetes 不使用 Docker 网络模型：Pod 网络由 CNI 插件提供，Pod 之间无 NAT 直通。此处的 bridge、DNS 概念有助于理解，但配置方式不可迁移。
 
@@ -142,3 +192,4 @@ docker network prune                    # 删除所有未被使用的网络
 - [Host network driver](https://docs.docker.com/engine/network/drivers/host/)
 - [None network driver](https://docs.docker.com/engine/network/drivers/none/)
 - [docker network CLI](https://docs.docker.com/reference/cli/docker/network/)
+- [docker run CLI](https://docs.docker.com/reference/cli/docker/container/run/)

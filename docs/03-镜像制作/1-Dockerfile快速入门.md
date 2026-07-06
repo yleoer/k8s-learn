@@ -25,7 +25,7 @@ Dockerfile 是一个纯文本文件，按行声明构建步骤。构建指令会
 
 ## 第一个镜像
 
-从最简单的 Dockerfile 开始——复制静态文件到 nginx 镜像并暴露端口。
+从最简单的 Dockerfile 开始——复制静态文件到 nginx 镜像，并声明容器内应用计划监听的端口。
 
 先准备一个静态文件目录，确保构建上下文中存在 `COPY` 指令要复制的源路径：
 
@@ -76,6 +76,84 @@ curl http://127.0.0.1:8080
 ```
 
 每次执行 `docker build`，Docker 会把命令指定的目录（示例末尾的 `.`）作为构建上下文（build context）发送给 daemon；Dockerfile 默认位于上下文根目录，也可以用 `-f` 指定其他路径。上下文目录中的所有文件默认都会被打包发送，因此需要 `.dockerignore` 排除无关内容（详见 [镜像分层与体积优化](./4-镜像分层与体积优化.md)）。
+
+## EXPOSE：声明监听端口
+
+`EXPOSE` 表示镜像作者认为容器运行时会监听哪些端口。它会写入镜像元数据，方便使用者、工具或 `docker inspect` 查看，但不会把端口发布到宿主机。
+
+端口发布发生在 `docker run` 阶段：
+
+| 写法        | 作用                                                    |
+|-----------|-------------------------------------------------------|
+| `EXPOSE` | Dockerfile 中的文档约定，只声明容器计划监听的端口，不发布端口              |
+| `-p`      | 把指定容器端口发布到宿主机指定端口，例如 `-p 8080:80`                 |
+| `-P`      | 把镜像中所有 `EXPOSE` 声明的端口发布到宿主机随机高位端口                 |
+
+可以用前文构建的 `nginx:demo` 验证三者差异。只声明 `EXPOSE 80` 时，镜像元数据中能看到端口声明：
+
+```bash
+docker inspect nginx:demo --format '{{json .Config.ExposedPorts}}'
+```
+
+::: details 输出类似如下
+
+```text
+{"80/tcp":{}}
+```
+
+:::
+
+但仅运行容器不会产生宿主机端口映射：
+
+```bash
+docker run -d --name expose-only nginx:demo
+docker inspect expose-only --format '{{json .NetworkSettings.Ports}}'
+```
+
+::: details 输出类似如下
+
+```text
+{"80/tcp":null}
+```
+
+:::
+
+使用 `-p` 可以明确指定宿主机端口：
+
+```bash
+docker run -d --name publish-one -p 8081:80 nginx:demo
+docker port publish-one 80
+curl http://127.0.0.1:8081
+```
+
+::: details 端口查看输出类似如下
+
+```text
+0.0.0.0:8081
+```
+
+:::
+
+使用 `-P` 时，Docker 会把所有已声明的 `EXPOSE` 端口发布到宿主机随机高位端口：
+
+```bash
+docker run -d --name publish-all -P nginx:demo
+docker port publish-all 80
+```
+
+::: details 端口查看输出类似如下
+
+```text
+0.0.0.0:32768
+```
+
+:::
+
+清理示例容器：
+
+```bash
+docker rm -f expose-only publish-one publish-all
+```
 
 ## FROM：选择基础镜像
 

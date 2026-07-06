@@ -72,7 +72,7 @@ docker images
 docker image ls
 ```
 
-Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起，CLI 默认改用新的输出格式，即使服务端仍在使用传统存储驱动也是如此。
+Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`IMAGE ID`、`CREATED` 和 `SIZE` 等字段。Docker Engine v29 起，CLI 默认改用新的输出格式。
 
 ::: details 新版输出类似如下
 
