@@ -19,7 +19,7 @@ npm run docs:preview # 预览构建产物
 | --- | --- | --- |
 | 集群部署 | 01 | 环境规划、Ubuntu 节点准备、containerd 组件安装、kubeadm 初始化、Calico、Metrics Server 和集群验证 |
 | 容器基础 | 02 | 容器核心概念、Docker 架构、镜像管理、容器操作、数据持久化、容器网络、Docker Compose 和 Docker 命令速查 |
-| 镜像制作 | 03 | Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建、多架构镜像和 BuildKit 构建挂载 |
+| 镜像制作 | 03 | Dockerfile、构建上下文、基础镜像、镜像元数据、文件复制、运行用户、启动命令、变量配置、镜像分层、多阶段构建、BuildKit 构建挂载和多架构镜像 |
 | 镜像仓库 | 04 | 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理、镜像供应链安全和漏洞扫描 |
 | 容器运行 | 05 | CRI、containerd、crictl、ctr、nerdctl、仓库访问配置、镜像缓存、RuntimeClass 多运行时、镜像懒加载和运行时排障记录 |
 | 集群架构 | 06 | Kubernetes 定位、声明式模型、集群架构、控制面组件、节点组件和核心资源抽象 |

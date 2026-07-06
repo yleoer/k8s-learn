@@ -17,7 +17,7 @@ features:
     link: /02-容器基础/
   - icon: 🧱
     title: 03 · 镜像制作
-    details: Dockerfile、启动命令、文件复制、运行用户、镜像分层、多阶段构建、多架构镜像和 BuildKit 构建挂载。
+    details: Dockerfile、构建上下文、基础镜像、镜像元数据、文件复制、运行用户、启动命令、变量配置、镜像分层、多阶段构建、BuildKit 构建挂载和多架构镜像。
     link: /03-镜像制作/
   - icon: 🗄️
     title: 04 · 镜像仓库
