@@ -293,8 +293,8 @@ docker compose exec app wget -qO- http://proxy
 | 类型 | 示例 | 适用场景 | 边界 |
 | --- | --- | --- | --- |
 | bind mount | `./html:/usr/share/nginx/html:ro` | 源码、静态文件、开发配置从宿主机直接挂入容器。 | 依赖宿主机目录结构，默认可写，建议按需加 `:ro`。 |
-| named volume | `db-data:/var/lib/postgresql/data` | 数据库数据、应用状态等由 Docker 管理的持久化数据。跨服务复用时必须在顶层 `volumes` 声明。 | 不方便直接从宿主机目录编辑，但更适合跨容器生命周期保留。 |
-| anonymous volume | `/var/lib/postgresql/data` | 镜像 `VOLUME` 指令或省略卷名时隐式产生的数据目录。 | 名称随机，后续 `up` 不会自动复用，不适合存放需要保留的数据。 |
+| named volume | `db-data:/var/lib/postgresql` | 数据库数据、应用状态等由 Docker 管理的持久化数据。跨服务复用时必须在顶层 `volumes` 声明。 | 不方便直接从宿主机目录编辑，但更适合跨容器生命周期保留。 |
+| anonymous volume | `/var/lib/postgresql` | 镜像 `VOLUME` 指令或省略卷名时隐式产生的数据目录。 | 名称随机，后续 `up` 不会自动复用，不适合存放需要保留的数据。 |
 
 `docker compose down` 默认删除本项目的容器和网络，保留命名卷，匿名卷也不会删除；但匿名卷没有稳定名称，重建后的容器不会自动挂回原来的匿名卷，需要保留的数据应使用命名卷或 bind mount。声明为 `external` 的网络和卷永远不会被 `down` 删除。`docker compose down -v` 会额外删除 Compose 文件 `volumes` 中声明的命名卷，以及容器挂载的匿名卷。
 
@@ -314,7 +314,7 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: example
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
@@ -635,6 +635,7 @@ docker compose -f compose.yaml -f compose.dev.yaml config
 | 多文件合并结果不符合预期 | 使用 `docker compose -f compose.yaml -f compose.dev.yaml config` 查看最终配置，重点检查列表字段拼接、映射字段覆盖和相对路径解析；确认是否有 `compose.override.yaml` 被自动加载。 |
 | 环境变量没有注入容器 | 区分 `.env` 插值和 `env_file` 注入。用 `docker compose config --environment` 查看插值变量，用 `docker compose exec <service> env` 查看容器环境。 |
 | secret 文件不存在或权限异常 | 确认顶层 `secrets` 的 `file` 路径存在，并确认服务自身 `secrets` 字段显式引用了该 secret。 |
+| PostgreSQL 18+ 提示 `/var/lib/postgresql/data (unused mount/volume)` | 检查是否仍把卷挂载到旧路径 `/var/lib/postgresql/data`。`postgres:18` 及更高版本应挂载 `/var/lib/postgresql`；已有真实数据时不能直接删除卷，需要按 PostgreSQL 大版本升级流程迁移。 |
 
 ## 与 Kubernetes 的边界
 
@@ -679,3 +680,4 @@ Kubernetes 面向集群环境，核心能力包括多节点调度、控制器持
 - [docker compose down](https://docs.docker.com/reference/cli/docker/compose/down/)
 - [Volumes](https://docs.docker.com/engine/storage/volumes/)
 - [Bind mounts](https://docs.docker.com/engine/storage/bind-mounts/)
+- [Postgres Docker Official Image](https://github.com/docker-library/docs/blob/master/postgres/README.md)
