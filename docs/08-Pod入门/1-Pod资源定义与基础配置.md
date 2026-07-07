@@ -15,7 +15,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
 ```
 
 创建并查看 Pod：
@@ -39,8 +39,8 @@ nginx-demo   1/1     Running   0          6s    10.244.205.197   work01   <none>
 快速测试时也可以使用 `kubectl run`：
 
 ```bash
-kubectl run nginx-demo --image=nginx:stable-alpine
-kubectl run nginx-demo --image=nginx:stable-alpine --dry-run=client -o yaml
+kubectl run nginx-demo --image=nginx:1.31-alpine
+kubectl run nginx-demo --image=nginx:1.31-alpine --dry-run=client -o yaml
 ```
 
 `kubectl run` 适合临时验证，需要长期保留的资源建议保存为 YAML，并通过声明式方式管理。
@@ -59,7 +59,7 @@ kubectl run nginx-demo --image=nginx:stable-alpine --dry-run=client -o yaml
 | `spec`                                        | 是    | Pod 期望状态定义区域，用于描述容器、存储、调度等配置       |
 | `spec.containers`                             | 是    | 容器列表，至少包含一个容器                      |
 | `spec.containers[].name`                      | 是    | 容器名称，同一个 Pod 内必须唯一                 |
-| `spec.containers[].image`                     | 是    | 容器镜像地址，本例使用 `nginx:stable-alpine`  |
+| `spec.containers[].image`                     | 是    | 容器镜像地址，本例使用 `nginx:1.31-alpine`  |
 
 字段不确定时使用：
 
@@ -86,7 +86,7 @@ spec:
 
   containers:
     - name: writer
-      image: busybox:1.36.1
+      image: busybox:1.38
       command:
         - /bin/sh
         - -c
@@ -100,7 +100,7 @@ spec:
           mountPath: /data
 
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       volumeMounts:
@@ -112,8 +112,8 @@ spec:
 
 | 容器       | 镜像                    | 职责                                     |
 |----------|-----------------------|----------------------------------------|
-| `writer` | `busybox:1.36.1`      | 每 5 秒向 `/data/index.html` 写入一段 HTML 内容 |
-| `nginx`  | `nginx:stable-alpine` | 将共享目录挂载为 Nginx 默认站点目录，对外提供 HTTP 访问     |
+| `writer` | `busybox:1.38`      | 每 5 秒向 `/data/index.html` 写入一段 HTML 内容 |
+| `nginx`  | `nginx:1.31-alpine` | 将共享目录挂载为 Nginx 默认站点目录，对外提供 HTTP 访问     |
 
 `spec.volumes` 定义了名为 `shared-data` 的 `emptyDir` 临时卷。`writer` 将该卷挂载到 `/data`，`nginx` 将同一个卷挂载到 `/usr/share/nginx/html`。两个容器虽然拥有各自独立的镜像和文件系统，但可以通过同一个 volume 交换文件。
 
@@ -210,7 +210,7 @@ metadata:
 spec:
   containers:
     - name: busybox
-      image: busybox:1.36.1
+      image: busybox:1.38
       command: ["/bin/sh"]
       args:
         - "-c"

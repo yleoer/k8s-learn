@@ -238,13 +238,13 @@ kubectl top nodes
 kubectl top pods -A
 
 # 部署测试应用并验证 NodePort 访问
-kubectl create deployment sample-nginx --image=nginx:1.27
+kubectl create deployment sample-nginx --image=nginx:1.31-alpine
 kubectl expose deployment sample-nginx --port=80 --type=NodePort
 kubectl get deploy,pod,svc -l app=sample-nginx -o wide
 NODE_PORT=$(kubectl get svc sample-nginx -o jsonpath='{.spec.ports[0].nodePort}')
 curl "http://master:${NODE_PORT}"
 kubectl run sample-curl --rm -i --restart=Never \
-  --image=curlimages/curl:8.10.1 \
+  --image=curlimages/curl:8.21.0 \
   -- curl -I --max-time 10 http://sample-nginx.default.svc.cluster.local
 
 kubectl delete svc sample-nginx

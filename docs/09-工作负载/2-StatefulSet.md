@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           ports:
             - name: web
               containerPort: 80
@@ -172,7 +172,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 该 StatefulSet 创建的 Pod 为 `ordinal-web-10`、`ordinal-web-11`、`ordinal-web-12`。与其他示例一样，实际创建前需要先按最小示例的方式创建与 `serviceName` 同名的 Headless Service。
@@ -206,7 +206,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: mysql:8.4
           ports:
             - name: mysql
               containerPort: 3306
@@ -345,7 +345,7 @@ web-2.nginx
 创建一个临时调试 Pod：
 
 ```bash
-kubectl run dns-test --image=busybox:1.36.1 --restart=Never -- sleep 3600
+kubectl run dns-test --image=busybox:1.38 --restart=Never -- sleep 3600
 ```
 
 查询 DNS：
@@ -800,7 +800,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 它会按顺序创建、删除和扩缩容 Pod。也可以改为 `Parallel`：
@@ -824,7 +824,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 两种策略对比如下：

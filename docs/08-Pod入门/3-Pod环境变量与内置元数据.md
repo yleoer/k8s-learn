@@ -12,7 +12,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       env:
         - name: ENV
           value: test
@@ -40,7 +40,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       env:
         - name: POD_NAME
           valueFrom:
@@ -100,7 +100,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: busybox:1.36.1
+      image: busybox:1.38
       command: ["sh", "-c", "env | grep MY_; sleep 3600"]
       resources:
         requests:
@@ -152,7 +152,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: busybox:1.36.1
+      image: busybox:1.38
       command: ["sh", "-c", "cat /etc/podinfo/labels; sleep 3600"]
       volumeMounts:
         - name: podinfo

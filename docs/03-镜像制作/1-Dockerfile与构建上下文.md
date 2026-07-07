@@ -37,7 +37,7 @@ echo '<h1>Hello nginx</h1>' > html/index.html
 ```
 
 ```dockerfile [Dockerfile]
-FROM nginx:1.31.2-alpine
+FROM nginx:1.31-alpine
 COPY ./html /usr/share/nginx/html
 EXPOSE 80
 ```
@@ -55,12 +55,12 @@ $ docker build -t nginx:demo .
 [+] Building 2.1s (7/7) FINISHED
  => [internal] load build definition from Dockerfile                         0.0s
  => => transferring dockerfile: 99B                                          0.0s
- => [internal] load metadata for docker.io/library/nginx:1.31.2-alpine       2.0s
+ => [internal] load metadata for docker.io/library/nginx:1.31-alpine       2.0s
  => [internal] load .dockerignore                                            0.0s
  => => transferring context: 2B                                              0.0s
  => [internal] load build context                                            0.0s
  => => transferring context: 82B                                             0.0s
- => CACHED [1/2] FROM docker.io/library/nginx:1.31.2-alpine                  0.0s
+ => CACHED [1/2] FROM docker.io/library/nginx:1.31-alpine                  0.0s
  => [2/2] COPY ./html /usr/share/nginx/html                                  0.0s
  => exporting to image                                                       0.0s
  => => exporting layers                                                      0.0s

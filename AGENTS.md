@@ -54,9 +54,28 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 ````
+
+### 示例镜像版本约束
+
+文档中的通用示例镜像应固定到明确版本，不使用 `latest`、`stable` 或未带 tag 的镜像名作为推荐写法。当前统一使用以下版本：
+
+| 镜像 | 固定版本 |
+| --- | --- |
+| Alpine | `alpine:3.23` |
+| Nginx | `nginx:1.31-alpine` |
+| Go | `golang:1.26-alpine` |
+| BusyBox | `busybox:1.38` |
+| curl | `curlimages/curl:8.21.0` |
+| PHP Apache | `php:8.5.8-apache` |
+| Python slim | `python:3.12-slim` |
+| MySQL | `mysql:8.4` |
+| PostgreSQL | `postgres:18.4` |
+| Redis | `redis:8.8-alpine` |
+
+新增示例镜像或引入新的镜像仓库地址时，必须先手动确认合适的明确版本号，再写入文档；不要凭记忆沿用旧标签。若示例用于说明默认 tag、升级、回滚、灰度或分段发布，可以使用其他明确版本，但正文需要说明该版本差异服务于示例语义。
 
 提示、建议、风险和注意事项统一使用 GitHub 风格警报，不使用 VitePress 专属的 `::: warning`、`::: tip` 等容器。按语义选择以下格式：
 

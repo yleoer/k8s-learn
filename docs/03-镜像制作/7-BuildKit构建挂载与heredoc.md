@@ -48,7 +48,7 @@ Go 项目结合多阶段构建的写法：
 
 ```dockerfile [Dockerfile]
 # syntax=docker/dockerfile:1
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -58,7 +58,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server .
 
-FROM alpine:3.20
+FROM alpine:3.23
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/server /app/server
@@ -216,7 +216,7 @@ EOT
 
 ```dockerfile [Dockerfile]
 # syntax=docker/dockerfile:1
-FROM nginx:1.27-alpine
+FROM nginx:1.31-alpine
 COPY <<'EOF' /usr/share/nginx/html/index.html
 <h1>hello heredoc</h1>
 EOF

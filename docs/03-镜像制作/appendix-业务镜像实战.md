@@ -87,7 +87,7 @@ document.getElementById('version').textContent = 'v1.0.0';
 ### Dockerfile
 
 ```dockerfile [Dockerfile]
-FROM nginx:1.27-alpine
+FROM nginx:1.31-alpine
 LABEL maintainer="platform@example.com"
 LABEL org.opencontainers.image.title="frontend"
 LABEL org.opencontainers.image.version="1.0.0"
@@ -100,7 +100,7 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
 EXPOSE 80
 ```
 
-关键点：静态文件只需 `COPY`；`nginx:1.27-alpine` 自带 `wget`，可用于健康检查；nginx worker 自动以非 root 身份运行；静态文件已是最终产物，通常不需要多阶段构建。
+关键点：静态文件只需 `COPY`；`nginx:1.31-alpine` 自带 `wget`，可用于健康检查；nginx worker 自动以非 root 身份运行；静态文件已是最终产物，通常不需要多阶段构建。
 
 ### 构建、运行、验证
 
@@ -217,7 +217,7 @@ COPY composer.json ./
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts
 
 # === 运行阶段 ===
-FROM php:8.3-apache
+FROM php:8.5.8-apache
 LABEL maintainer="platform@example.com"
 LABEL org.opencontainers.image.title="php-app"
 LABEL org.opencontainers.image.version="1.0.0"
@@ -369,7 +369,7 @@ touch go.sum
 
 ```dockerfile [Dockerfile]
 # === 构建阶段 ===
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -377,7 +377,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server .
 
 # === 运行阶段 ===
-FROM alpine:3.20
+FROM alpine:3.23
 LABEL maintainer="platform@example.com"
 LABEL org.opencontainers.image.title="backend"
 LABEL org.opencontainers.image.version="1.0.0"
@@ -402,7 +402,7 @@ CMD ["/app/server"]
 
 关键点：
 
-- **多阶段构建**：`golang:1.23-alpine` 仅用于编译，最终 Alpine 镜像不含 Go 工具链。
+- **多阶段构建**：`golang:1.26-alpine` 仅用于编译，最终 Alpine 镜像不含 Go 工具链。
 - **静态编译**：`CGO_ENABLED=0` 不依赖 glibc；`-ldflags="-s -w"` 去除调试符号。
 - **缓存优化**：`go.mod/go.sum` 先复制 → `go mod download` → 最后 `COPY . .`，源码改动时依赖下载层被缓存。
 - **非 root**：创建 `app` 用户并以 `USER app` 运行，配合 `COPY --chown` 赋予文件所有权。
@@ -453,7 +453,7 @@ harbor.example.com/team/backend:v1.0.0   5c9706869b6c       17.1MB             0
 
 | 对比项         | 前端                  | PHP                      | Go                 |
 |-------------|---------------------|--------------------------|--------------------|
-| 基础镜像        | `nginx:1.27-alpine` | `php:8.3-apache`         | `alpine:3.20`      |
+| 基础镜像        | `nginx:1.31-alpine` | `php:8.5.8-apache`         | `alpine:3.23`      |
 | 构建阶段数       | 1                   | 2（composer → php）        | 2（golang → alpine） |
 | 非 root 方式   | nginx 自动处理          | Apache `www-data`        | `USER app`         |
 | HEALTHCHECK | `wget /`            | `wget /healthz`          | `wget /healthz`    |

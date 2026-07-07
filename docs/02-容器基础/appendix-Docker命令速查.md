@@ -28,8 +28,8 @@ sudo journalctl -u docker -xe --no-pager
 
 ```bash
 docker search nginx
-docker pull nginx:1.27-alpine
-docker pull redis:8-alpine
+docker pull nginx:1.31-alpine
+docker pull redis:8.8-alpine
 ```
 
 查看本地镜像：
@@ -44,16 +44,16 @@ docker image ls --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}'
 查看镜像详情：
 
 ```bash
-docker image inspect nginx:1.27-alpine
-docker history nginx:1.27-alpine
-docker image inspect nginx:1.27-alpine --format '{{.Architecture}}'
+docker image inspect nginx:1.31-alpine
+docker history nginx:1.31-alpine
+docker image inspect nginx:1.31-alpine --format '{{.Architecture}}'
 ```
 
 打标签与删除镜像：
 
 ```bash
-docker tag nginx:1.27-alpine nginx:demo
-docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
+docker tag nginx:1.31-alpine nginx:demo
+docker tag nginx:1.31-alpine harbor.example.com/base/nginx:1.31-alpine
 docker rmi nginx:demo
 docker image prune
 ```
@@ -61,7 +61,7 @@ docker image prune
 离线导入导出：
 
 ```bash
-docker save -o nginx.alpine.tar nginx:1.27-alpine
+docker save -o nginx.alpine.tar nginx:1.31-alpine
 docker load -i nginx.alpine.tar
 ```
 
@@ -70,7 +70,7 @@ docker load -i nginx.alpine.tar
 前台运行临时容器：
 
 ```bash
-docker run --rm -it nginx:1.27-alpine sh
+docker run --rm -it nginx:1.31-alpine sh
 ```
 
 后台运行服务容器：
@@ -83,7 +83,7 @@ docker run -d \
   --cpus 0.5 \
   -p 8080:80 \
   -v "$PWD/html:/usr/share/nginx/html" \
-  nginx:1.27-alpine
+  nginx:1.31-alpine
 ```
 
 常用参数如下：
@@ -142,14 +142,14 @@ docker top nginx-demo
 ```bash
 mkdir -p ./html
 echo 'hello nginx' > ./html/index.html
-docker run -d --name web -p 8080:80 -v "$PWD/html:/usr/share/nginx/html" nginx:1.27-alpine
+docker run -d --name web -p 8080:80 -v "$PWD/html:/usr/share/nginx/html" nginx:1.31-alpine
 ```
 
 使用 named volume：
 
 ```bash
 docker volume create nginx-data
-docker run -d --name web-volume -v nginx-data:/usr/share/nginx/html nginx:1.27-alpine
+docker run -d --name web-volume -v nginx-data:/usr/share/nginx/html nginx:1.31-alpine
 docker volume inspect nginx-data
 ```
 
@@ -185,8 +185,8 @@ docker network prune
 指定网络运行容器并按名称互访：
 
 ```bash
-docker run -d --name web --network app-net nginx:1.27-alpine
-docker run --rm --network app-net busybox:1.36.1 wget -qO- http://web
+docker run -d --name web --network app-net nginx:1.31-alpine
+docker run --rm --network app-net busybox:1.38 wget -qO- http://web
 ```
 
 Compose 项目管理：
@@ -247,7 +247,7 @@ docker rm -f nginx-demo
 删除镜像：
 
 ```bash
-docker rmi nginx:1.27-alpine
+docker rmi nginx:1.31-alpine
 docker image prune
 docker image prune -a
 ```

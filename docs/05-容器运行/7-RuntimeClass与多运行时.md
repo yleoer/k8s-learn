@@ -25,7 +25,7 @@ spec:
   runtimeClassName: gvisor
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
 ```
 
 不设置 `runtimeClassName` 时，Pod 使用 CRI 配置的默认运行时，containerd 的出厂默认是 runc。引用的 RuntimeClass 不存在，或者 CRI 无法运行对应 handler 时，Pod 会直接进入 Failed 终态而不是 Pending，排障时应查看 Pod 事件。

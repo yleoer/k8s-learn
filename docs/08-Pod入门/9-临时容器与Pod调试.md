@@ -18,13 +18,13 @@
 先创建一个目标 Pod：
 
 ```bash
-kubectl run debug-demo --image=nginx:stable-alpine
+kubectl run debug-demo --image=nginx:1.31-alpine
 ```
 
 向 Pod 注入临时容器并进入交互 shell：
 
 ```bash
-kubectl debug -it debug-demo --image=busybox:1.36.1 --target=debug-demo -- sh
+kubectl debug -it debug-demo --image=busybox:1.38 --target=debug-demo -- sh
 ```
 
 `--target=<container>` 让临时容器加入目标容器的进程命名空间，才能看到目标容器的进程；该能力需要容器运行时支持，containerd 支持该行为。进入后验证可以观察到 nginx 进程和网络：
@@ -46,7 +46,7 @@ kubectl describe pod debug-demo
 Ephemeral Containers:
   debugger-8xzmp:
     Container ID:   containerd://e2e152b9...
-    Image:          busybox:1.36.1
+    Image:          busybox:1.38
     State:          Running
 ```
 
@@ -66,13 +66,13 @@ kubectl debug debug-demo -it --copy-to=debug-demo-copy --container=debug-demo --
 |-----------------------------------|-------------------------------------|
 | `--copy-to=<name>`                | 以原 Pod 为模板创建副本                      |
 | `--container` / `-c`              | 指定修改启动命令的目标容器，不指定时新增一个调试容器          |
-| `--set-image=<container>=<image>` | 修改副本中容器镜像，`*=busybox:1.36.1` 表示全部容器 |
+| `--set-image=<container>=<image>` | 修改副本中容器镜像，`*=busybox:1.38` 表示全部容器 |
 | `--share-processes`               | 副本内容器共享进程命名空间                       |
 
 例如把副本的所有容器换成带工具的镜像：
 
 ```bash
-kubectl debug debug-demo --copy-to=debug-demo-img --set-image=*=busybox:1.36.1 -- sleep 3600
+kubectl debug debug-demo --copy-to=debug-demo-img --set-image=*=busybox:1.38 -- sleep 3600
 ```
 
 副本 Pod 不受原控制器管理，调试完成后需要手动删除：
@@ -86,7 +86,7 @@ kubectl delete pod debug-demo-copy debug-demo-img
 `kubectl debug node/` 在目标节点上创建调试 Pod，用于没有节点 SSH 权限时的排障：
 
 ```bash
-kubectl debug node/<node-name> -it --image=busybox:1.36.1
+kubectl debug node/<node-name> -it --image=busybox:1.38
 ```
 
 调试 Pod 的名称形如 `node-debugger-<node-name>-<suffix>`，节点根文件系统挂载在容器内的 `/host`，容器运行在宿主机的 IPC、Network 和 PID 命名空间中，可以直接观察节点进程和网络。
@@ -94,7 +94,7 @@ kubectl debug node/<node-name> -it --image=busybox:1.36.1
 默认创建的不是特权 Pod：读取部分进程信息可能失败，`chroot /host` 也可能失败。需要完整宿主机权限时使用 `--profile=sysadmin`：
 
 ```bash
-kubectl debug node/<node-name> -it --profile=sysadmin --image=busybox:1.36.1
+kubectl debug node/<node-name> -it --profile=sysadmin --image=busybox:1.38
 ```
 
 调试结束后删除调试 Pod：

@@ -73,7 +73,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
           name: http-web-svc
@@ -529,7 +529,7 @@ spec:
   hostname: busybox-1
   subdomain: busybox-subdomain
   containers:
-    - image: busybox:1.28
+    - image: busybox:1.38
       command:
         - sleep
         - "3600"
@@ -545,7 +545,7 @@ spec:
   hostname: busybox-2
   subdomain: busybox-subdomain
   containers:
-    - image: busybox:1.28
+    - image: busybox:1.38
       command:
         - sleep
         - "3600"

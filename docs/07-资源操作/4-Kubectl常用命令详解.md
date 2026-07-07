@@ -145,6 +145,7 @@ kubectl get job --sort-by=.metadata.name
 kubectl logs nginx
 kubectl logs nginx -c nginx
 kubectl logs nginx --tail=100
+kubectl logs nginx --since=1h
 kubectl logs nginx -f
 kubectl logs nginx --previous
 ```
@@ -158,6 +159,8 @@ kubectl logs nginx --previous
 | `-f`         | 持续追踪日志        |
 | `--previous` | 查看上一次容器实例的日志  |
 | `--since`    | 查看最近一段时间的日志   |
+
+`--since` 使用相对时间，例如 `30s`、`10m`、`1h`；如果要从固定时间点开始查看日志，可以使用 `--since-time=<RFC3339 时间>`。两者不能同时使用。
 
 当 Pod 处于 `CrashLoopBackOff` 时，`--previous` 尤其有用：当前容器可能刚启动就退出，上一轮的日志往往更接近真实的失败原因。
 
@@ -179,10 +182,32 @@ kubectl exec nginx -- env
 `exec` 依赖容器镜像中存在可执行的 shell。distroless 等精简镜像连 `sh` 都没有时，可以使用 `kubectl debug` 向运行中的 Pod 注入一个临时调试容器（ephemeral container，Kubernetes v1.25 起稳定）：
 
 ```bash
-kubectl debug -it <pod-name> --image=busybox:1.36.1 --target=<container-name>
+kubectl debug -it <pod-name> --image=busybox:1.38 --target=<container-name>
 ```
 
 `--target` 表示与目标容器共享进程命名空间，便于在调试容器内用 `ps` 观察目标进程，该参数需要容器运行时支持。临时容器加入后不能修改或移除，会随 Pod 一起删除，因此它适合排障观察，不适合承载业务逻辑。
+
+下面示例先创建一个运行 Nginx 的 Pod，再向其中注入 BusyBox 调试容器：
+
+```bash
+kubectl run debug-nginx --image=nginx:1.31-alpine
+kubectl wait pod/debug-nginx --for=condition=Ready --timeout=60s
+kubectl debug -it debug-nginx --image=busybox:1.38 --target=debug-nginx -- sh
+```
+
+进入调试容器后，可以访问同一个 Pod 网络命名空间中的 Nginx，也可以查看目标容器进程：
+
+```bash
+wget -qO- http://127.0.0.1
+ps
+exit
+```
+
+调试结束后清理 Pod：
+
+```bash
+kubectl delete pod debug-nginx
+```
 
 ## 文件拷贝
 
@@ -268,8 +293,8 @@ Deployment 章节会进一步分析滚动更新、暂停、恢复和回滚细节
 可以使用 `run` 快速启动一个临时 Pod：
 
 ```bash
-kubectl run test-shell --image=busybox:1.36.1 -it --rm -- sh
-kubectl run nginx --image=nginx:1.27
+kubectl run test-shell --image=busybox:1.38 -it --rm -- sh
+kubectl run nginx --image=nginx:1.31-alpine
 ```
 
 `--rm` 表示退出后删除 Pod，适合临时测试 DNS、网络连通性和镜像拉取。

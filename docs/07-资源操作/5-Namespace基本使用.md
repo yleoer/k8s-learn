@@ -178,7 +178,7 @@ kubectl describe namespace dev
 命令方式：
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.27 -n dev
+kubectl create deployment nginx --image=nginx:1.31-alpine -n dev
 kubectl get deployment -n dev
 kubectl get pod -n dev
 ```
@@ -203,7 +203,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 资源 YAML 中的 `metadata.namespace` 表示该资源所属的 Namespace。如果 YAML 中没有指定，则会使用 kubectl 当前上下文的默认 Namespace。

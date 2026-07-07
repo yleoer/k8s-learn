@@ -19,7 +19,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       resources:
         requests:
           cpu: 100m
@@ -57,7 +57,7 @@ $ kubectl describe po resource-demo
 Containers:
   nginx:
     Container ID:   containerd://60b0090037c415f603789e0eb210dd55c32cf77e4fbc8ae0f0c32ee6f31d2491
-    Image:          nginx:stable-alpine
+    Image:          nginx:1.31-alpine
     Image ID:       docker.io/library/nginx@sha256:92cf5e2f488744c90d3df4378dfa3f0842704950cfa1353975d5510c945b072f
     Port:           <none>
     Host Port:      <none>
@@ -96,7 +96,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: nginx:1.27
+      image: nginx:1.31-alpine
       resources:
         requests:
           cpu: 200m
@@ -105,7 +105,7 @@ spec:
           cpu: 1000m
           memory: 512Mi
     - name: sidecar
-      image: busybox:1.36.1
+      image: busybox:1.38
       command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
       resources:
         requests:

@@ -72,7 +72,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:1.27
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
 ```

@@ -36,7 +36,7 @@ flowchart LR
   daemon <--> registry["Registry<br/>Docker Hub / Harbor"]
 ```
 
-以 `docker run nginx:1.27-alpine` 为例，调用过程可以拆分为以下步骤：
+以 `docker run nginx:1.31-alpine` 为例，调用过程可以拆分为以下步骤：
 
 1. Docker Client 将运行请求发送给 Docker Daemon。
 2. Docker Daemon 检查本地是否存在目标镜像。

@@ -20,7 +20,7 @@ Proxy Cache 项目和普通项目的关键差异如下：
 拉取示例：
 
 ```bash
-docker pull harbor.example.com/dockerhub/library/nginx:1.27-alpine
+docker pull harbor.example.com/dockerhub/library/nginx:1.31-alpine
 ```
 
 Pod 中引用时也使用代理项目路径：
@@ -33,7 +33,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: harbor.example.com/dockerhub/library/nginx:1.27-alpine
+      image: harbor.example.com/dockerhub/library/nginx:1.31-alpine
 ```
 
 上游账号的权限会影响 Proxy Cache 可拉取的镜像范围。配置私有上游仓库时，应使用权限受限的账号或 Token，避免让 Harbor 项目成员间接访问超出预期的上游镜像。

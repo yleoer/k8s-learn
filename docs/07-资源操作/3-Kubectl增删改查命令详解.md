@@ -7,7 +7,7 @@ Kubernetes 中的资源对象通常通过 kubectl 完成增删改查。常见操
 创建资源常用 `create` 和 `apply`。
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.27
+kubectl create deployment nginx --image=nginx:1.31-alpine
 kubectl create namespace dev
 kubectl create -f nginx.yaml
 kubectl apply -f nginx.yaml
@@ -20,15 +20,15 @@ kubectl apply -f nginx.yaml
 很多资源可以先通过命令生成 YAML，再手动调整字段：
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.27 --dry-run=client -o yaml
+kubectl create deployment nginx --image=nginx:1.31-alpine --dry-run=client -o yaml
 kubectl create namespace dev --dry-run=client -o yaml
-kubectl create job hello --image=busybox:1.36.1 --dry-run=client -o yaml -- echo hello
+kubectl create job hello --image=busybox:1.38 --dry-run=client -o yaml -- echo hello
 ```
 
 常见流程如下：
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.27 --dry-run=client -o yaml > nginx-deploy.yaml
+kubectl create deployment nginx --image=nginx:1.31-alpine --dry-run=client -o yaml > nginx-deploy.yaml
 kubectl apply -f nginx-deploy.yaml
 ```
 
@@ -78,7 +78,7 @@ kubectl apply -f nginx-deploy.yaml
 kubectl edit deployment nginx
 kubectl replace -f nginx-deploy.yaml
 kubectl scale deployment nginx --replicas=3
-kubectl set image deployment/nginx nginx=nginx:1.28
+kubectl set image deployment/nginx nginx=nginx:1.31-alpine
 kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
 ```
 

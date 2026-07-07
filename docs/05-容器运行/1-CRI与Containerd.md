@@ -119,7 +119,7 @@ kubectl describe node <node-name> | grep -i "Container Runtime"
 
 ```bash
 containerd --version
-ctr version
+sudo ctr version
 sudo systemctl status containerd
 sudo journalctl -u containerd -n 100 --no-pager
 ```

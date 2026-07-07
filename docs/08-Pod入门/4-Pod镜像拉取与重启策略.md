@@ -20,7 +20,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       imagePullPolicy: IfNotPresent
 ```
 
@@ -30,7 +30,7 @@ spec:
 |-------------------------|----------------|
 | `nginx`                 | `Always`       |
 | `nginx:latest`          | `Always`       |
-| `nginx:stable-alpine`   | `IfNotPresent` |
+| `nginx:1.31-alpine`   | `IfNotPresent` |
 | `nginx@sha256:<digest>` | `IfNotPresent` |
 
 `imagePullPolicy` 的默认值在对象创建时确定，之后修改镜像 tag 不会自动改变已有对象的该字段。生产环境建议使用固定 tag 或 digest，避免使用可变的 `latest` 标签。
@@ -111,7 +111,7 @@ spec:
   restartPolicy: Always
   containers:
     - name: demo
-      image: busybox:1.36.1
+      image: busybox:1.38
       command:
         - sh
         - -c

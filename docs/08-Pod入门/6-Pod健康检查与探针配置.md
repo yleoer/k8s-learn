@@ -24,7 +24,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       startupProbe:
@@ -61,7 +61,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       livenessProbe:
@@ -98,7 +98,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       readinessProbe:
@@ -143,7 +143,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       livenessProbe:
@@ -164,7 +164,7 @@ metadata:
 spec:
   containers:
     - name: app
-      image: busybox:1.36.1
+      image: busybox:1.38
       command:
         - sh
         - -c

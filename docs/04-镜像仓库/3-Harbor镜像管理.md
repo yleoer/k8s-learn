@@ -27,16 +27,16 @@ Docker Hub 会对镜像拉取频率做限制，具体额度可能随账号类型
 
 ```bash
 # 拉取一个测试镜像
-docker pull nginx:1.27-alpine
+docker pull nginx:1.31-alpine
 
 # 打标签，指向 Harbor 中的 base 项目
-docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
+docker tag nginx:1.31-alpine harbor.example.com/base/nginx:1.31-alpine
 
 # 推送镜像
-docker push harbor.example.com/base/nginx:1.27-alpine
+docker push harbor.example.com/base/nginx:1.31-alpine
 ```
 
-推送完成后，可在 Harbor 控制台进入 `base` 项目查看 `nginx` 仓库和 `1.27-alpine` 标签。若推送失败，应检查项目是否存在、账号是否具备开发人员及以上权限，以及客户端是否信任 Harbor 地址。
+推送完成后，可在 Harbor 控制台进入 `base` 项目查看 `nginx` 仓库和 `1.31-alpine` 标签。若推送失败，应检查项目是否存在、账号是否具备开发人员及以上权限，以及客户端是否信任 Harbor 地址。
 
 ## 拉取验证
 
@@ -44,7 +44,7 @@ docker push harbor.example.com/base/nginx:1.27-alpine
 
 ```bash
 docker login harbor.example.com
-docker pull harbor.example.com/base/nginx:1.27-alpine
+docker pull harbor.example.com/base/nginx:1.31-alpine
 ```
 
 公开项目可以省略 `docker login` 执行拉取；私有项目必须登录，或由运行时通过预置凭据完成认证。
@@ -127,7 +127,7 @@ sudo systemctl restart containerd
 验证 containerd 能否拉取镜像：
 
 ```bash
-sudo crictl pull harbor.example.com/base/nginx:1.27-alpine
+sudo crictl pull harbor.example.com/base/nginx:1.31-alpine
 sudo crictl images | grep harbor
 ```
 

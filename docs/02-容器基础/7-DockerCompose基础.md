@@ -113,7 +113,7 @@ name: compose-basic
 
 services:
   web:
-    image: nginx:1.28-alpine
+    image: nginx:1.31-alpine
     ports:
       - "8080:80"
     volumes:
@@ -121,7 +121,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: alpine:3.22
+    image: alpine:3.23
     command: ["sh", "-c", "sleep 365d"]
     depends_on:
       - web
@@ -223,21 +223,21 @@ name: compose-topology
 
 services:
   proxy:
-    image: nginx:1.28-alpine
+    image: nginx:1.31-alpine
     ports:
       - "8080:80"
     networks:
       - frontend
 
   app:
-    image: alpine:3.22
+    image: alpine:3.23
     command: ["sh", "-c", "sleep 365d"]
     networks:
       - frontend
       - backend
 
   db:
-    image: postgres:18
+    image: postgres:18.4
     environment:
       POSTGRES_PASSWORD: example
     networks:
@@ -308,7 +308,7 @@ name: compose-volume
 
 services:
   db:
-    image: postgres:18
+    image: postgres:18.4
     environment:
       POSTGRES_DB: app
       POSTGRES_USER: app
@@ -363,7 +363,7 @@ Compose 中的环境变量有两类用途，需要分开看：
 `.env` 默认放在项目目录中，通常与 `compose.yaml` 同级。它不会因为存在就自动进入容器，只有被 Compose 文件插值引用，或者通过 `env_file` 声明时，相关值才会进入容器环境。
 
 ```text [.env]
-NGINX_TAG=1.28-alpine
+NGINX_TAG=1.31-alpine
 WEB_PORT=8080
 APP_MODE=dev
 ```
@@ -377,7 +377,7 @@ name: compose-env
 
 services:
   web:
-    image: "nginx:${NGINX_TAG:-1.28-alpine}"
+    image: "nginx:${NGINX_TAG:-1.31-alpine}"
     ports:
       - "${WEB_PORT:-8080}:80"
     environment:
@@ -474,7 +474,7 @@ name: compose-health
 
 services:
   app:
-    image: alpine:3.22
+    image: alpine:3.23
     command: ["sh", "-c", "echo db is healthy; sleep 365d"]
     depends_on:
       db:
@@ -482,7 +482,7 @@ services:
         restart: true
 
   db:
-    image: postgres:18
+    image: postgres:18.4
     environment:
       POSTGRES_DB: app
       POSTGRES_USER: app
@@ -529,12 +529,12 @@ name: compose-profile
 
 services:
   web:
-    image: nginx:1.28-alpine
+    image: nginx:1.31-alpine
     ports:
       - "8080:80"
 
   shell:
-    image: alpine:3.22
+    image: alpine:3.23
     command: ["sh", "-c", "sleep 365d"]
     profiles:
       - debug
@@ -570,7 +570,7 @@ name: compose-merge
 
 services:
   web:
-    image: nginx:1.28-alpine
+    image: nginx:1.31-alpine
     ports:
       - "8080:80"
     environment:
@@ -635,7 +635,7 @@ docker compose -f compose.yaml -f compose.dev.yaml config
 | 多文件合并结果不符合预期 | 使用 `docker compose -f compose.yaml -f compose.dev.yaml config` 查看最终配置，重点检查列表字段拼接、映射字段覆盖和相对路径解析；确认是否有 `compose.override.yaml` 被自动加载。 |
 | 环境变量没有注入容器 | 区分 `.env` 插值和 `env_file` 注入。用 `docker compose config --environment` 查看插值变量，用 `docker compose exec <service> env` 查看容器环境。 |
 | secret 文件不存在或权限异常 | 确认顶层 `secrets` 的 `file` 路径存在，并确认服务自身 `secrets` 字段显式引用了该 secret。 |
-| PostgreSQL 18+ 提示 `/var/lib/postgresql/data (unused mount/volume)` | 检查是否仍把卷挂载到旧路径 `/var/lib/postgresql/data`。`postgres:18` 及更高版本应挂载 `/var/lib/postgresql`；已有真实数据时不能直接删除卷，需要按 PostgreSQL 大版本升级流程迁移。 |
+| PostgreSQL 18+ 提示 `/var/lib/postgresql/data (unused mount/volume)` | 检查是否仍把卷挂载到旧路径 `/var/lib/postgresql/data`。`postgres:18.4` 及更高版本应挂载 `/var/lib/postgresql`；已有真实数据时不能直接删除卷，需要按 PostgreSQL 大版本升级流程迁移。 |
 
 ## 与 Kubernetes 的边界
 

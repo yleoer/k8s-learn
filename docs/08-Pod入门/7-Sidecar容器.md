@@ -23,7 +23,7 @@ spec:
     spec:
       initContainers:
         - name: logshipper
-          image: busybox:1.36.1
+          image: busybox:1.38
           restartPolicy: Always
           command: ["sh", "-c", "tail -F /opt/logs.txt"]
           volumeMounts:
@@ -31,7 +31,7 @@ spec:
               mountPath: /opt
       containers:
         - name: app
-          image: busybox:1.36.1
+          image: busybox:1.38
           command: ["sh", "-c", "while true; do echo logging >> /opt/logs.txt; sleep 1; done"]
           volumeMounts:
             - name: data

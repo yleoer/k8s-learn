@@ -53,7 +53,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           ports:
             - name: http
               containerPort: 80
@@ -380,7 +380,7 @@ spec:
         node-role.example.com/logging: "true"
       containers:
         - name: agent
-          image: busybox:1.36.1
+          image: busybox:1.38
           command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
@@ -428,7 +428,7 @@ spec:
                       - "true"
       containers:
         - name: agent
-          image: busybox:1.36.1
+          image: busybox:1.38
           command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
@@ -470,7 +470,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: agent
-          image: busybox:1.36.1
+          image: busybox:1.38
           command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 

@@ -78,7 +78,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 现代 Kubernetes 中更常见的是 Deployment。Deployment 会自动创建和管理 ReplicaSet，再由 ReplicaSet 管理 Pod，因此实际使用中通常不直接操作 ReplicaSet 或 ReplicationController。
@@ -106,7 +106,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           ports:
             - containerPort: 80
 ```
@@ -179,7 +179,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           ports:
             - containerPort: 80
 ```
@@ -196,7 +196,7 @@ kubectl get po -l app=nginx-deploy -o wide
 也可以用命令快速生成模板：
 
 ```bash
-kubectl create deploy nginx-deploy --image=nginx:1.27 --dry-run=client -o yaml
+kubectl create deploy nginx-deploy --image=nginx:1.31-alpine --dry-run=client -o yaml
 ```
 
 生成的模板通常还需要补充 `replicas`、标签、端口、资源限制、探针和更新策略，才能接近生产可用配置。
@@ -233,7 +233,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 如果二者不匹配，创建请求会被 API 拒绝。在 `apps/v1` 中，Deployment 创建后 `spec.selector` 不可修改，因此前期应规划好稳定标签。
@@ -265,7 +265,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           ports:
             - name: http
               containerPort: 80
@@ -612,7 +612,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 `revisionHistoryLimit` 默认保留 10 个旧 ReplicaSet，显式设置为 0 会清空历史并使 Deployment 无法回滚，常见取值为 5 到 10。版本保留数量需要结合发布频率、回滚要求和集群规模确定。不要把 Deployment 历史版本当作唯一回滚手段，可靠的回滚还应包括 Git 中的 YAML、不可变镜像 tag、配置变更记录和数据库变更预案。
@@ -628,7 +628,7 @@ Deployment 还通过 `spec.strategy` 控制更新方式。常用策略有 Rollin
 创建示例 Deployment：
 
 ```bash
-kubectl create deploy nginx-scale --image=nginx:1.27
+kubectl create deploy nginx-scale --image=nginx:1.31-alpine
 kubectl scale deploy nginx-scale --replicas=3
 kubectl rollout status deploy nginx-scale
 ```
@@ -710,7 +710,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: app
-          image: nginx:1.27
+          image: nginx:1.31-alpine
           lifecycle:
             preStop:
               exec:
@@ -762,7 +762,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 字段说明：
@@ -821,7 +821,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:1.27
+          image: nginx:1.31-alpine
 ```
 
 使用 Recreate 时不能配置 `rollingUpdate`。更新过程会先删除旧 Pod，再创建新 Pod，因此服务可能短暂不可用。

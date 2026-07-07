@@ -45,8 +45,8 @@ redis/redis-stack      Redis Stack with JSON, Search, Timeseries…      250
 拉取明确版本的镜像：
 
 ```bash
-docker pull redis:8-alpine
-docker pull nginx:1.27-alpine
+docker pull redis:8.8-alpine
+docker pull nginx:1.31-alpine
 ```
 
 不指定 tag 时默认使用 `latest`：
@@ -80,9 +80,9 @@ Docker Engine v28 及更早版本，输出通常包含 `REPOSITORY`、`TAG`、`I
 IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
 centos:user          94ce4d5dd91f        204MB             0B
 hello-world:latest   e2ac70e7319a       10.1kB             0B
-nginx:1.27-alpine    6769dc3a703c       48.2MB             0B
+nginx:1.31-alpine    6769dc3a703c       48.2MB             0B
 nginx:latest         936fef290c8f        161MB             0B    U
-redis:8-alpine       3a02d38405dc        114MB             0B
+redis:8.8-alpine       3a02d38405dc        114MB             0B
 ```
 
 :::
@@ -106,8 +106,8 @@ docker image ls --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}'
 查看镜像详细信息：
 
 ```bash
-docker image inspect nginx:1.27-alpine
-docker history nginx:1.27-alpine
+docker image inspect nginx:1.31-alpine
+docker history nginx:1.31-alpine
 ```
 
 `docker image inspect` 适合查看镜像架构、入口命令、环境变量、工作目录和 RepoDigest；`docker history` 适合观察镜像层构成，辅助分析镜像体积。
@@ -117,7 +117,7 @@ docker history nginx:1.27-alpine
 为镜像增加新标签：
 
 ```bash
-docker tag redis:8-alpine redis:local
+docker tag redis:8.8-alpine redis:local
 docker images | grep redis
 ```
 
@@ -126,7 +126,7 @@ docker images | grep redis
 推送到私有仓库前，通常需要按目标仓库地址重新打标签：
 
 ```bash
-docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
+docker tag nginx:1.31-alpine harbor.example.com/base/nginx:1.31-alpine
 ```
 
 镜像标签建议包含明确语义，例如应用版本、基础系统、构建时间或 Git 提交号。避免在生产部署中使用含义模糊、会频繁移动的标签。
@@ -137,7 +137,7 @@ docker tag nginx:1.27-alpine harbor.example.com/base/nginx:1.27-alpine
 
 ```bash
 docker rmi redis:local
-docker rmi redis:8-alpine
+docker rmi redis:8.8-alpine
 ```
 
 如果一个镜像仍有其他标签引用，删除时通常只会显示 `Untagged`，底层镜像层不会被删除。只有当所有标签引用都被移除，并且没有容器继续引用该镜像时，Docker 才能真正释放相关镜像层。
@@ -168,7 +168,7 @@ docker image prune -a
 导出镜像：
 
 ```bash
-docker save -o nginx.alpine.tar nginx:1.27-alpine
+docker save -o nginx.alpine.tar nginx:1.31-alpine
 ```
 
 导入镜像：

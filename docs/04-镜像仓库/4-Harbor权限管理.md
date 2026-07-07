@@ -111,7 +111,7 @@ spec:
     - name: harbor-secret
   containers:
     - name: nginx
-      image: harbor.example.com/base/nginx:1.27-alpine
+      image: harbor.example.com/base/nginx:1.31-alpine
 ```
 
 ### 在 Deployment 中引用

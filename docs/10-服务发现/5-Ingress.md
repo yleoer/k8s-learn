@@ -137,7 +137,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:stable-alpine
+          image: nginx:1.31-alpine
           ports:
             - name: http
               containerPort: 80

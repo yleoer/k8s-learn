@@ -41,15 +41,15 @@ NETWORK ID     NAME      DRIVER    SCOPE
 
 ```bash
 docker network create app-net
-docker run -d --name web --network app-net nginx:1.27-alpine
-docker run --rm --network app-net busybox:1.36.1 wget -qO- http://web
+docker run -d --name web --network app-net nginx:1.31-alpine
+docker run --rm --network app-net busybox:1.38 wget -qO- http://web
 ```
 
 第三条命令中的 `busybox` 容器通过容器名 `web` 直接访问 nginx，预期输出 nginx 欢迎页 HTML。对比默认 bridge 的行为：
 
 ```bash
-docker run -d --name web-default nginx:1.27-alpine
-docker run --rm busybox:1.36.1 wget -qO- --timeout=3 http://web-default
+docker run -d --name web-default nginx:1.31-alpine
+docker run --rm busybox:1.38 wget -qO- --timeout=3 http://web-default
 ```
 
 第二条命令预期解析失败报错，因为默认 bridge 没有容器名解析。
@@ -70,7 +70,7 @@ docker run --rm busybox:1.36.1 wget -qO- --timeout=3 http://web-default
 `--network host` 让容器直接使用宿主机网络命名空间：容器没有独立 IP，应用监听的端口就是宿主机端口。
 
 ```bash
-docker run --rm -d --network host --name web-host nginx:1.27-alpine
+docker run --rm -d --network host --name web-host nginx:1.31-alpine
 curl http://127.0.0.1:80
 ```
 
@@ -83,7 +83,7 @@ host 网络驱动原生只在 Linux 上可用；Docker Desktop 4.34 及以上版
 `--network none` 完全隔离容器网络栈，容器内只有 loopback 设备：
 
 ```bash
-docker run --rm --network none busybox:1.36.1 ip addr
+docker run --rm --network none busybox:1.38 ip addr
 ```
 
 预期只输出 `lo` 一个网络设备。none 网络适合完全不需要网络的任务，例如本地文件批处理、离线数据转换，或将网络交给其他工具单独配置的场景。
@@ -95,7 +95,7 @@ docker run --rm --network none busybox:1.36.1 ip addr
 ```bash
 docker network create net-a
 docker network create net-b
-docker run -d --name multi --network net-a nginx:1.27-alpine
+docker run -d --name multi --network net-a nginx:1.31-alpine
 docker network connect net-b multi
 docker inspect multi --format '{{json .NetworkSettings.Networks}}'
 ```
@@ -108,13 +108,13 @@ docker network create alias-net
 docker run -d --name web-a \
 > --network alias-net \
 > --network-alias web-pool \
-> nginx:1.27-alpine \
+> nginx:1.31-alpine \
 > sh -c 'printf "web-a\n" > /usr/share/nginx/html/index.html && nginx -g "daemon off;"'
 
 docker run -d --name web-b \
 > --network alias-net \
 > --network-alias web-pool \
-> nginx:1.27-alpine \
+> nginx:1.31-alpine \
 > sh -c 'printf "web-b\n" > /usr/share/nginx/html/index.html && nginx -g "daemon off;"'
 ```
 
@@ -136,7 +136,7 @@ docker inspect web-a web-b --format '{{.Name}} {{range $network, $conf := .Netwo
 通过别名访问服务：
 
 ```bash
-docker run --rm --network alias-net busybox:1.36.1 sh -c 'for i in 1 2 3 4; do wget -qO- http://web-pool; done'
+docker run --rm --network alias-net busybox:1.38 sh -c 'for i in 1 2 3 4; do wget -qO- http://web-pool; done'
 ```
 
 ::: details 输出类似如下
@@ -162,7 +162,7 @@ docker network rm alias-net
 容器访问宿主机服务时，约定使用 `host.docker.internal` 主机名。Docker Desktop 自动解析该名称，Linux 上需要显式映射到宿主机网关：
 
 ```bash
-docker run --rm --add-host host.docker.internal=host-gateway busybox:1.36.1 ping -c 1 host.docker.internal
+docker run --rm --add-host host.docker.internal=host-gateway busybox:1.38 ping -c 1 host.docker.internal
 ```
 
 ## 常用命令

@@ -49,7 +49,7 @@ spec:
       emptyDir: {}
   initContainers:
     - name: init-page
-      image: busybox:1.36.1
+      image: busybox:1.38
       command:
         - /bin/sh
         - -c
@@ -59,7 +59,7 @@ spec:
           mountPath: /work-dir
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       volumeMounts:
@@ -111,6 +111,10 @@ kubectl delete pod <pod-name>
 kubectl delete pod <pod-name> --grace-period=10
 ```
 
+`--grace-period=10` 表示本次删除请求给 Pod 留 10 秒优雅终止时间。Pod 进入 `Terminating` 后，kubelet 会在这个时间窗口内执行 `preStop`、发送 `SIGTERM` 或镜像定义的 `STOPSIGNAL`，并等待容器进程自行退出；如果到期后仍有进程未退出，后续会被强制终止。未显式指定 `--grace-period` 时，删除通常使用 Pod 的 `terminationGracePeriodSeconds`；该字段未配置时默认 30 秒。
+
+删除命令中的 `--grace-period` 适合临时缩短本次删除等待时间，不应作为延长应用退出时间的主要方式。需要更长的优雅退出窗口时，应在 Pod YAML 中调整 `terminationGracePeriodSeconds`。`--grace-period=0` 只能和 `--force` 一起用于强制删除。
+
 强制删除只适合异常清理，不适合作为常规发布方式：
 
 ```bash
@@ -129,7 +133,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       lifecycle:
         postStart:
           exec:
@@ -162,7 +166,7 @@ spec:
   terminationGracePeriodSeconds: 30
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       lifecycle:
@@ -199,7 +203,7 @@ spec:
   terminationGracePeriodSeconds: 60
   containers:
     - name: nginx
-      image: nginx:stable-alpine
+      image: nginx:1.31-alpine
       ports:
         - containerPort: 80
       lifecycle:
