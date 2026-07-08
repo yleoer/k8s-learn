@@ -635,7 +635,7 @@ docker compose -f compose.yaml -f compose.dev.yaml config
 | 多文件合并结果不符合预期 | 使用 `docker compose -f compose.yaml -f compose.dev.yaml config` 查看最终配置，重点检查列表字段拼接、映射字段覆盖和相对路径解析；确认是否有 `compose.override.yaml` 被自动加载。 |
 | 环境变量没有注入容器 | 区分 `.env` 插值和 `env_file` 注入。用 `docker compose config --environment` 查看插值变量，用 `docker compose exec <service> env` 查看容器环境。 |
 | secret 文件不存在或权限异常 | 确认顶层 `secrets` 的 `file` 路径存在，并确认服务自身 `secrets` 字段显式引用了该 secret。 |
-| PostgreSQL 18+ 提示 `/var/lib/postgresql/data (unused mount/volume)` | 检查是否仍把卷挂载到旧路径 `/var/lib/postgresql/data`。`postgres:18.4` 及更高版本应挂载 `/var/lib/postgresql`；已有真实数据时不能直接删除卷，需要按 PostgreSQL 大版本升级流程迁移。 |
+| PostgreSQL 18+ 提示 `/var/lib/postgresql/data (unused mount/volume)` | 检查是否仍把卷挂载到旧路径 `/var/lib/postgresql/data`。`postgres:18` 及更高版本应挂载 `/var/lib/postgresql`；已有真实数据时不能直接删除卷，需要按 PostgreSQL 大版本升级流程迁移。 |
 
 ## 与 Kubernetes 的边界
 

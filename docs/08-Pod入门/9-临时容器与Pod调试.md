@@ -109,14 +109,14 @@ kubectl delete pod node-debugger-<node-name>-<suffix>
 
 | profile      | 行为                                    |
 |--------------|---------------------------------------|
-| `legacy`     | 未指定时的默认值，兼容历史行为，官方已计划弃用               |
-| `general`    | 通用调试配置，官方推荐的默认选择                      |
+| `legacy`     | 兼容历史行为，已弃用；kubectl v1.35 及更早版本未指定时的默认值  |
+| `general`    | 通用调试配置，kubectl v1.36 起未指定时的默认值           |
 | `baseline`   | 满足 Pod Security Standards baseline 策略 |
 | `restricted` | 满足 restricted 策略，适合受限命名空间             |
 | `netadmin`   | 附加 `NET_ADMIN` 等网络管理能力                |
 | `sysadmin`   | 特权模式，节点级排障使用                          |
 
-新记录统一显式指定 `--profile`，避免依赖将被弃用的 `legacy` 默认值。
+kubectl v1.36 起，未指定 `--profile` 时的默认值已从 `legacy` 改为 `general`；使用更早版本的 kubectl 时仍建议显式指定 `--profile`，避免依赖已弃用的 `legacy` 行为。
 
 ## 记录要点
 

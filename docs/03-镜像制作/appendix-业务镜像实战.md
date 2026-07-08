@@ -133,7 +133,7 @@ f0b201388ff8   harbor.example.com/team/frontend:v1.0.0   "/docker-entrypoint.…
 
 ## 范例二：PHP Web 应用
 
-场景：PHP 8.3 + Apache，Composer 管理依赖，Monolog 记录日志，内置 `/healthz` 端点。
+场景：PHP 8.5 + Apache，Composer 管理依赖，Monolog 记录日志，内置 `/healthz` 端点。
 
 ### 项目结构
 
@@ -406,7 +406,7 @@ CMD ["/app/server"]
 - **静态编译**：`CGO_ENABLED=0` 不依赖 glibc；`-ldflags="-s -w"` 去除调试符号。
 - **缓存优化**：`go.mod/go.sum` 先复制 → `go mod download` → 最后 `COPY . .`，源码改动时依赖下载层被缓存。
 - **非 root**：创建 `app` 用户并以 `USER app` 运行，配合 `COPY --chown` 赋予文件所有权。
-- **运行时依赖**：`ca-certificates`（HTTPS）、`tzdata`（时区）是 Alpine 最小镜像的常见补充；健康检查用的 `wget` 由 Alpine 自带的 busybox 提供，无需额外安装。
+- **运行时依赖**：`tzdata`（时区）是 Alpine 最小镜像的常见补充；Alpine 自带 `ca-certificates-bundle` 根证书，安装 `ca-certificates` 主要为通过 `update-ca-certificates` 信任私有 CA；健康检查用的 `wget` 由 Alpine 自带的 busybox 提供，无需额外安装。
 - **Exec 格式 CMD**：信号直接送达 Go 进程，`docker stop` 可触发 `SIGTERM` 优雅退出。
 
 ### 构建、运行、验证

@@ -2,7 +2,7 @@
 
 ingress-nginx 曾是使用最广泛的 Ingress Controller，它的退役使集群入口由哪个组件承接重新成为需要决策的问题。本文记录 ingress-nginx 退役时间线、仍在维护的 Ingress Controller 选型，以及向 Gateway API 迁移的路径与工具。
 
-Ingress 资源的字段、路径匹配、TLS 和 ingress-nginx 存量注解已在 [Ingress](./5-Ingress.md) 中记录。Gateway API 的完整资源模型和流量治理能力后续在网络入口内容中单独展开，本文只覆盖迁移决策需要的部分。
+Ingress 资源的字段、路径匹配和 TLS 已在 [Ingress](./5-Ingress.md) 中记录，ingress-nginx 存量注解见[附录：ingress-nginx 存量注解参考](./appendix-ingress-nginx存量注解参考.md)。Gateway API 的完整资源模型和流量治理能力后续在网络入口内容中单独展开，本文只覆盖迁移决策需要的部分。
 
 ## 退役时间线
 
@@ -66,7 +66,7 @@ kubectl get pods --all-namespaces --selector app.kubernetes.io/name=ingress-ngin
 
 Gateway API 是 Kubernetes 官方维护的下一代入口与流量路由 API，用于替代 Ingress。它以 CRD 形式发布，不随集群内置，需要先安装 CRD 再部署某个实现。
 
-Gateway API 有四个稳定的核心资源，均为 `gateway.networking.k8s.io/v1`：
+Gateway API 最核心的四个稳定资源如下，均为 `gateway.networking.k8s.io/v1`：
 
 | 资源           | 作用域         | 职责                                       |
 |--------------|-------------|------------------------------------------|
@@ -91,7 +91,7 @@ Gateway API 采用 Standard 与 Experimental 两个发布渠道。Standard chann
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.0/standard-install.yaml
 ```
 
-CRD 只定义 API，还需要部署一个实现作为控制器。实现的安装方式以各项目官方文档为准，完整列表和一致性状态见 [Gateway API implementations](https://gateway-api.sigs.k8s.io/docs/implementations/list/)。截至 2026 年 7 月，通过一致性测试的实现包括 Cilium、Istio、Traefik Proxy、NGINX Gateway Fabric、kgateway、Gloo Gateway、HAProxy Ingress、GKE 等；Envoy Gateway 当前状态为部分一致；Kong 的 Gateway API 投入已转向 Kong Operator。
+CRD 只定义 API，还需要部署一个实现作为控制器。实现的安装方式以各项目官方文档为准，完整列表和一致性状态见 [Gateway API implementations](https://gateway-api.sigs.k8s.io/docs/implementations/list/)。截至 2026 年 7 月，通过一致性测试的实现包括 Cilium、Istio、Traefik Proxy、NGINX Gateway Fabric、Envoy Gateway、kgateway、Gloo Gateway、HAProxy Ingress、GKE 等；Kong 的 Gateway API 投入已转向 Kong Operator，后者当前为部分一致状态。
 
 实现部署完成后，确认可用的 GatewayClass：
 

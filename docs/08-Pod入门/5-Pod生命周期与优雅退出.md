@@ -180,6 +180,9 @@ spec:
 
 preStop 的执行时间包含在 `terminationGracePeriodSeconds` 之内。应用本身仍需正确处理 `SIGTERM`，停止接收新请求，等待存量请求完成后再退出。
 
+> [!TIP]
+> 纯等待类的 preStop 也可以使用内置的 `sleep` 动作（Kubernetes v1.34 起 GA），例如 `preStop: {sleep: {seconds: 10}}`，不要求镜像内存在 shell，适合 distroless 这类精简镜像。
+
 创建 Pod 后删除，并观察 preStop 带来的退出等待：
 
 ```bash
