@@ -26,7 +26,7 @@ npm run docs:preview # 预览构建产物
 | 资源操作 | 07 | kubectl、Namespace、Pod 基础操作、状态观察和问题记录 |
 | Pod 入门 | 08 | Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期、健康检查、Sidecar 容器、静态 Pod 和 Pod 调试 |
 | 工作负载 | 09 | Deployment、StatefulSet、DaemonSet 和典型控制器行为 |
-| 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress、控制器选型与 Gateway API 迁移和排查记录 |
+| 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress、Gateway API、Traefik 和 ingress-nginx 附录 |
 
 ## 后续补全清单
 

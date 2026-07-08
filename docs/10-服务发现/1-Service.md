@@ -2,7 +2,7 @@
 
 Service 是 Kubernetes 为后端 Pod 或其他网络端点提供稳定访问入口的核心资源。Service 通过固定名称、固定虚拟 IP 或固定端口屏蔽后端端点变化，调用方不需要直接维护 Pod IP 或外部地址列表。
 
-本文集中记录 Service 资源定义、Service 类型、流量策略、双栈地址族、多端口、会话保持、EndpointSlice 与 Endpoints 兼容、DNS、Headless Service、代理模式和排查记录。Ingress 与 Gateway API 迁移仍保留在后续独立文档。
+本文集中记录 Service 资源定义、Service 类型、流量策略、双栈地址族、多端口、会话保持、EndpointSlice 与 Endpoints 兼容、DNS、Headless Service、代理模式和排查记录。Ingress、Gateway API 和 Traefik 在后续独立文档中记录。
 
 ## Service 定义与访问
 

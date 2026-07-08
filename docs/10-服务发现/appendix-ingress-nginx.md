@@ -1,9 +1,64 @@
-# 附录：ingress-nginx 存量注解参考
+# 附录：ingress-nginx
 
-ingress-nginx（`kubernetes/ingress-nginx`）已于 2026 年 3 月正式退役。本附录保留其安装形态、注解扩展和排查要点，仅作为存量集群的维护参考；Ingress API 本身的字段与规则见 [Ingress](./5-Ingress.md)，退役时间线、控制器选型和迁移路径见 [Ingress 控制器选型与 Gateway API 迁移](./6-Ingress控制器选型与GatewayAPI迁移.md)。
+ingress-nginx（`kubernetes/ingress-nginx`）已于 2026 年 3 月正式退役。本附录保留其退役背景、替代控制器选型、安装形态、存量注解和排查要点，仅作为存量集群的维护参考；Ingress API 本身的字段与规则见 [Ingress](./5-Ingress.md)，Gateway API 迁移记录见 [Gateway API](./6-GatewayAPI.md)。
 
 > [!WARNING]
 > ingress-nginx 仓库已归档只读，不再发布新版本，也不再修复缺陷和安全漏洞，此后发现的 CVE 会持续累积。以下内容不应再用于新集群设计，存量集群应按安全风险排期迁移。
+
+## 退役时间线
+
+本附录中的 ingress-nginx 指 Kubernetes 社区维护的 `kubernetes/ingress-nginx` 项目，常见 IngressClass 名称为 `nginx`，控制器标识为 `k8s.io/ingress-nginx`。
+
+关键节点如下：
+
+| 时间       | 事件                                                     |
+|----------|--------------------------------------------------------|
+| 2025-11-11 | Kubernetes 官方博客发布退役公告，宣布 best-effort 维护持续到 2026 年 3 月 |
+| 2026-01-29 | Steering Committee 与 Security Response Committee 发布联合声明，要求使用者立即规划迁移 |
+| 2026-03-19 | 发布 controller v1.15.1 与 Helm chart 4.15.1             |
+| 2026-03-24 | GitHub 仓库归档为只读，项目退役                                  |
+
+退役后的实际含义：
+
+- 不再发布新版本，不再修复缺陷，也不再修复新发现的安全漏洞。
+- 已有部署不会立即失效，已发布的 Helm chart 和容器镜像仍可下载。
+- 存量部署继续运行会承担不断累积的安全风险，迁移窗口应按风险排期。
+- 曾计划作为继任者的 InGate 项目未发展到可用程度，已一并退役。
+
+确认集群中是否运行 ingress-nginx：
+
+```bash
+kubectl get pods --all-namespaces --selector app.kubernetes.io/name=ingress-nginx
+```
+
+> [!WARNING]
+> Ingress NGINX 与 NGINX Ingress Controller 是两个不同项目：退役的是 Kubernetes 社区的 `kubernetes/ingress-nginx`；F5 维护的 NGINX Ingress Controller（`nginx/kubernetes-ingress`）不受本次退役影响。二者都使用 NGINX 作为数据面，但注解体系和配置方式互不兼容，不能直接混用文档。
+
+## 替代控制器选型
+
+控制器退役不等于 Ingress API 被移除。Ingress API 仍是 GA API，官方没有移除计划；但 Ingress API 已冻结，不再扩展新能力。新入口设计应优先评估 Gateway API，存量 Ingress 资源如果暂时不改写，则需要替换为仍在维护的 Ingress Controller。
+
+Kubernetes 官方 Ingress Controllers 列表中，由 Kubernetes 项目自身支持和维护的是 AWS 与 GCE Ingress Controller；其余常见控制器属于第三方项目。常见选项如下：
+
+| 控制器                          | 数据面             | 记录要点                                      |
+|------------------------------|-----------------|-------------------------------------------|
+| Traefik                      | Traefik         | 同时支持 Ingress 与 Gateway API，动态配置能力较强       |
+| HAProxy Ingress              | HAProxy         | 同时支持 Ingress 与 Gateway API                |
+| NGINX Ingress Controller（F5） | NGINX           | 数据面同为 NGINX，但注解不兼容 ingress-nginx，迁移仍需逐条改写 |
+| Cilium                       | eBPF + Envoy    | CNI 与入口能力结合较紧密，适合已经采用 Cilium 的集群         |
+| Istio Ingress Gateway        | Envoy           | 适合已经使用 Istio 服务网格或 Envoy 体系的集群           |
+| Kong、APISIX                  | OpenResty/NGINX | 偏 API 网关场景，通常提供认证、限流等插件体系               |
+| 云厂商控制器                       | 云负载均衡           | AWS ALB、GCE、AKS Application Gateway 等托管环境优先评估 |
+
+没有任何控制器能直接平替 ingress-nginx。选型时重点核对：
+
+- 注解兼容性：`nginx.ingress.kubernetes.io/*` 注解不可平移，rewrite、正则路径、金丝雀、限流等能力需要在目标控制器中重新表达。
+- Gateway API 支持状态：选择同时支持 Ingress 与 Gateway API 的控制器，可以把控制器替换和 API 迁移放在同一条演进路径上。
+- 数据面运维经验：团队对 NGINX、HAProxy、Envoy 或云负载均衡的排障熟悉度会直接影响故障恢复速度。
+- 行为差异验证：路径匹配、默认后端、转发头、超时、重定向和真实客户端 IP 识别等默认行为在各控制器之间可能不同。
+- 一致性与生态：迁移到 Gateway API 时，应查看目标实现的 Gateway API conformance 状态，并确认所需功能是否属于标准字段、实验字段或实现私有扩展。
+
+`ingress2gateway` 可以把 Ingress 及部分控制器私有注解转换为 Gateway API 资源，是迁移分析和初稿生成工具，不是一键替换工具。转换结果需要逐条审查，并在测试环境验证路由、TLS、重写、限流、灰度、默认后端和错误页行为后再切换流量。
 
 ## 安装形态
 
@@ -396,6 +451,12 @@ ingress-nginx 特有的常见现象：
 
 ## 参考
 
+- [Ingress NGINX Retirement: What You Need to Know](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/)
+- [Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees](https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/)
+- [Ingress Controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
+- [A Welcome Guide for Ingress-NGINX Users](https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress-nginx/)
+- [Announcing Ingress2Gateway 1.0](https://kubernetes.io/blog/2026/03/20/ingress2gateway-1-0-release/)
+- [ingress2gateway](https://github.com/kubernetes-sigs/ingress2gateway)
 - [ingress-nginx Installation Guide](https://kubernetes.github.io/ingress-nginx/deploy/)
 - [ingress-nginx Annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/)
 - [ingress-nginx Basic usage](https://kubernetes.github.io/ingress-nginx/user-guide/basic-usage/)

@@ -26,6 +26,10 @@ function lessonPath(lesson) {
   return `${sanitizeSegment(lesson.no)}-${sanitizeSegment(lesson.title)}`
 }
 
+function displayLessonTitle(title) {
+  return String(title).replace(/GatewayAPI/g, 'Gateway API')
+}
+
 function parseChapterDir(name) {
   const match = name.match(/^(\d+)-(.+)$/)
 
@@ -120,7 +124,7 @@ const courseChapters = course.map((chapter, index) => {
   const num = chapter.num ?? String(index + 1).padStart(2, '0')
   const defaultItems = [
     ...chapter.lessons.map((lesson) => ({
-      text: lesson.title,
+      text: displayLessonTitle(lesson.title),
       link: `/${dir}/${lessonPath(lesson)}`,
     })),
     ...chapter.appendixes.map((appendix) => ({

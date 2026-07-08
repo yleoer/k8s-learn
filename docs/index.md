@@ -45,7 +45,7 @@ features:
     link: /09-工作负载/
   - icon: 🔎
     title: 10 · 服务发现
-    details: Service、EndpointSlice、DNS、流量策略、Headless Service、代理模式、Ingress、控制器选型与 Gateway API 迁移。
+    details: Service、EndpointSlice、DNS、流量策略、Headless Service、代理模式、Ingress、Gateway API、Traefik 和 ingress-nginx 附录。
     link: /10-服务发现/
 ---
 
