@@ -2,15 +2,9 @@
 
 Deployment 是 Kubernetes 中最常用的无状态工作负载控制器。它通过声明式配置描述应用期望状态，再由控制器自动维护 Pod 和 ReplicaSet，完成副本数量维持、滚动发布、历史版本保留和回滚。
 
-本文将无状态调度相关内容合并为一个完整的 Deployment 文档，内容包括无状态调度基础、Deployment 定义与创建、更新与回滚、扩缩容与策略。
+本文围绕 Deployment 的资源定义、创建过程、更新与回滚、扩缩容和发布策略展开。
 
-## 无状态调度基础
-
-直接创建 Pod 有助于明确 Kubernetes 最小可部署单元的边界，但生产环境通常不会长期使用裸 Pod 承载业务。Pod 退出后不会自动维持副本数，也缺少滚动更新、版本回滚和统一扩缩容能力。
-
-Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望状态。无状态服务通常使用 Deployment，有状态服务通常使用 StatefulSet，节点级守护进程通常使用 DaemonSet。
-
-### 无状态服务
+## Deployment 的定位
 
 无状态服务指服务实例本身不保存必须依赖本地副本的数据。任意副本都可以处理请求，副本销毁后也不会造成业务数据丢失。
 
@@ -23,118 +17,7 @@ Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望
 
 无状态并不表示服务不需要数据，而是业务状态应存放在数据库、缓存、对象存储或其他外部系统中。这样 Pod 才可以被替换、扩容、缩容和迁移，Deployment 的滚动发布和故障自愈能力才能充分发挥。
 
-### 工作负载控制器
-
-常见调度资源可以按业务形态划分：
-
-| 资源                      | 典型场景               | 核心能力                |
-|-------------------------|--------------------|---------------------|
-| `Deployment`            | Web 服务、API 服务、微服务  | 多副本、滚动更新、回滚、扩缩容     |
-| `ReplicaSet`            | Deployment 底层副本控制  | 维持 Pod 副本数量         |
-| `ReplicationController` | 早期副本控制器            | 维持 Pod 副本数量         |
-| `StatefulSet`           | 数据库、注册中心、有序集群      | 稳定网络标识、稳定存储、有序发布    |
-| `DaemonSet`             | 日志采集、监控 Agent、节点插件 | 稳定状态下按匹配节点各运行一份 Pod |
-| `Job`                   | 一次性任务              | 执行完成即退出             |
-| `CronJob`               | 周期性任务              | 按计划创建 Job           |
-
-本章聚焦常用工作负载控制器，记录 Deployment、StatefulSet 和 DaemonSet 的核心行为。Job 和 CronJob 将在后续章节展开。
-
-### RC 与 ReplicaSet
-
-ReplicationController 简称 RC，是 Kubernetes 早期提供的副本控制器。它通过 `selector` 匹配一组 Pod，并维持匹配到的 Pod 数量等于 `spec.replicas`。
-
-ReplicaSet 简称 RS，是 RC 的下一代实现。它同样用于维持 Pod 副本数，但支持更丰富的标签选择器。
-
-| 对比项    | ReplicationController | ReplicaSet        |
-|--------|-----------------------|-------------------|
-| API 版本 | `v1`                  | `apps/v1`         |
-| 主要职责   | 维持 Pod 副本数量           | 维持 Pod 副本数量       |
-| 标签选择器  | 等值匹配                  | 等值匹配与集合表达式        |
-| 当前定位   | 早期资源，作为背景保留           | Deployment 底层资源   |
-| 生产建议   | 不建议新建使用               | 由 Deployment 自动管理 |
-
-ReplicaSet 支持 `matchLabels` 和 `matchExpressions`：
-
-```yaml
-apiVersion: apps/v1
-kind: ReplicaSet
-metadata:
-  name: nginx-rs-selector
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-    matchExpressions:
-      - key: tier
-        operator: In
-        values:
-          - frontend
-  template:
-    metadata:
-      labels:
-        app: nginx
-        tier: frontend
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.31-alpine
-```
-
-现代 Kubernetes 中更常见的是 Deployment。Deployment 会自动创建和管理 ReplicaSet，再由 ReplicaSet 管理 Pod，因此实际使用中通常不直接操作 ReplicaSet 或 ReplicationController。
-
-### RS 与 Pod 的关系
-
-ReplicaSet 通过标签选择器关联 Pod，并不直接记录某几个 Pod 的名称。控制器持续观察匹配标签的 Pod 数量：实际数量少于期望值时创建新 Pod，多于期望值时删除多余 Pod。
-
-下面示例使用 ReplicaSet 创建 3 个 Pod：
-
-```yaml
-apiVersion: apps/v1
-kind: ReplicaSet
-metadata:
-  name: nginx-rs
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx-rs
-  template:
-    metadata:
-      labels:
-        app: nginx-rs
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.31-alpine
-          ports:
-            - containerPort: 80
-```
-
-创建并查看：
-
-```bash
-kubectl create -f nginx-rs.yaml
-kubectl get rs
-kubectl get pod -l app=nginx-rs -o wide
-```
-
-删除一个被 RS 管理的 Pod：
-
-```bash
-kubectl delete pod -l app=nginx-rs
-kubectl get pod -l app=nginx-rs -w
-```
-
-ReplicaSet 会重新创建新的 Pod，使副本数量回到 3。如果要真正删除这组 Pod，应删除控制器：
-
-```bash
-kubectl delete rs nginx-rs
-```
-
-### Deployment 的定位
-
-Deployment 是 Kubernetes 中最常用的无状态工作负载控制器，通常用于不维护本地状态的应用。它以声明式方式描述期望状态，控制器自动完成 Pod 与 ReplicaSet 的副本维护、滚动更新、历史版本回滚和扩缩容。
+在工作负载控制器中，Deployment 主要承担无状态应用的副本维护和版本发布。它以声明式方式描述期望状态，控制器自动完成 Pod 与 ReplicaSet 的副本维护、滚动更新、历史版本回滚和扩缩容。
 
 Deployment、ReplicaSet 和 Pod 的关系可以概括为：
 
