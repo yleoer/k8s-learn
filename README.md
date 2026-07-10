@@ -2,7 +2,7 @@
 
 基于 VitePress 搭建的 Kubernetes 文档站，用于记录 Docker、容器运行时与 Kubernetes 从基础环境到集群实践的个人学习过程。
 
-当前已完成 01-10 章，其中 06-10 章对应 Kubernetes 核心资源阶段：集群架构、资源操作、Pod、工作负载和服务发现。
+当前已完成 01-13 章，其中 06-13 章对应 Kubernetes 核心资源阶段：集群架构、资源操作、Pod、工作负载、服务发现、配置管理、存储管理和任务管理。
 
 ## 本地开发
 
@@ -27,6 +27,9 @@ npm run docs:preview # 预览构建产物
 | Pod 入门 | 08 | Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期、健康检查、Sidecar 容器、静态 Pod 和 Pod 调试 |
 | 工作负载 | 09 | Deployment、StatefulSet、DaemonSet 和典型控制器行为 |
 | 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress、Gateway API、Traefik 和 ingress-nginx 附录 |
+| 配置管理 | 11 | ConfigMap、Secret、环境变量与卷投射、更新传播、不可变配置、镜像仓库凭据和 Secret 安全边界 |
+| 存储管理 | 12 | Volume、PV、PVC、StorageClass、CSI、NFS 动态供给、扩容、VolumeSnapshot 边界和存储排障 |
+| 任务管理 | 13 | Job、Indexed Job、失败与成功策略、TTL、CronJob 调度、并发策略和 MySQL 定时备份 |
 
 ## 后续补全清单
 
@@ -40,9 +43,9 @@ npm run docs:preview # 预览构建产物
 - 镜像构建进阶：`STOPSIGNAL`、`SHELL`、`VOLUME`、`ONBUILD`，Build checks、远程缓存、可复现构建和构建器垃圾回收
 - Gateway API 迁移实测：实现部署、ingress2gateway 转换结果验证和流量切换记录
 - 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 完整资源模型和 NetworkPolicy
-- 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
-- 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
-- 任务管理：Job、CronJob 和任务型工作负载
+- 身份管理：ServiceAccount、短期令牌投射、工作负载身份和镜像拉取凭据复用
+- 存储实测补充：CSI VolumeSnapshot 控制器部署、快照恢复、卷克隆、应用一致性和故障恢复演练
+- 任务管理实测补充：大规模 Indexed Job、外部工作队列、失败策略观测和备份恢复演练
 - 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
 - Pod 新能力：Pod 级资源配置、运行中资源调整、容器级重启规则、`PodReadyToStartContainers`、用户命名空间和细粒度补充组策略
 - 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度
@@ -76,7 +79,10 @@ docs/
 ├── 07-资源操作/
 ├── 08-Pod入门/
 ├── 09-工作负载/
-└── 10-服务发现/
+├── 10-服务发现/
+├── 11-配置管理/
+├── 12-存储管理/
+└── 13-任务管理/
 ```
 
 ### 文件命名约定

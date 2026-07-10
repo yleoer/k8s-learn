@@ -47,13 +47,25 @@ features:
     title: 10 · 服务发现
     details: Service、EndpointSlice、DNS、流量策略、Headless Service、代理模式、Ingress、Gateway API、Traefik 和 ingress-nginx 附录。
     link: /10-服务发现/
+  - icon: 🧾
+    title: 11 · 配置管理
+    details: ConfigMap、Secret、配置注入、更新传播、不可变配置、镜像仓库凭据和 Secret 安全边界。
+    link: /11-配置管理/
+  - icon: 💾
+    title: 12 · 存储管理
+    details: Volume、PV、PVC、StorageClass、CSI、NFS 动态供给、扩容、快照边界和存储排障。
+    link: /12-存储管理/
+  - icon: ⏱️
+    title: 13 · 任务管理
+    details: Job、Indexed Job、失败与成功策略、TTL、CronJob 调度、并发策略和 MySQL 定时备份。
+    link: /13-任务管理/
 ---
 
 ## 当前进度
 
-当前文档已完成基础环境、容器基础、镜像制作、镜像仓库、容器运行时，以及 Kubernetes 核心阶段的集群架构、资源操作、Pod、工作负载和服务发现。
+当前文档已完成基础环境、容器基础、镜像制作、镜像仓库、容器运行时，以及 Kubernetes 核心阶段的集群架构、资源操作、Pod、工作负载、服务发现、配置管理、存储管理和任务管理。
 
-后续记录将围绕配置管理、存储管理、任务管理、网络入口、调度治理、安全、可观测性和工程化交付逐步补齐。
+后续记录将围绕网络入口、调度治理、安全、可观测性和工程化交付逐步补齐。
 
 ## 后续补全清单
 
@@ -67,9 +79,9 @@ features:
 - 镜像构建进阶：`STOPSIGNAL`、`SHELL`、`VOLUME`、`ONBUILD`，Build checks、远程缓存、可复现构建和构建器垃圾回收
 - Gateway API 迁移实测：实现部署、ingress2gateway 转换结果验证和流量切换记录
 - 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 完整资源模型和 NetworkPolicy
-- 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
-- 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
-- 任务管理：Job、CronJob 和任务型工作负载
+- 身份管理：ServiceAccount、短期令牌投射、工作负载身份和镜像拉取凭据复用
+- 存储实测补充：CSI VolumeSnapshot 控制器部署、快照恢复、卷克隆、应用一致性和故障恢复演练
+- 任务管理实测补充：大规模 Indexed Job、外部工作队列、失败策略观测和备份恢复演练
 - 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
 - Pod 新能力：Pod 级资源配置、运行中资源调整、容器级重启规则、`PodReadyToStartContainers`、用户命名空间和细粒度补充组策略
 - 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度

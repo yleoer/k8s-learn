@@ -19,8 +19,6 @@ Kubernetes 提供了一组工作负载控制器，用于持续维护业务期望
 | `ReplicationController` | 早期副本控制器 | 维持 Pod 副本数量 |
 | `StatefulSet` | 数据库、注册中心、有序集群 | 稳定网络标识、稳定存储、有序发布 |
 | `DaemonSet` | 日志采集、监控 Agent、节点插件 | 稳定状态下按匹配节点各运行一份 Pod |
-| `Job` | 一次性任务 | 执行完成即退出 |
-| `CronJob` | 周期性任务 | 按计划创建 Job |
 
 ## 副本控制器
 

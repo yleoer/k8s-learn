@@ -27,7 +27,6 @@ DaemonSet 常用于以下场景：
 | Deployment  | 指定副本数，调度到合适节点       | Web、API、微服务     |
 | StatefulSet | 指定副本数，并保持稳定身份       | 数据库、注册中心、协调组件   |
 | DaemonSet   | 稳定状态下每个匹配节点运行一个 Pod | 日志、监控、网络、存储节点组件 |
-| Job         | 任务完成后退出             | 一次性批处理任务        |
 
 DaemonSet 不需要配置 `replicas`。副本数量由符合条件的节点数量决定，滚动更新期间可能因 `maxSurge` 临时增加。
 

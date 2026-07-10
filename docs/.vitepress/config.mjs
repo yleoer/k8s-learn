@@ -252,15 +252,14 @@ function partNavItem(part) {
 const visibleCourseParts = courseParts.filter((part) => chaptersInPart(part).length > 0)
 
 const courseSidebar = {
-  '/': [
-    {
-      text: '文档导航',
-      items: visibleCourseParts.map((part) => ({
-        text: part.label,
-        link: partLink(part),
-      })),
-    },
-  ],
+  '/': visibleCourseParts.map((part) => ({
+    text: part.label,
+    collapsed: false,
+    items: chaptersInPart(part).map((chapter) => ({
+      text: `${chapter.num} · ${displayLessonTitle(chapter.title)}`,
+      link: chapter.link,
+    })),
+  })),
   ...Object.fromEntries(visibleCourseParts.flatMap((part) => {
     return chaptersInPart(part).map((chapter) => [chapter.link, chapterSidebar(chapter, part)])
   })),
