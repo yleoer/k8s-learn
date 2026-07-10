@@ -348,12 +348,15 @@ web-2.nginx
 kubectl run dns-test --image=busybox:1.38 --restart=Never -- sleep 3600
 ```
 
-查询 DNS：
+使用完整域名查询固定 Pod 的 DNS 记录：
 
 ```bash
-kubectl exec -it dns-test -- nslookup web-0.nginx
+kubectl exec -it dns-test -- nslookup web-0.nginx.default.svc.cluster.local
 kubectl exec -it dns-test -- nslookup web-1.nginx.default.svc.cluster.local
 ```
+
+> [!NOTE]
+> 同一 Namespace 中的应用仍可以使用 `web-0.nginx` 这类短名称，但 BusyBox 1.38 的 `nslookup` 对 DNS 搜索列表的处理与应用使用的系统解析器并不完全一致，查询含点短名称时可能直接返回 `NXDOMAIN`。检查 DNS 记录时使用完整域名，短名称访问则使用 `wget`、`ping` 或应用自身的网络客户端验证。
 
 也可以直接访问指定副本：
 
@@ -400,7 +403,7 @@ kubectl get pod -l app=nginx --show-labels
 
 | 现象                        | 可能原因                            | 排查命令                                                             |
 |---------------------------|---------------------------------|------------------------------------------------------------------|
-| `nslookup web-0.nginx` 失败 | CoreDNS 异常或名称写错                 | `kubectl get pod -n kube-system -l k8s-app=kube-dns`             |
+| 完整 Pod DNS 名称查询失败         | CoreDNS 异常、名称写错或记录尚未发布             | `kubectl get pod -n kube-system -l k8s-app=kube-dns`             |
 | Service 没有后端地址            | selector 与 Pod 标签不匹配            | `kubectl get endpointslices -l kubernetes.io/service-name=nginx` |
 | 只能解析 Service，不能解析单个 Pod   | StatefulSet 未配置正确 `serviceName` | `kubectl get sts web -o yaml`                                    |
 | 可以解析但访问失败                 | 容器端口、应用监听或网络策略问题                | `kubectl describe pod web-0`                                     |

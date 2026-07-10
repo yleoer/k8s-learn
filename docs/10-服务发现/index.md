@@ -103,7 +103,7 @@ spec:
     spec:
       containers:
         - name: my-nginx
-          image: nginx
+          image: nginx:1.31-alpine
           ports:
             - containerPort: 80
 ```

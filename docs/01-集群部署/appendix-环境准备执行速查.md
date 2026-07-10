@@ -171,8 +171,8 @@ kubectl get pods -A
 ## control-plane 节点：安装 Calico 网络插件
 
 ```bash
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/v1_crd_projectcalico_org.yaml
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/tigera-operator.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/v1_crd_projectcalico_org.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/tigera-operator.yaml
 
 cat > calico-custom-resources.yaml <<'EOF'
 apiVersion: operator.tigera.io/v1
@@ -211,7 +211,7 @@ sudo kubeadm join <control-plane-ip>:6443 \
 ## control-plane 节点：安装 Metrics Server
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml
 kubectl -n kube-system rollout status deploy/metrics-server
 kubectl get apiservice v1beta1.metrics.k8s.io
 

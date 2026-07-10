@@ -763,10 +763,12 @@ kubectl describe pod <pod-name>
 在具备 DNS 工具的调试 Pod 中检查解析和访问：
 
 ```bash
-nslookup <service-name>
 nslookup <service-name>.<namespace>.svc.cluster.local
 curl http://<service-name>:<port>
 ```
+
+> [!NOTE]
+> 不同 `nslookup` 实现对 DNS 搜索列表的处理可能存在差异。检查 Service 的 DNS 记录时使用完整域名；验证同一 Namespace 内的短名称访问时，使用 `curl`、`wget` 或应用自身的网络客户端。
 
 查看 kube-proxy：
 

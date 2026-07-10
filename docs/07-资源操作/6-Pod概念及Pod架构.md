@@ -15,7 +15,7 @@ flowchart TB
 ```
 
 > [!NOTE]
-> 每个 Pod 中会先创建一个基础设施容器（`pause` 容器）：它持有 Pod 的网络命名空间等共享环境，使业务容器崩溃或重启时不丢失网络配置。使用 containerd 时，`pause` 容器就是 CRI 中 Pod sandbox 的实现，因此 `crictl ps` 只列出业务容器，sandbox 需要用 `crictl pods` 查看；`ctr -n k8s.io containers ls` 中则能直接看到运行 `pause` 镜像的容器。第 01 章预拉取的 `registry.k8s.io/pause:3.10.2` 就是本环境使用的 sandbox 镜像。
+> 在本文的 Linux 与 containerd 环境中，每个 Pod 会先创建一个使用 `pause` 镜像的 Pod sandbox：它持有 Pod 的网络命名空间等共享环境，使业务容器崩溃或重启时不丢失网络配置。Pod sandbox 是 CRI 抽象，不同操作系统和运行时不要求都以同样的 `pause` 容器形式实现。使用 containerd 时，`crictl ps` 只列出业务容器，sandbox 需要用 `crictl pods` 查看；`ctr -n k8s.io containers ls` 中则能看到相关容器。第 01 章预拉取的 `registry.k8s.io/pause:3.10.2` 就是本环境使用的 sandbox 镜像。
 
 ## Pod 共享的资源
 

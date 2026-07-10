@@ -59,9 +59,7 @@ traefik   traefik.io/ingress-controller   <none>       1m
 
 ## 示例前提
 
-后续示例复用 [Ingress](./5-Ingress.md) 中的 study-ingress Namespace、
-ginx Deployment 和 
-ginx Service。若只阅读 Traefik 扩展能力，可先应用该页的 ingress-demo.yaml，再继续本页的 Middleware、IngressRoute 和 TraefikService 示例。
+后续示例复用 [Ingress](./5-Ingress.md) 中的 `study-ingress` Namespace、Nginx Deployment 和 Nginx Service。若只阅读 Traefik 扩展能力，可先应用该页的 `ingress-demo.yaml`，再继续本页的 Middleware、IngressRoute 和 TraefikService 示例。
 
 ## Traefik 功能扩展
 

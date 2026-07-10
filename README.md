@@ -35,13 +35,19 @@ npm run docs:preview # 预览构建产物
 - 沙箱运行时实测：Kata Containers 与 gVisor 的节点安装、RuntimeClass 验证和沙箱内行为观察
 - 镜像懒加载实测：远程 snapshotter 部署、镜像格式转换和冷启动收益验证
 - Harbor 漏洞扫描实测：Trivy 扫描结果、阻止拉取策略与 CVE 允许清单的联动验证
+- Harbor 生产部署：高可用拓扑、外部 PostgreSQL 与 Redis、对象存储、备份恢复和跨版本升级演练
+- Docker 运行治理：CPU、内存、PID 与 ulimit 约束，rootless 与 user namespace，capabilities、seccomp 和日志驱动
+- 镜像构建进阶：`STOPSIGNAL`、`SHELL`、`VOLUME`、`ONBUILD`，Build checks、远程缓存、可复现构建和构建器垃圾回收
 - Gateway API 迁移实测：实现部署、ingress2gateway 转换结果验证和流量切换记录
 - 网络入口与访问控制：CNI 插件选型、CoreDNS 深入、Gateway API 完整资源模型和 NetworkPolicy
 - 配置管理与身份：ConfigMap、Secret、ServiceAccount、应用配置注入和镜像拉取凭据
 - 存储管理：Volume、PV、PVC、StorageClass、动态供给和 VolumeSnapshot
 - 任务管理：Job、CronJob 和任务型工作负载
 - 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
+- Pod 新能力：Pod 级资源配置、运行中资源调整、容器级重启规则、`PodReadyToStartContainers`、用户命名空间和细粒度补充组策略
 - 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度
+- 工作负载状态与发布：Deployment `terminatingReplicas`、滚动发布容量峰值、StatefulSet 强制回滚边界，以及工作负载终止与 Service 终止端点的连接排空协同
+- Service 网络进阶：ServiceCIDR 与 IPAddress、多 CIDR 分配、拓扑感知路由、终止端点流量排空、NodeLocal DNSCache 和 CoreDNS 定制
 - 安全与权限：RBAC、SecurityContext、Pod Security Standards 和审计基础
 - 集群运维：kubeadm 配置文件、版本偏差、集群升级、证书续期、etcd 备份恢复和高可用控制平面
 - 可观测性：系统日志、系统指标、事件、Tracing 和常见可观测性组件

@@ -211,7 +211,7 @@ echo json_encode(['error' => 'not found']);
 
 ```dockerfile [Dockerfile]
 # === 依赖安装阶段 ===
-FROM composer:2 AS vendor
+FROM composer:2.10.2 AS vendor
 WORKDIR /app
 COPY composer.json ./
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts

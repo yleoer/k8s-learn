@@ -164,9 +164,9 @@ docker cp nginx-demo:/var/log/nginx/access.log ./access.log
 
 ```bash
 mkdir -p ./backup
-docker run --rm -v nginx-data:/data -v "$PWD/backup:/backup" alpine tar czf /backup/nginx-data.tgz -C /data .
+docker run --rm -v nginx-data:/data -v "$PWD/backup:/backup" alpine:3.23 tar czf /backup/nginx-data.tgz -C /data .
 docker volume create nginx-data-restore
-docker run --rm -v nginx-data-restore:/data -v "$PWD/backup:/backup" alpine tar xzf /backup/nginx-data.tgz -C /data
+docker run --rm -v nginx-data-restore:/data -v "$PWD/backup:/backup" alpine:3.23 tar xzf /backup/nginx-data.tgz -C /data
 ```
 
 ## 网络与 Compose
