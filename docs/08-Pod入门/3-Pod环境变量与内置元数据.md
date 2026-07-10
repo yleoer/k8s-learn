@@ -4,7 +4,7 @@ Pod 可以通过 `env` 为容器注入环境变量。环境变量既可以填写
 
 ## 固定值环境变量
 
-```yaml [env-demo.yaml]
+```yaml{9-13} [env-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -30,7 +30,7 @@ kubectl exec -it env-demo -- env
 
 ## 使用 fieldRef 引用 Pod 字段
 
-```yaml [fieldref-demo.yaml]
+```yaml{11-27} [fieldref-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -92,7 +92,7 @@ kubectl exec -it fieldref-demo -- env | grep POD
 
 `resourceFieldRef` 把容器的 CPU、内存等资源配置注入为环境变量，可引用 `requests.cpu`、`limits.cpu`、`requests.memory`、`limits.memory`，以及 `ephemeral-storage` 和 `hugepages-*` 的对应字段：
 
-```yaml [resourcefieldref-demo.yaml]
+```yaml{17-29} [resourcefieldref-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -139,7 +139,7 @@ kubectl logs resourcefieldref-demo
 
 downwardAPI 卷把元数据以文件形式挂载进容器，适合读取全部标签、注解，或为无法读环境变量的组件提供配置：
 
-```yaml [downwardapi-volume-demo.yaml]
+```yaml{15-27} [downwardapi-volume-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:

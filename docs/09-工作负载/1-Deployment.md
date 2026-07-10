@@ -236,7 +236,7 @@ nginx-update-859c676bc    3         3         3       3m6s
 
 更新完成后，新的 RS 副本数会变为 3，旧的 RS 副本数会变为 0。旧 RS 通常仍会保留，用于后续回滚。
 
-生产中更推荐修改 YAML 后使用 `apply`：
+生产中更推荐先把已有 `nginx-update.yaml` 中的 `spec.template.spec.containers[0].image` 修改为目标版本，再使用 `apply` 更新已经创建的 Deployment：
 
 ```bash
 kubectl apply -f nginx-update.yaml
@@ -280,11 +280,7 @@ kubectl rollout status deploy nginx-update
 kubectl annotate deploy nginx-update kubernetes.io/change-cause="update nginx to 1.27" --overwrite
 ```
 
-再次查看历史版本，可以直观查看每个 revision 对应的变更原因：
-
-```bash
-kubectl rollout history deploy nginx-update
-```
+再次执行前面的 `kubectl rollout history deploy nginx-update`，可以直观查看每个 revision 对应的变更原因。
 
 ::: details 输出类似如下
 
@@ -399,7 +395,7 @@ kubectl annotate deploy nginx-update kubernetes.io/change-cause="update nginx to
 
 `revisionHistoryLimit` 用于控制 Deployment 保留多少个旧版本：
 
-```yaml [nginx-history.yaml]
+```yaml{7} [nginx-history.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -430,32 +426,31 @@ Deployment 还通过 `spec.strategy` 控制更新方式。常用策略有 Rollin
 
 ### 手动扩缩容
 
-创建示例 Deployment：
+本节复用前文[最小示例](#最小示例)中的完整 `nginx-deploy.yaml`，并假设该 Deployment 已经创建。先调整为 3 个副本：
 
 ```bash
-kubectl create deploy nginx-scale --image=nginx:1.31-alpine
-kubectl scale deploy nginx-scale --replicas=3
-kubectl rollout status deploy nginx-scale
+kubectl scale deploy nginx-deploy --replicas=3
+kubectl rollout status deploy nginx-deploy
 ```
 
 扩容到 5 个副本：
 
 ```bash
-kubectl scale deploy nginx-scale --replicas=5
-kubectl get pod -l app=nginx-scale -o wide
+kubectl scale deploy nginx-deploy --replicas=5
+kubectl get pod -l app=nginx-deploy -o wide
 ```
 
 缩容到 2 个副本：
 
 ```bash
-kubectl scale deploy nginx-scale --replicas=2
-kubectl get deploy nginx-scale
+kubectl scale deploy nginx-deploy --replicas=2
+kubectl get deploy nginx-deploy
 ```
 
-也可以修改 YAML 中的 `spec.replicas` 后执行：
+也可以修改已有 `nginx-deploy.yaml` 中的 `spec.replicas` 后更新资源：
 
 ```bash
-kubectl apply -f nginx-scale.yaml
+kubectl apply -f nginx-deploy.yaml
 ```
 
 生产中更推荐通过 YAML 或发布平台管理副本数，避免手动命令造成配置漂移。
@@ -477,11 +472,7 @@ kubectl top pod
 - Service、Ingress 或网关是否能正常发现新 Pod
 - 应用是否真正无状态，新增副本是否可以立即处理请求
 
-如果 Pod 一直 Pending，优先查看事件：
-
-```bash
-kubectl describe pod <pod-name>
-```
+如果 Pod 一直 Pending，优先复用 Pod 资源章节[查看 Pod 调度事件](../08-Pod入门/2-Pod资源分配与调度排查.md#查看-pod-调度事件)中的 `describe` 命令查看事件。
 
 常见原因包括 CPU 或内存不足、节点选择器不匹配、污点未容忍，或者镜像拉取失败。
 
@@ -497,7 +488,7 @@ kubectl describe pod <pod-name>
 
 示例：
 
-```yaml [graceful-nginx.yaml]
+```yaml{15,19-22} [graceful-nginx.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -545,7 +536,7 @@ RollingUpdate 可以在发布过程中保持部分旧版本继续服务，同时
 
 常见 RollingUpdate 配置：
 
-```yaml [nginx-rolling.yaml]
+```yaml{10-14} [nginx-rolling.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -568,6 +559,12 @@ spec:
       containers:
         - name: nginx
           image: nginx:1.31-alpine
+```
+
+首次创建该示例：
+
+```bash
+kubectl create -f nginx-rolling.yaml
 ```
 
 字段说明：
@@ -596,9 +593,9 @@ spec:
 观察过程：
 
 ```bash
-kubectl set image deploy nginx-scale nginx=nginx:1.28
-kubectl get deploy nginx-scale -w
-kubectl get rs -l app=nginx-scale
+kubectl set image deploy nginx-rolling nginx=nginx:1.28
+kubectl get deploy nginx-rolling -w
+kubectl get rs -l app=nginx-rolling
 ```
 
 滚动更新依赖 readiness 状态判断新 Pod 是否可以接收流量。未配置 readinessProbe 时，容器启动后可能很快被视为 Ready，但应用内部尚未完成初始化。
@@ -607,7 +604,7 @@ kubectl get rs -l app=nginx-scale
 
 Recreate 配置如下：
 
-```yaml [nginx-recreate.yaml]
+```yaml{10,11} [nginx-recreate.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:

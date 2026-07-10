@@ -4,27 +4,12 @@
 
 ## 创建单容器 Pod
 
-编写 `nginx-pod.yaml`：
-
-```yaml [nginx-pod.yaml]
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-  labels:
-    app: nginx
-spec:
-  containers:
-    - name: nginx
-      image: nginx:1.31-alpine
-      ports:
-        - containerPort: 80
-```
+复用前文 [Pod 的基本组成](./6-Pod概念及Pod架构.md#pod-的基本组成)中的完整 `nginx-pod.yaml`。
 
 创建 Pod：
 
 ```bash
-kubectl apply -f nginx-pod.yaml
+kubectl create -f nginx-pod.yaml
 ```
 
 查看状态：

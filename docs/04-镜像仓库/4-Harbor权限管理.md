@@ -101,7 +101,7 @@ kubectl create secret docker-registry harbor-secret \
 
 ### 在 Pod 中引用
 
-```yaml
+```yaml{6,7}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -116,7 +116,7 @@ spec:
 
 ### 在 Deployment 中引用
 
-```yaml
+```yaml{15,16}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

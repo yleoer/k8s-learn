@@ -152,9 +152,7 @@ curl http://127.0.0.1:8080
 
 ::: details 输出类似如下
 
-```text
-hello compose
-```
+容器内访问的输出与前面的宿主机访问相同，均为 `hello compose`。
 
 :::
 
@@ -218,7 +216,7 @@ docker compose down
 
 需要更细的网络边界时，可以用顶层 `networks` 定义多个网络，再在服务级 `networks` 中声明加入关系。下面示例中 `proxy` 与 `db` 不在同一网络，互相不可见，只有 `app` 能同时访问两侧：
 
-```yaml [compose.yaml]
+```yaml{8,9,14-16,22-27} [compose.yaml]
 name: compose-topology
 
 services:
@@ -303,7 +301,7 @@ docker compose exec app wget -qO- http://proxy
 
 named volume 示例：
 
-```yaml [compose.yaml]
+```yaml{10,11,14,15} [compose.yaml]
 name: compose-volume
 
 services:
@@ -330,11 +328,7 @@ docker volume ls
 docker volume inspect compose-volume_db-data
 ```
 
-普通停止并保留数据：
-
-```bash
-docker compose down
-```
+普通停止并保留数据时，复用前文[最小服务组](#最小服务组)中的 `docker compose down`。该命令不会删除 named volume。
 
 需要连同示例数据一起清理时，再使用：
 
@@ -372,7 +366,7 @@ APP_MODE=dev
 NGINX_ENTRYPOINT_QUIET_LOGS=1
 ```
 
-```yaml [compose.yaml]
+```yaml{5-11} [compose.yaml]
 name: compose-env
 
 services:
@@ -424,7 +418,7 @@ printf 'example-root-password\n' > secrets/mysql_root_password.txt
 printf 'example-app-password\n' > secrets/mysql_app_password.txt
 ```
 
-```yaml [compose.yaml]
+```yaml{6-13,17-21} [compose.yaml]
 name: compose-secret
 
 services:
@@ -469,7 +463,7 @@ docker compose exec db ls -l /run/secrets
 
 等待依赖就绪时，应给依赖服务定义 `healthcheck`，并在 `depends_on` 长格式中使用 `condition: service_healthy`：
 
-```yaml [compose.yaml]
+```yaml{7-10,18-23} [compose.yaml]
 name: compose-health
 
 services:
@@ -524,7 +518,7 @@ docker compose logs app
 
 profiles 用于把调试工具、管理界面、一次性任务等可选服务放在同一份 Compose 文件中。未配置 `profiles` 的核心服务始终启用；配置了 `profiles` 的服务只在对应 profile 激活时参与启动和停止。profile 名称需要匹配 `[a-zA-Z0-9][a-zA-Z0-9_.-]+`。
 
-```yaml [compose.yaml]
+```yaml{12,13} [compose.yaml]
 name: compose-profile
 
 services:

@@ -250,13 +250,7 @@ kubectl events --types=Warning
 
 ## 资源发现
 
-集群支持哪些资源，可以通过 `api-resources` 查询：
-
-```bash
-kubectl api-resources
-kubectl api-resources --namespaced=true
-kubectl api-resources --namespaced=false
-```
+集群支持哪些资源，可以通过 `api-resources` 查询。完整命令复用前文[资源类型写法](./2-Kubectl命令格式详解.md#资源类型写法)中的资源发现示例。
 
 查看 API 版本使用：
 
@@ -316,7 +310,7 @@ kubectl explain pod.spec.containers --recursive
 - 不确定字段层级时，先查资源整体，再逐级查看字段
 - 递归输出适合快速查看字段树
 - 字段说明以当前集群 API 为准
-- 写完 YAML 后再使用 `kubectl apply -f <file> --dry-run=client` 做基础检查
+- 复用前文[生成 YAML 清单](./3-Kubectl增删改查命令详解.md#生成-yaml-清单)中的 `nginx-deploy.yaml` 时，可以先使用 `kubectl create --dry-run=client -f nginx-deploy.yaml` 做基础检查
 
 `explain` 是一个辅助命令：遇到不确定的 YAML 字段时，直接查询字段的路径和含义。
 

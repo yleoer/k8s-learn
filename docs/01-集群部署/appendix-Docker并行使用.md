@@ -98,7 +98,7 @@ sudo crictl images | grep myapp
 
 通过本地导入方式使用镜像时，将拉取策略设置为 `IfNotPresent`，避免 Kubernetes 尝试从远端仓库重新拉取。以下使用 Deployment 资源为例：
 
-```yaml [deployment.yaml]
+```yaml{18} [deployment.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:

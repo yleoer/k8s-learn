@@ -73,7 +73,7 @@ jobservice:
 
 生产环境应配置权威 CA 证书或内部统一签发的受信任证书。启用 HTTPS 时，`harbor.yml` 可按下面的结构保留 HTTP 监听并补充 HTTPS 证书路径：
 
-```yaml [harbor.yml]
+```yaml{2-7} [harbor.yml]
 hostname: harbor.example.com
 http:
   port: 80

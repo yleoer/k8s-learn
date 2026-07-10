@@ -4,16 +4,14 @@ Kubernetes 中的资源对象通常通过 kubectl 完成增删改查。常见操
 
 ## 创建资源
 
-创建资源常用 `create` 和 `apply`。
+第一次创建资源使用 `create`。命令式创建适合快速生成简单资源，基于完整清单创建的方式在下一小节记录。
 
 ```bash
 kubectl create deployment nginx --image=nginx:1.31-alpine
 kubectl create namespace dev
-kubectl create -f nginx.yaml
-kubectl apply -f nginx.yaml
 ```
 
-`create` 偏向命令式创建，资源已存在时会报错；`apply` 偏向声明式管理，资源不存在时创建，已存在时按配置更新。
+资源已存在时，`create` 会报错。`apply` 虽然也能创建不存在的资源，但本文只把它用于修改已经由清单创建的资源，使首次创建和后续更新的意图保持清晰。
 
 ## 生成 YAML 清单
 
@@ -25,14 +23,35 @@ kubectl create namespace dev --dry-run=client -o yaml
 kubectl create job hello --image=busybox:1.38 --dry-run=client -o yaml -- echo hello
 ```
 
-常见流程如下：
+生成命令可以作为起点。整理后的完整 `nginx-deploy.yaml` 如下：
 
-```bash
-kubectl create deployment nginx --image=nginx:1.31-alpine --dry-run=client -o yaml > nginx-deploy.yaml
-kubectl apply -f nginx-deploy.yaml
+```yaml [nginx-deploy.yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.31-alpine
 ```
 
-`--dry-run=client` 表示只在客户端生成对象，不提交到 APIServer；`-o yaml` 表示以 YAML 格式输出。
+首次提交该清单：
+
+```bash
+kubectl create -f nginx-deploy.yaml
+```
+
+`--dry-run=client` 表示只在客户端生成对象，不提交到 APIServer；`-o yaml` 表示以 YAML 格式输出。保存后应检查并整理完整清单，再使用 `create -f` 创建资源。
 
 ## 查看资源
 
@@ -71,7 +90,7 @@ kubectl describe node worker-01
 
 ## 修改资源
 
-修改资源常用 `apply`、`edit`、`replace` 和少量专用命令。
+修改资源常用 `apply`、`edit`、`replace` 和少量专用命令。下面的 `nginx-deploy.yaml` 复用前文[生成 YAML 清单](#生成-yaml-清单)中的完整文件，并假设 Deployment 已经创建：
 
 ```bash
 kubectl apply -f nginx-deploy.yaml
@@ -86,7 +105,7 @@ kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
 
 | 命令          | 特点        | 适用场景                        |
 |-------------|-----------|-----------------------------|
-| `apply`     | 声明式创建或更新  | 推荐用于 YAML 管理                |
+| `apply`     | 按修改后的清单更新已有资源 | 已纳入 YAML 管理的资源               |
 | `edit`      | 在线编辑当前资源  | 临时修改和排查                     |
 | `replace`   | 用文件替换已有资源 | 明确知道完整资源定义时使用               |
 | `scale`     | 调整副本数     | Deployment、StatefulSet 等扩缩容 |
@@ -95,7 +114,7 @@ kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
 
 `patch` 默认使用 strategic merge patch，也可以通过 `--type` 指定 JSON merge patch 或 JSON patch。
 
-生产环境更推荐把资源配置写入 YAML 并使用 `apply`，这样配置的每次变更都能纳入版本管理。
+生产环境更推荐把资源配置写入 YAML，首次使用 `create`，后续修改使用 `apply`，这样配置的每次变更都能纳入版本管理。
 
 ## 删除资源
 
@@ -119,9 +138,9 @@ kubectl get pod -l app=nginx
 
 ## apply 与 replace 的区别
 
-`apply` 是最常用的声明式操作方式：
+`apply` 是常用的声明式更新方式：
 
-- 文件中不存在的资源会被创建
+- 命令本身可以创建不存在的资源，但本文约定首次创建使用 `create`
 - 已存在的资源会被更新
 - 适合长期维护 YAML 清单
 
@@ -131,4 +150,4 @@ kubectl get pod -l app=nginx
 - 文件需要包含完整对象定义
 - 不适合作为默认更新方式
 
-实际工作中，建议把 `apply -f` 作为主要入口，把 `create` 用于快速生成资源，把 `edit` 用于临时调整，把 `replace` 用于明确的替换场景。
+实际工作中，建议先用 `create -f` 提交完整清单，后续把 `apply -f` 作为更新入口；`edit` 用于临时调整，`replace` 用于明确的替换场景。

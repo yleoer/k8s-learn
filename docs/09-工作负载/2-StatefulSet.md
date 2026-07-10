@@ -50,7 +50,7 @@ StatefulSet 不是为了替代 Deployment。只要应用可以做到无状态化
 
 下面示例创建一个名为 `web` 的 StatefulSet，并通过名为 `nginx` 的 Headless Service 提供稳定网络标识：
 
-```yaml
+```yaml [web-statefulset.yaml]
 apiVersion: v1
 kind: Service
 metadata:
@@ -92,7 +92,7 @@ spec:
 创建资源：
 
 ```bash
-kubectl apply -f web-statefulset.yaml
+kubectl create -f web-statefulset.yaml
 kubectl get sts
 kubectl get pod -l app=nginx -o wide
 kubectl get svc nginx
@@ -152,7 +152,7 @@ web-2   Running
 
 StatefulSet 默认从 0 开始编号，序号范围是 0 到 `replicas - 1`。`spec.ordinals.start` 可以修改起始序号，设置后序号范围变为 `start` 到 `start + replicas - 1`。该字段自 Kubernetes v1.31 起为稳定特性。
 
-```yaml
+```yaml{8,9}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -188,7 +188,7 @@ spec:
 
 StatefulSet 的重要能力是通过 `volumeClaimTemplates` 为每个 Pod 自动创建独立 PVC：
 
-```yaml
+```yaml{25-36}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -280,7 +280,7 @@ StatefulSet 需要稳定的网络标识，Headless Service 正是这个能力的
 
 Headless Service 将 `clusterIP` 设置为 `None`：
 
-```yaml
+```yaml{6}
 apiVersion: v1
 kind: Service
 metadata:
@@ -411,61 +411,6 @@ kubectl get pod -l app=nginx --show-labels
 
 Headless Service 的关键是标签匹配和 DNS 记录。先确认 Pod Ready，再确认 Service selector，最后确认 DNS 查询结果，通常可以快速定位问题。
 
-### Eureka 集群示例
-
-Eureka 这类注册中心需要节点之间互相发现。使用 StatefulSet 可以让每个副本拥有固定名称，再把这些固定名称写入对等节点地址。该示例用于说明固定 DNS 对自组集群的价值，不表示所有 Kubernetes 应用都需要额外引入注册中心。
-
-下面示例只展示 StatefulSet 与 Headless Service 的组织方式，实际生产还需要补充镜像、探针、资源限制和配置管理：
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: eureka
-spec:
-  clusterIP: None
-  selector:
-    app: eureka
-  ports:
-    - name: http
-      port: 8761
-      targetPort: 8761
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: eureka
-spec:
-  serviceName: eureka
-  replicas: 3
-  selector:
-    matchLabels:
-      app: eureka
-  template:
-    metadata:
-      labels:
-        app: eureka
-    spec:
-      containers:
-        - name: eureka
-          image: <registry.example.com>/<namespace>/eureka:1.0.0
-          ports:
-            - name: http
-              containerPort: 8761
-          env:
-            - name: EUREKA_INSTANCE_HOSTNAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: EUREKA_PEERS
-              value: "http://eureka-0.eureka:8761/eureka/,http://eureka-1.eureka:8761/eureka/,http://eureka-2.eureka:8761/eureka/"
-```
-
-这里的关键不是具体镜像，而是 `eureka-0.eureka`、`eureka-1.eureka`、`eureka-2.eureka` 这些稳定地址。应用可以把它们作为集群成员列表，从而避免 Pod 重建后名称变化导致节点发现失败。
-
-> [!TIP]
-> 对于真实业务配置，建议将成员列表放入 ConfigMap 或启动参数模板中，不要把环境差异直接写死在工作负载 YAML 中。
-
 ## StatefulSet 更新扩缩容
 
 StatefulSet 的扩缩容和更新都围绕 Pod 序号进行。默认情况下，扩容按序号正序创建，缩容按序号倒序删除，更新则从最大序号开始逐个替换。
@@ -500,7 +445,7 @@ kubectl get pod -l app=nginx -w
 web-4 -> web-3 -> web-2
 ```
 
-也可以修改 YAML 中的 `spec.replicas` 后执行：
+也可以修改已经创建资源所对应的 `web-statefulset.yaml`，调整其中的 `spec.replicas` 后执行：
 
 ```bash
 kubectl apply -f web-statefulset.yaml
@@ -541,7 +486,7 @@ kubectl delete pvc data-web-2
 
 StatefulSet 通过 `spec.updateStrategy` 控制更新方式：
 
-```yaml
+```yaml{8,9}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -604,7 +549,7 @@ web-2 -> web-1 -> web-0
 
 `partition` 可以让 StatefulSet 只更新部分高序号 Pod，常用于灰度发布：
 
-```yaml
+```yaml{8-11}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -676,7 +621,7 @@ kubectl patch sts partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{
 
 滚动更新默认一次只处理一个 Pod。`spec.updateStrategy.rollingUpdate.maxUnavailable` 可以放宽更新期间允许不可用的 Pod 数量，取值为绝对数或期望副本数的百分比（百分比向上取整），不能为 0，默认值为 1：
 
-```yaml
+```yaml{8-12}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -716,7 +661,7 @@ spec:
 
 `OnDelete` 策略不会在 Pod 模板变化后自动替换 Pod：
 
-```yaml
+```yaml{8,9}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -784,7 +729,7 @@ kubectl describe pod web-0 | grep Image:
 
 StatefulSet 默认的 Pod 管理策略是 `OrderedReady`：
 
-```yaml
+```yaml{8}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -808,7 +753,7 @@ spec:
 
 它会按顺序创建、删除和扩缩容 Pod。也可以改为 `Parallel`：
 
-```yaml
+```yaml{8}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -868,5 +813,6 @@ kubectl get pvc
 ## 参考
 
 - [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+- [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
 - [StatefulSet API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/stateful-set-v1/)
 - [Feature Gates](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)

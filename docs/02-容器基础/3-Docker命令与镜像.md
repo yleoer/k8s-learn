@@ -42,12 +42,7 @@ redis/redis-stack      Redis Stack with JSON, Search, Timeseries…      250
 
 ## 拉取镜像
 
-拉取明确版本的镜像：
-
-```bash
-docker pull redis:8.8-alpine
-docker pull nginx:1.31-alpine
-```
+拉取明确版本镜像的命令复用前文[不建议依赖 latest](./1-容器核心概念.md#不建议依赖-latest)中的示例。
 
 不指定 tag 时默认使用 `latest`：
 

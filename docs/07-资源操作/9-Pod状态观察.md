@@ -135,15 +135,7 @@ kubectl get pod -o wide
 
 ## 观察顺序
 
-建议形成固定流程：
-
-```bash
-kubectl get pod -o wide
-kubectl describe pod <pod-name>
-kubectl logs <pod-name>
-kubectl logs <pod-name> --previous
-kubectl get events --sort-by=.metadata.creationTimestamp
-```
+建议沿用前文[常用排障顺序](./4-Kubectl常用命令详解.md#常用排障顺序)中的完整命令流程。
 
 观察时按层次判断：
 

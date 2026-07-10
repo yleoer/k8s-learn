@@ -12,9 +12,9 @@
 
 ## 配置方式
 
-静态 Pod 的清单目录由 kubelet 配置文件中的 `staticPodPath` 字段指定。kubelet 默认不启用该字段（默认值为空字符串），kubeadm 部署时会将其设置为 `/etc/kubernetes/manifests`：
+静态 Pod 的清单目录由 kubelet 配置文件中的 `staticPodPath` 字段指定。kubelet 默认不启用该字段（默认值为空字符串），kubeadm 部署时会将其设置为 `/etc/kubernetes/manifests`。下面只展示相关字段，不是完整的 `KubeletConfiguration`：
 
-```yaml
+```yaml{3}
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 staticPodPath: /etc/kubernetes/manifests

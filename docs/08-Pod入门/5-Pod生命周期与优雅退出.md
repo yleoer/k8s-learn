@@ -38,7 +38,7 @@ Init Container 用于在普通容器启动前执行初始化任务。一个 Pod 
 
 下面示例先由 `init-page` 容器写入首页文件，再由 `nginx` 容器挂载同一个 `emptyDir` 卷并对外提供访问：
 
-```yaml [init-container-demo.yaml]
+```yaml{9-18} [init-container-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -125,7 +125,7 @@ kubectl delete pod <pod-name> --grace-period=0 --force
 
 `postStart` 是容器创建后执行的容器级生命周期钩子。
 
-```yaml [poststart-demo.yaml]
+```yaml{9-15} [poststart-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -157,7 +157,7 @@ kubectl exec -it poststart-demo -- cat /usr/share/nginx/html/index.html
 
 `preStop` 是容器终止前执行的容器级生命周期钩子，常用于等待流量收敛、通知应用下线或执行清理动作。
 
-```yaml [prestop-demo.yaml]
+```yaml{6,12-18} [prestop-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -199,7 +199,7 @@ time kubectl delete pod prestop-demo
 
 当应用需要更长时间完成请求处理、连接关闭或本地清理时，可以调大 `terminationGracePeriodSeconds`。下面示例将宽限期调整为 60 秒，并在 preStop 中等待 45 秒，用于模拟较长的下线收敛过程：
 
-```yaml [graceful-period-demo.yaml]
+```yaml{6,12-18} [graceful-period-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:

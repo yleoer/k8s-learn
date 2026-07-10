@@ -52,17 +52,17 @@ kubectl get node --show-labels
 kubectl describe node <node-name>
 ```
 
-## 创建与应用
+## 创建资源
 
-根据 YAML 创建或更新工作负载：
+完整清单分别见 [Deployment 最小示例](./1-Deployment.md#最小示例)中的 `nginx-deploy.yaml`、[StatefulSet 最小示例](./2-StatefulSet.md#最小示例)中的 `web-statefulset.yaml` 和 [DaemonSet 最小示例](./3-DaemonSet.md#最小示例)中的 `node-nginx-daemonset.yaml`。首次创建工作负载：
 
 ```bash
-kubectl apply -f nginx-deploy.yaml
-kubectl apply -f web-statefulset.yaml
-kubectl apply -f node-nginx-daemonset.yaml
+kubectl create -f nginx-deploy.yaml
+kubectl create -f web-statefulset.yaml
+kubectl create -f node-nginx-daemonset.yaml
 ```
 
-创建章节公共背景中的 ReplicaSet 示例：
+复用[副本控制器](./index.md#副本控制器)中的完整 `nginx-rs.yaml` 创建 ReplicaSet：
 
 ```bash
 kubectl create -f nginx-rs.yaml
@@ -137,17 +137,17 @@ kubectl rollout status deployment/nginx-update
 调整 Deployment 副本数：
 
 ```bash
-kubectl scale deployment/nginx-scale --replicas=5
-kubectl get pod -l app=nginx-scale -o wide
+kubectl scale deployment/nginx-deploy --replicas=5
+kubectl get pod -l app=nginx-deploy -o wide
 
-kubectl scale deployment/nginx-scale --replicas=2
-kubectl get deployment/nginx-scale
+kubectl scale deployment/nginx-deploy --replicas=2
+kubectl get deployment/nginx-deploy
 ```
 
 使用当前副本数作为前置条件：
 
 ```bash
-kubectl scale --current-replicas=3 deployment/nginx-scale --replicas=5
+kubectl scale --current-replicas=3 deployment/nginx-deploy --replicas=5
 ```
 
 调整 StatefulSet 副本数并观察有序变化：
@@ -231,10 +231,9 @@ kubectl rollout status statefulset/web
 
 ## DaemonSet 操作
 
-创建并查看 DaemonSet：
+复用前文[创建资源](#创建资源)中已经创建的 DaemonSet，查看资源状态：
 
 ```bash
-kubectl apply -f node-nginx-daemonset.yaml
 kubectl get daemonset/node-nginx
 kubectl get pod -l app=node-nginx -o wide
 ```

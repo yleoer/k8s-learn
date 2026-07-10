@@ -202,7 +202,7 @@ Pod 可以使用 `command` 和 `args` 覆盖镜像默认启动行为。`command`
 
 下面示例使用 `busybox` 启动一个循环脚本。`command` 指定入口命令为 `/bin/sh`，`args` 传入 `-c` 和需要执行的 shell 脚本：
 
-```yaml [command-args-demo.yaml]
+```yaml{9-12} [command-args-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:

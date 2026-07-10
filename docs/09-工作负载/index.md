@@ -38,7 +38,7 @@ ReplicaSet 简称 RS，是 RC 的下一代实现。它同样用于维持 Pod 副
 
 ReplicaSet 支持 `matchLabels` 和 `matchExpressions`：
 
-```yaml [nginx-rs-selector.yaml]
+```yaml{7-19} [nginx-rs-selector.yaml]
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:

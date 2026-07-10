@@ -59,13 +59,13 @@ traefik   traefik.io/ingress-controller   <none>       1m
 
 ## 示例前提
 
-后续示例复用 [Ingress](./5-Ingress.md) 中的 `study-ingress` Namespace、Nginx Deployment 和 Nginx Service。若只阅读 Traefik 扩展能力，可先应用该页的 `ingress-demo.yaml`，再继续本页的 Middleware、IngressRoute 和 TraefikService 示例。
+后续示例复用 [Ingress](./5-Ingress.md) 中的 `study-ingress` Namespace、Nginx Deployment 和 Nginx Service。若只阅读 Traefik 扩展能力，可先按照该页说明创建完整 `ingress-demo.yaml` 中的资源，再继续本页的 Middleware、IngressRoute 和 TraefikService 示例。
 
 ## Traefik 功能扩展
 
-Ingress API 只覆盖 Host、Path 和 TLS 终止。认证、限流、重写、灰度、会话保持等能力由各控制器扩展提供，注解不能跨控制器平移。ingress-nginx 时代这些能力通过 `nginx.ingress.kubernetes.io/*` 注解表达（见附录）；Traefik 的做法是把每种能力定义成 Middleware CRD 对象，再用一个注解挂到 Ingress 上：
+Ingress API 只覆盖 Host、Path 和 TLS 终止。认证、限流、重写、灰度、会话保持等能力由各控制器扩展提供，注解不能跨控制器平移。ingress-nginx 时代这些能力通过 `nginx.ingress.kubernetes.io/*` 注解表达（见附录）；Traefik 的做法是把每种能力定义成 Middleware CRD 对象，再用一个注解挂到 Ingress 上。下面只展示 Ingress 的 `metadata.annotations` 字段关系，不是完整资源：
 
-```yaml
+```yaml{2,3}
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: <namespace>-<middleware-name>@kubernetescrd
@@ -90,7 +90,7 @@ kubectl create secret generic basic-auth \
 
 创建 Middleware 和带认证的 Ingress：
 
-```yaml [ingress-auth.yaml]
+```yaml{7,8,15,16} [ingress-auth.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -135,7 +135,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -u foo:<password> --resolve auth.exampl
 
 `forwardAuth` 把认证决策委托给外部服务：每个请求先被转发到认证服务，认证服务返回 2XX 时放行原请求，否则把认证服务的响应（例如 302 跳转登录页、401）直接返回给客户端。这是对接 oauth2-proxy、Authelia、authentik 等统一认证组件的标准方式，对应 ingress-nginx 时代的 `auth-url` 注解：
 
-```yaml
+```yaml{7-12}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -156,7 +156,7 @@ spec:
 
 Service 的 `sessionAffinity: ClientIP` 是四层源 IP 粘性。Traefik 可以基于 Cookie 做七层会话保持，配置方式是给后端 Service 添加注解（注意是 Service，不是 Ingress）：
 
-```yaml [service-sticky.yaml]
+```yaml{6-9} [service-sticky.yaml]
 apiVersion: v1
 kind: Service
 metadata:
@@ -206,7 +206,7 @@ curl -sv --resolve sticky.example.com:30080:<node-ip> http://sticky.example.com:
 
 当外部路径与后端应用实际路径不一致时，可以在转发前改写路径。去掉固定前缀用 `stripPrefix`：
 
-```yaml [ingress-rewrite.yaml]
+```yaml{7-9,16,17} [ingress-rewrite.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -251,7 +251,7 @@ spec:
 
 更复杂的改写用 `replacePathRegex` 表达正则捕获组替换：
 
-```yaml
+```yaml{7-9}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -269,7 +269,7 @@ spec:
 
 跨域名的永久重定向用 `redirectRegex`：
 
-```yaml [ingress-redirect.yaml]
+```yaml{7-10,17,18} [ingress-redirect.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -305,7 +305,7 @@ spec:
 
 HTTP 到 HTTPS 的重定向用 `redirectScheme`；实验环境 HTTPS 走的是 30443 节点端口，需要显式指定端口，生产环境标准 443 端口则省略 `port`：
 
-```yaml
+```yaml{7-10}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -324,7 +324,7 @@ spec:
 
 `rateLimit` 按客户端来源限制请求速率，`ipAllowList` 限制来源地址；两个中间件可以逗号分隔同时挂到一个 Ingress：
 
-```yaml [ingress-limit.yaml]
+```yaml{7-10,18-21,28,29} [ingress-limit.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -379,7 +379,7 @@ done; echo
 
 `rateLimit` 限制的是请求速率，并发维度对应 `inFlightReq`：单个来源同时在途的请求数超过 `amount` 时返回 429，等价于 ingress-nginx 的 `limit-connections`，适合保护慢接口和连接数敏感的后端：
 
-```yaml
+```yaml{7,8}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -398,7 +398,7 @@ spec:
 
 跨域响应头通过 `headers` 中间件生成，配置后预检请求（OPTIONS）由 Traefik 直接应答，不再转发到后端：
 
-```yaml [ingress-cors.yaml]
+```yaml{7-20,27,28} [ingress-cors.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -450,7 +450,7 @@ spec:
 
 Traefik 默认不缓冲请求和响应，SSE、长轮询这类流式接口开箱即用，不需要像 ingress-nginx 那样显式关闭代理缓冲。需要限制请求体大小时使用 `buffering` 中间件，超限返回 413：
 
-```yaml
+```yaml{7,8}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -465,9 +465,9 @@ spec:
 
 ### HTTPS 后端
 
-Traefik 到后端默认走明文 HTTP。后端本身以 HTTPS 提供服务时，满足以下任一条件 Traefik 就会改用 TLS 连接后端：Service 端口号为 443、端口名以 `https` 开头，或在 Service 上显式添加协议注解（值为 `h2c` 时表示明文 HTTP/2，常见于 gRPC 后端）：
+Traefik 到后端默认走明文 HTTP。后端本身以 HTTPS 提供服务时，满足以下任一条件 Traefik 就会改用 TLS 连接后端：Service 端口号为 443、端口名以 `https` 开头，或在 Service 上显式添加协议注解（值为 `h2c` 时表示明文 HTTP/2，常见于 gRPC 后端）。下面只展示 Service 注解片段，不是完整资源：
 
-```yaml
+```yaml{2,3}
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/service.serversscheme: https
@@ -475,7 +475,7 @@ metadata:
 
 后端使用自签名证书时，直接连接会因证书校验失败得到 502，需要再配一个 `ServersTransport` 声明校验行为，并在 Service 上引用。下面片段用于说明注解与 `ServersTransport` 的引用关系，后端需自行提供 443 端口的 TLS 服务：
 
-```yaml
+```yaml{7,14-16}
 apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
 metadata:
@@ -508,7 +508,7 @@ spec:
 
 三个开销很低、生产常开的中间件可以按需组合。`compress` 根据请求的 `Accept-Encoding` 自动压缩响应（gzip、brotli、zstd）；`retry` 在与后端建立连接失败等网络层错误时按指数退避重发请求；`circuitBreaker` 按表达式统计后端健康状况，触发后短路请求、默认直接返回 503，恢复期通过试探流量逐步闭合：
 
-```yaml [resilience.yaml]
+```yaml{7,15-17,25,26} [resilience.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -543,7 +543,7 @@ spec:
 
 `errors` 中间件在后端返回指定状态码时改由错误页服务响应。错误页本身需要一个真实的后端来提供，下面用 ConfigMap 加 nginx 部署一个最简错误页服务，并把 404、502、503 指向它：
 
-```yaml [error-pages.yaml]
+```yaml{59-67,74,75} [error-pages.yaml]
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -728,7 +728,7 @@ spec:
 
 再声明 9:1 的加权服务和路由：
 
-```yaml [canary-route.yaml]
+```yaml{7-14,24-29} [canary-route.yaml]
 apiVersion: traefik.io/v1alpha1
 kind: TraefikService
 metadata:

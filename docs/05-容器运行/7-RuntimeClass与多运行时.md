@@ -6,7 +6,7 @@
 
 RuntimeClass 是集群级资源，属于 `node.k8s.io/v1`，自 Kubernetes v1.20 起为稳定特性。它的结构很小：没有 `spec`，核心字段是顶层的 `handler`，指向 CRI 运行时配置中的处理器名称：
 
-```yaml [runtimeclass-gvisor.yaml]
+```yaml{5} [runtimeclass-gvisor.yaml]
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
@@ -16,7 +16,7 @@ handler: runsc
 
 `handler` 必须是小写 DNS 标签格式，创建后不可修改。Pod 通过 `spec.runtimeClassName` 引用：
 
-```yaml [gvisor-pod.yaml]
+```yaml{6} [gvisor-pod.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -34,7 +34,7 @@ spec:
 
 `handler` 的值对应 containerd 配置中 runtimes 表的键名。注册一个新运行时需要在 `/etc/containerd/config.toml` 中添加对应段落，配置路径随 containerd 大版本不同：
 
-```toml [containerd 2.x]
+```toml{4-8} [containerd 2.x]
 [plugins.'io.containerd.cri.v1.runtime'.containerd]
   default_runtime_name = "runc"
 
@@ -45,7 +45,7 @@ spec:
     runtime_type = "io.containerd.kata.v2"
 ```
 
-```toml [containerd 1.x]
+```toml{4-8} [containerd 1.x]
 [plugins."io.containerd.grpc.v1.cri".containerd]
   default_runtime_name = "runc"
 
@@ -65,7 +65,7 @@ RuntimeClass 还有两个可选字段，解决“Pod 只能调度到装了对应
 - `scheduling`（自 v1.16 起为 Beta）：`nodeSelector` 在准入时与 Pod 自身的 nodeSelector 合并取交集，冲突时 Pod 被拒绝；`tolerations` 合并取并集。运行时只安装在部分节点时，应配合节点标签使用。
 - `overhead`（自 v1.24 起为稳定特性）：声明该运行时每个 Pod 的固定开销，调度器按“容器 requests 之和加 overhead”选择节点，kubelet 据此设置 Pod cgroup 上限，ResourceQuota 也会计入。
 
-```yaml [runtimeclass-kata-fc.yaml]
+```yaml{6-12} [runtimeclass-kata-fc.yaml]
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:

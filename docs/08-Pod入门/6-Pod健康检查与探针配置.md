@@ -16,7 +16,7 @@ Kubernetes 通过 kubelet 对容器执行健康探针：`startupProbe`、`livene
 
 `startupProbe` 用于保护启动较慢的应用。在 startupProbe 成功之前，livenessProbe 和 readinessProbe 不会按运行期逻辑影响容器。
 
-```yaml [startup-probe-demo.yaml]
+```yaml{11-16} [startup-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -53,7 +53,7 @@ kubectl describe pod startup-probe-demo
 
 `livenessProbe` 用于判断容器是否仍然存活。探针连续失败后，kubelet 会重启容器。
 
-```yaml [liveness-probe-demo.yaml]
+```yaml{11-18} [liveness-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -88,7 +88,7 @@ kubectl describe pod liveness-probe-demo
 
 `readinessProbe` 用于判断 Pod 是否可以接收业务流量。探针失败后，Pod 不会被重启，但会变为 NotReady，Service 不再将其作为可用后端。
 
-```yaml [readiness-probe-demo.yaml]
+```yaml{13-21} [readiness-probe-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -135,7 +135,7 @@ HTTP 方式的完整写法见上文 readinessProbe 示例。
 
 TCP liveness 示例：
 
-```yaml [tcp-liveness-demo.yaml]
+```yaml{11-16} [tcp-liveness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -156,7 +156,7 @@ spec:
 
 exec 示例：
 
-```yaml [exec-liveness-demo.yaml]
+```yaml{13-19} [exec-liveness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -180,7 +180,7 @@ spec:
 
 gRPC 示例：
 
-```yaml [grpc-readiness-demo.yaml]
+```yaml{13-16} [grpc-readiness-demo.yaml]
 apiVersion: v1
 kind: Pod
 metadata:

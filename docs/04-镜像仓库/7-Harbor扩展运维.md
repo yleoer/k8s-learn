@@ -25,7 +25,7 @@ docker pull harbor.example.com/dockerhub/library/nginx:1.31-alpine
 
 Pod 中引用时也使用代理项目路径：
 
-```yaml
+```yaml{8}
 apiVersion: v1
 kind: Pod
 metadata:

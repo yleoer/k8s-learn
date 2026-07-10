@@ -62,7 +62,7 @@ flowchart LR
 
 一个 Pod 的 YAML 通常包括以下部分：
 
-```yaml
+```yaml [nginx-pod.yaml]
 apiVersion: v1
 kind: Pod
 metadata:

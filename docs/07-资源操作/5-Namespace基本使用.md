@@ -146,22 +146,17 @@ metadata:
   name: dev
 ```
 
-应用 YAML：
+首次创建 Namespace：
 
 ```bash
-kubectl apply -f namespace-dev.yaml
+kubectl create -f namespace-dev.yaml
 ```
 
 生产环境更推荐使用 YAML 管理 Namespace，方便纳入版本控制。
 
 ## 查看 Namespace
 
-查看所有 Namespace：
-
-```bash
-kubectl get namespace
-kubectl get ns
-```
+查看所有 Namespace 时，复用前文[默认 Namespace](#默认-namespace)中的全称和简称查询命令。
 
 查看指定 Namespace：
 
@@ -185,7 +180,7 @@ kubectl get pod -n dev
 
 YAML 方式：
 
-```yaml [nginx-deploy.yaml]
+```yaml{5} [nginx-deploy.yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -210,12 +205,7 @@ spec:
 
 ## 切换默认 Namespace
 
-可以为当前上下文设置默认 Namespace：
-
-```bash
-kubectl config set-context --current --namespace=dev
-kubectl config view --minify
-```
+可以为当前上下文设置默认 Namespace。设置与确认命令复用前文[设置默认 Namespace](./4-Kubectl常用命令详解.md#设置默认-namespace)中的示例。
 
 恢复为 `default`：
 

@@ -53,7 +53,7 @@ docker pull harbor.example.com/base/nginx:1.31-alpine
 
 生产环境推荐使用受信任的 HTTPS 证书。若 Harbor 使用 HTTP，可以在 `/etc/docker/daemon.json` 中配置 `insecure-registries`：
 
-```json [daemon.json]
+```json{2} [daemon.json]
 {
   "insecure-registries": ["harbor.example.com"]
 }
@@ -61,7 +61,7 @@ docker pull harbor.example.com/base/nginx:1.31-alpine
 
 带非标准端口时必须写出端口：
 
-```json [daemon.json]
+```json{2} [daemon.json]
 {
   "insecure-registries": ["harbor.example.com:8080"]
 }
