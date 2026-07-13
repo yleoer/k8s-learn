@@ -75,7 +75,9 @@ spec:
 
 Ingress 使用 `networking.k8s.io/v1`。一个典型 Ingress 至少包含 `metadata.name`、`spec.ingressClassName`、`spec.rules`、`rules[].http.paths[]`、后端 Service 名称和端口。
 
-下面示例包含 Namespace、Deployment、Service 和 Ingress，可作为完整资源关系参考：
+本章位于 Traefik 部署章节之前。下面示例包含 Namespace、Deployment、Service 和 Ingress，可先创建后端资源与路由声明；其中 `ingressClassName: traefik` 引用下一篇 [Traefik](./7-Traefik.md) 安装后提供的 IngressClass。
+
+在 Traefik 或其他匹配的 Ingress Controller 就绪前，Deployment 和 Service 可以正常运行，但 Ingress 没有可接收外部请求的数据面，因此不能用 `curl` 验证入口访问。
 
 ```yaml [ingress-demo.yaml]
 apiVersion: v1
@@ -138,20 +140,25 @@ spec:
                   name: http
 ```
 
-首次创建资源后可以查看 Ingress 状态：
+首次创建资源后，可以检查后端资源和 Ingress 声明：
 
 ```bash
 kubectl create -f ingress-demo.yaml
-kubectl get ingress -n study-ingress
+kubectl get deployment,service,ingress -n study-ingress
 kubectl describe ingress nginx -n study-ingress
 ```
 
-Ingress 的 `status.loadBalancer` 由控制器更新。不同控制器和暴露方式下，`ADDRESS` 可能是外部 IP、主机名、节点地址，也可能为空。NodePort 方式下可能不写回地址，应以控制器 Service 的节点端口为准确认访问入口。
+此时 `kubectl get ingress` 的 `CLASS` 会显示清单中的 `traefik`，但它不表示控制器已经安装或正在处理该 Ingress。尚未安装控制器时，`ADDRESS` 为空且访问 `master` 的 80 端口失败都属于预期现象。
 
-本地 DNS 没有解析 `nginx.example.com` 时，可以使用 `curl --resolve` 临时把域名指向节点 IP：
+> [!NOTE]
+> 继续完成下一篇 [Traefik](./7-Traefik.md) 的安装，并确认 Traefik Pod 在 `master` 上为 `Running`、`master` 的 TCP 80 端口已由 Traefik 占用后，再执行下面的访问验证。控制器会处理已经创建的 Ingress，无需重新创建 `ingress-demo.yaml`。
+
+Ingress 的 `status.loadBalancer` 由控制器更新。不同控制器和暴露方式下，`ADDRESS` 可能是外部 IP、主机名、节点地址，也可能为空。当前 Traefik 通过 `hostNetwork` 暴露在 `master` 上，且 Service 是 `ClusterIP`，因此 `ADDRESS` 为空不表示路由不可用。
+
+本地 DNS 没有解析 `nginx.example.com` 时，可以使用 `curl --resolve` 临时把域名指向 `master` 的节点 IP：
 
 ```bash
-curl --resolve nginx.example.com:30080:<node-ip> http://nginx.example.com:30080/
+curl --resolve nginx.example.com:80:<master-ip> http://nginx.example.com/
 ```
 
 能看到 nginx 欢迎页即表示 Ingress 与控制器已经打通。
@@ -262,7 +269,7 @@ spec:
 通过 HTTPS 入口端口验证时，自签名证书需要 `-k` 跳过校验：
 
 ```bash
-curl -k --resolve nginx.example.com:30443:<node-ip> https://nginx.example.com:30443/
+curl -k --resolve nginx.example.com:443:<master-ip> https://nginx.example.com/
 ```
 
 `tls.hosts` 应与 `rules.host` 以及证书中的域名匹配。TLS 终止后，到 Service 和 Pod 的流量通常是明文 HTTP；如果后端需要 HTTPS、gRPC 或 TLS 透传，需要查看所用控制器的特定配置。是否把 HTTP 自动重定向到 HTTPS 也由控制器决定，不属于 Ingress API 的通用字段。
