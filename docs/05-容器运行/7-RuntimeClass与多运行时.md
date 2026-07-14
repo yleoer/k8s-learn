@@ -80,7 +80,7 @@ scheduling:
     katacontainers.io/kata-runtime: "true"
 ```
 
-overhead 由 RuntimeClass 在准入时注入 Pod，Pod 自行设置 `spec.overhead` 会被拒绝。注入结果可以通过 `kubectl get pod <pod-name> -o jsonpath='{.spec.overhead}'` 验证。
+overhead 由 RuntimeClass 在准入时注入 Pod，Pod 自行设置 `spec.overhead` 会被拒绝。注入结果可以通过 `kubectl get po <pod-name> -o jsonpath='{.spec.overhead}'` 验证。
 
 ## Kata Containers
 

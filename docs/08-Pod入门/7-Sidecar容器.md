@@ -45,8 +45,8 @@ spec:
 
 ```bash
 kubectl create -f sidecar-demo.yaml
-kubectl get pod -l app=sidecar-demo
-kubectl logs deployment/sidecar-demo -c logshipper -f
+kubectl get po -l app=sidecar-demo
+kubectl logs deploy/sidecar-demo -c logshipper -f
 ```
 
 `READY` 列会显示 `2/2`：Sidecar 容器计入 Pod 的容器总数和就绪判断。

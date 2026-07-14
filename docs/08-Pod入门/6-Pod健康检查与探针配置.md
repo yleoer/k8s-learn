@@ -45,8 +45,8 @@ spec:
 
 ```bash
 kubectl create -f startup-probe-demo.yaml
-kubectl get pod startup-probe-demo
-kubectl describe pod startup-probe-demo
+kubectl get po startup-probe-demo
+kubectl describe po startup-probe-demo
 ```
 
 ## livenessProbe 完整示例
@@ -80,8 +80,8 @@ spec:
 
 ```bash
 kubectl create -f liveness-probe-demo.yaml
-kubectl get pod liveness-probe-demo
-kubectl describe pod liveness-probe-demo
+kubectl get po liveness-probe-demo
+kubectl describe po liveness-probe-demo
 ```
 
 ## readinessProbe 完整示例
@@ -118,8 +118,8 @@ spec:
 
 ```bash
 kubectl create -f readiness-probe-demo.yaml
-kubectl get pod readiness-probe-demo
-kubectl describe pod readiness-probe-demo
+kubectl get po readiness-probe-demo
+kubectl describe po readiness-probe-demo
 ```
 
 ## 四种检查方式

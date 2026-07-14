@@ -10,46 +10,46 @@
 查看本章涉及的控制器和 Pod：
 
 ```bash
-kubectl get deployment,replicaset,statefulset,daemonset
-kubectl get pod -o wide
-kubectl get pod -A -o wide
+kubectl get deploy,replicaset,statefulset,daemonset
+kubectl get po -o wide
+kubectl get po -A -o wide
 ```
 
 按资源名称查看：
 
 ```bash
-kubectl get deployment/nginx-deploy
-kubectl get statefulset/web
-kubectl get daemonset/node-nginx
+kubectl get deploy/nginx-deploy
+kubectl get sts/web
+kubectl get ds/node-nginx
 ```
 
 按标签查看下层 Pod 或 ReplicaSet：
 
 ```bash
-kubectl get replicaset -l app=nginx-deploy
-kubectl get pod -l app=nginx-deploy -o wide
-kubectl get pod -l app=nginx -o wide
-kubectl get pod -l app=node-nginx -o wide
+kubectl get rs -l app=nginx-deploy
+kubectl get po -l app=nginx-deploy -o wide
+kubectl get po -l app=nginx -o wide
+kubectl get po -l app=node-nginx -o wide
 ```
 
 查看完整对象内容和事件：
 
 ```bash
-kubectl get deployment/nginx-deploy -o yaml
-kubectl get statefulset/web -o yaml
-kubectl get daemonset/node-nginx -o yaml
+kubectl get deploy/nginx-deploy -o yaml
+kubectl get sts/web -o yaml
+kubectl get ds/node-nginx -o yaml
 
-kubectl describe deployment/nginx-deploy
-kubectl describe statefulset/web
-kubectl describe daemonset/node-nginx
-kubectl describe pod <pod-name>
+kubectl describe deploy/nginx-deploy
+kubectl describe sts/web
+kubectl describe ds/node-nginx
+kubectl describe po <pod-name>
 ```
 
 查看节点标签与节点详情：
 
 ```bash
-kubectl get node --show-labels
-kubectl describe node <node-name>
+kubectl get no --show-labels
+kubectl describe no <node-name>
 ```
 
 ## 创建资源
@@ -66,21 +66,21 @@ kubectl create -f node-nginx-daemonset.yaml
 
 ```bash
 kubectl create -f nginx-rs.yaml
-kubectl get replicaset
-kubectl get pod -l app=nginx-rs -o wide
+kubectl get rs
+kubectl get po -l app=nginx-rs -o wide
 ```
 
 生成 Deployment 模板：
 
 ```bash
-kubectl create deployment nginx-deploy --image=nginx:1.31-alpine --dry-run=client -o yaml
+kubectl create deploy nginx-deploy --image=nginx:1.31-alpine --dry-run=client -o yaml
 ```
 
 创建临时调试 Pod：
 
 ```bash
 kubectl run dns-test --image=busybox:1.38 --restart=Never -- sleep 3600
-kubectl get pod dns-test
+kubectl get po dns-test
 ```
 
 ## Deployment 发布
@@ -88,45 +88,45 @@ kubectl get pod dns-test
 更新镜像并观察发布状态：
 
 ```bash
-kubectl set image deployment/nginx-update nginx=nginx:1.31-alpine
-kubectl rollout status deployment/nginx-update
-kubectl annotate deployment/nginx-update kubernetes.io/change-cause="update nginx image" --overwrite
+kubectl set image deploy/nginx-update nginx=nginx:1.31-alpine
+kubectl rollout status deploy/nginx-update
+kubectl annotate deploy/nginx-update kubernetes.io/change-cause="update nginx image" --overwrite
 ```
 
 查看发布历史：
 
 ```bash
-kubectl rollout history deployment/nginx-update
-kubectl rollout history deployment/nginx-update --revision=3
-kubectl get replicaset -l app=nginx-update
+kubectl rollout history deploy/nginx-update
+kubectl rollout history deploy/nginx-update --revision=3
+kubectl get rs -l app=nginx-update
 ```
 
 回滚到上一版本或指定版本：
 
 ```bash
-kubectl rollout undo deployment/nginx-update
-kubectl rollout status deployment/nginx-update
+kubectl rollout undo deploy/nginx-update
+kubectl rollout status deploy/nginx-update
 
-kubectl rollout undo deployment/nginx-update --to-revision=2
-kubectl rollout status deployment/nginx-update
+kubectl rollout undo deploy/nginx-update --to-revision=2
+kubectl rollout status deploy/nginx-update
 ```
 
 暂停、合并修改并恢复发布：
 
 ```bash
-kubectl rollout pause deployment/nginx-update
-kubectl set image deployment/nginx-update nginx=nginx:1.31-alpine
-kubectl set env deployment/nginx-update APP_ENV=prod
-kubectl set resources deployment/nginx-update -c=nginx --requests=cpu=100m,memory=128Mi --limits=cpu=500m,memory=256Mi
-kubectl rollout resume deployment/nginx-update
-kubectl rollout status deployment/nginx-update
+kubectl rollout pause deploy/nginx-update
+kubectl set image deploy/nginx-update nginx=nginx:1.31-alpine
+kubectl set env deploy/nginx-update APP_ENV=prod
+kubectl set resources deploy/nginx-update -c=nginx --requests=cpu=100m,memory=128Mi --limits=cpu=500m,memory=256Mi
+kubectl rollout resume deploy/nginx-update
+kubectl rollout status deploy/nginx-update
 ```
 
 触发一次滚动重启：
 
 ```bash
-kubectl rollout restart deployment/nginx-update
-kubectl rollout status deployment/nginx-update
+kubectl rollout restart deploy/nginx-update
+kubectl rollout status deploy/nginx-update
 ```
 
 > [!NOTE]
@@ -137,34 +137,34 @@ kubectl rollout status deployment/nginx-update
 调整 Deployment 副本数：
 
 ```bash
-kubectl scale deployment/nginx-deploy --replicas=5
-kubectl get pod -l app=nginx-deploy -o wide
+kubectl scale deploy/nginx-deploy --replicas=5
+kubectl get po -l app=nginx-deploy -o wide
 
-kubectl scale deployment/nginx-deploy --replicas=2
-kubectl get deployment/nginx-deploy
+kubectl scale deploy/nginx-deploy --replicas=2
+kubectl get deploy/nginx-deploy
 ```
 
 使用当前副本数作为前置条件：
 
 ```bash
-kubectl scale --current-replicas=3 deployment/nginx-deploy --replicas=5
+kubectl scale --current-replicas=3 deploy/nginx-deploy --replicas=5
 ```
 
 调整 StatefulSet 副本数并观察有序变化：
 
 ```bash
-kubectl scale statefulset/web --replicas=5
-kubectl get pod -l app=nginx -w
+kubectl scale sts/web --replicas=5
+kubectl get po -l app=nginx -w
 
-kubectl scale statefulset/web --replicas=2
-kubectl get pod -l app=nginx -w
+kubectl scale sts/web --replicas=2
+kubectl get po -l app=nginx -w
 ```
 
 查看资源占用：
 
 ```bash
-kubectl top node
-kubectl top pod
+kubectl top no
+kubectl top po
 ```
 
 > [!NOTE]
@@ -175,9 +175,9 @@ kubectl top pod
 查看 StatefulSet、Headless Service、Pod 和 PVC：
 
 ```bash
-kubectl get statefulset/web
-kubectl get service/nginx
-kubectl get pod -l app=nginx -o wide
+kubectl get sts/web
+kubectl get svc/nginx
+kubectl get po -l app=nginx -o wide
 kubectl get pvc
 ```
 
@@ -192,41 +192,41 @@ kubectl exec -it dns-test -- wget -qO- web-0.nginx
 更新镜像并查看发布状态：
 
 ```bash
-kubectl set image statefulset/web nginx=nginx:1.31-alpine
-kubectl rollout status statefulset/web
-kubectl rollout history statefulset/web
+kubectl set image sts/web nginx=nginx:1.31-alpine
+kubectl rollout status sts/web
+kubectl rollout history sts/web
 ```
 
 分段更新：
 
 ```bash
-kubectl patch statefulset/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":2}}}}'
-kubectl patch statefulset/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":1}}}}'
-kubectl patch statefulset/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":0}}}}'
+kubectl patch sts/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":2}}}}'
+kubectl patch sts/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":1}}}}'
+kubectl patch sts/partition-web -p '{"spec":{"updateStrategy":{"rollingUpdate":{"partition":0}}}}'
 ```
 
 查看分段更新后的镜像分布：
 
 ```bash
-kubectl get pod -l app=partition-web -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+kubectl get po -l app=partition-web -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
 ```
 
 OnDelete 策略下手动删除 Pod 触发重建：
 
 ```bash
-kubectl set image statefulset/ondelete-web nginx=nginx:1.31-alpine
-kubectl delete pod ondelete-web-2
-kubectl get pod ondelete-web-2 -w
+kubectl set image sts/ondelete-web nginx=nginx:1.31-alpine
+kubectl delete po ondelete-web-2
+kubectl get po ondelete-web-2 -w
 ```
 
 回滚 StatefulSet：
 
 ```bash
-kubectl rollout undo statefulset/web
-kubectl rollout status statefulset/web
+kubectl rollout undo sts/web
+kubectl rollout status sts/web
 
-kubectl rollout undo statefulset/web --to-revision=2
-kubectl rollout status statefulset/web
+kubectl rollout undo sts/web --to-revision=2
+kubectl rollout status sts/web
 ```
 
 ## DaemonSet 操作
@@ -234,53 +234,53 @@ kubectl rollout status statefulset/web
 复用前文[创建资源](#创建资源)中已经创建的 DaemonSet，查看资源状态：
 
 ```bash
-kubectl get daemonset/node-nginx
-kubectl get pod -l app=node-nginx -o wide
+kubectl get ds/node-nginx
+kubectl get po -l app=node-nginx -o wide
 ```
 
 更新镜像并观察发布：
 
 ```bash
-kubectl set image daemonset/node-nginx nginx=nginx:1.31-alpine
-kubectl rollout status daemonset/node-nginx
-kubectl rollout history daemonset/node-nginx
+kubectl set image ds/node-nginx nginx=nginx:1.31-alpine
+kubectl rollout status ds/node-nginx
+kubectl rollout history ds/node-nginx
 ```
 
 回滚 DaemonSet：
 
 ```bash
-kubectl rollout undo daemonset/node-nginx
-kubectl rollout status daemonset/node-nginx
+kubectl rollout undo ds/node-nginx
+kubectl rollout status ds/node-nginx
 
-kubectl rollout undo daemonset/node-nginx --to-revision=2
-kubectl rollout status daemonset/node-nginx
+kubectl rollout undo ds/node-nginx --to-revision=2
+kubectl rollout status ds/node-nginx
 ```
 
 OnDelete 策略下手动删除 Pod 触发重建：
 
 ```bash
-kubectl set image daemonset/ondelete-node-nginx nginx=nginx:1.31-alpine
-kubectl delete pod <daemonset-pod-name>
-kubectl get pod -l app=ondelete-node-nginx -o wide
+kubectl set image ds/ondelete-node-nginx nginx=nginx:1.31-alpine
+kubectl delete po <daemonset-pod-name>
+kubectl get po -l app=ondelete-node-nginx -o wide
 ```
 
 通过节点标签控制调度范围：
 
 ```bash
-kubectl label node <node-name> node-role.example.com/logging=true
-kubectl get daemonset/logging-agent
-kubectl get pod -l app=logging-agent -o wide
+kubectl label no <node-name> node-role.example.com/logging=true
+kubectl get ds/logging-agent
+kubectl get po -l app=logging-agent -o wide
 
-kubectl label node <node-name> node-role.example.com/logging-
+kubectl label no <node-name> node-role.example.com/logging-
 ```
 
 查看污点和 DaemonSet 排查信息：
 
 ```bash
-kubectl describe node <node-name> | grep -i taints
-kubectl get daemonset/node-nginx -o wide
-kubectl describe daemonset/node-nginx
-kubectl describe pod <pod-name>
+kubectl describe no <node-name> | grep -i taints
+kubectl get ds/node-nginx -o wide
+kubectl describe ds/node-nginx
+kubectl describe po <pod-name>
 ```
 
 ## Pod 排查
@@ -288,8 +288,8 @@ kubectl describe pod <pod-name>
 查看 Pod 状态、事件和日志：
 
 ```bash
-kubectl get pod <pod-name> -o wide
-kubectl describe pod <pod-name>
+kubectl get po <pod-name> -o wide
+kubectl describe po <pod-name>
 kubectl logs <pod-name>
 kubectl logs <pod-name> -c <container-name>
 kubectl logs -f -l app=node-nginx --all-containers
@@ -305,9 +305,9 @@ kubectl exec -it <pod-name> -c <container-name> -- sh
 等待资源达到条件：
 
 ```bash
-kubectl wait --for=condition=available deployment/nginx-deploy --timeout=120s
-kubectl wait --for=condition=Ready pod/web-0 --timeout=60s
-kubectl wait --for=delete pod/ondelete-web-2 --timeout=60s
+kubectl wait --for=condition=available deploy/nginx-deploy --timeout=120s
+kubectl wait --for=condition=Ready po/web-0 --timeout=60s
+kubectl wait --for=delete po/ondelete-web-2 --timeout=60s
 ```
 
 ## 删除与清理
@@ -315,23 +315,23 @@ kubectl wait --for=delete pod/ondelete-web-2 --timeout=60s
 删除 Deployment、ReplicaSet 和 DaemonSet：
 
 ```bash
-kubectl delete deployment/nginx-deploy
-kubectl delete replicaset/nginx-rs
-kubectl delete daemonset/node-nginx
+kubectl delete deploy/nginx-deploy
+kubectl delete rs/nginx-rs
+kubectl delete ds/node-nginx
 ```
 
 删除 StatefulSet、Service 和临时 Pod：
 
 ```bash
-kubectl delete statefulset/web
-kubectl delete service/nginx
-kubectl delete pod dns-test
+kubectl delete sts/web
+kubectl delete svc/nginx
+kubectl delete po dns-test
 ```
 
 保留 Pod 删除 StatefulSet：
 
 ```bash
-kubectl delete statefulset/web --cascade=orphan
+kubectl delete sts/web --cascade=orphan
 ```
 
 删除 PVC：

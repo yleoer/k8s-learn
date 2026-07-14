@@ -37,7 +37,7 @@ wget -qO- http://127.0.0.1
 查看 Pod 中已注入的临时容器：
 
 ```bash
-kubectl describe pod debug-demo
+kubectl describe po debug-demo
 ```
 
 ::: details Ephemeral Containers 部分输出类似如下
@@ -78,15 +78,15 @@ kubectl debug debug-demo --copy-to=debug-demo-img --set-image=*=busybox:1.38 -- 
 副本 Pod 不受原控制器管理，调试完成后需要手动删除：
 
 ```bash
-kubectl delete pod debug-demo-copy debug-demo-img
+kubectl delete po debug-demo-copy debug-demo-img
 ```
 
 ## 节点调试
 
-`kubectl debug node/` 在目标节点上创建调试 Pod，用于没有节点 SSH 权限时的排障：
+`kubectl debug no/` 在目标节点上创建调试 Pod，用于没有节点 SSH 权限时的排障：
 
 ```bash
-kubectl debug node/<node-name> -it --image=busybox:1.38
+kubectl debug no/<node-name> -it --image=busybox:1.38
 ```
 
 调试 Pod 的名称形如 `node-debugger-<node-name>-<suffix>`，节点根文件系统挂载在容器内的 `/host`，容器运行在宿主机的 IPC、Network 和 PID 命名空间中，可以直接观察节点进程和网络。
@@ -94,13 +94,13 @@ kubectl debug node/<node-name> -it --image=busybox:1.38
 默认创建的不是特权 Pod：读取部分进程信息可能失败，`chroot /host` 也可能失败。需要完整宿主机权限时使用 `--profile=sysadmin`：
 
 ```bash
-kubectl debug node/<node-name> -it --profile=sysadmin --image=busybox:1.38
+kubectl debug no/<node-name> -it --profile=sysadmin --image=busybox:1.38
 ```
 
 调试结束后删除调试 Pod：
 
 ```bash
-kubectl delete pod node-debugger-<node-name>-<suffix>
+kubectl delete po node-debugger-<node-name>-<suffix>
 ```
 
 ## 调试 profile

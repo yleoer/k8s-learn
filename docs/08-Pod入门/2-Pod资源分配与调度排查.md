@@ -42,8 +42,8 @@ spec:
 
 ```bash
 kubectl create -f resource-demo.yaml
-kubectl get pod resource-demo -o wide
-kubectl describe pod resource-demo
+kubectl get po resource-demo -o wide
+kubectl describe po resource-demo
 ```
 
 ::: details 输出示例
@@ -78,7 +78,7 @@ Containers:
 
 :::
 
-在 `kubectl describe pod resource-demo` 的输出中，可以在 `Containers` 区域看到 `Requests` 和 `Limits`。其中 requests 会参与调度决策，并作为资源预留基准；limits 会在容器运行阶段形成资源上限。
+在 `kubectl describe po resource-demo` 的输出中，可以在 `Containers` 区域看到 `Requests` 和 `Limits`。其中 requests 会参与调度决策，并作为资源预留基准；limits 会在容器运行阶段形成资源上限。
 
 CPU 使用毫核表示时，`100m` 表示 0.1 核，`500m` 表示 0.5 核，`1000m` 等于 1 核。内存常用 `Mi`、`Gi` 表示，例如 `64Mi`、`128Mi`、`1Gi`。
 
@@ -122,7 +122,7 @@ spec:
 
 ## 节点存在空闲资源仍提示资源不足
 
-Pod 调度失败时，`kubectl describe pod` 的 Events 中可能出现以下信息：
+Pod 调度失败时，`kubectl describe po` 的 Events 中可能出现以下信息：
 
 ```text
 0/3 nodes are available: 3 Insufficient cpu.
@@ -144,17 +144,17 @@ Pod 调度失败时，`kubectl describe pod` 的 Events 中可能出现以下信
 先查看 Pod 为什么没有完成调度：
 
 ```bash
-kubectl describe pod <pod-name>
+kubectl describe po <pod-name>
 ```
 
 重点关注 Events 区域。如果出现 `Insufficient cpu`、`Insufficient memory`，说明调度器认为节点剩余可分配资源不足。
 
 ### 查看节点容量与已分配资源
 
-使用 `kubectl describe node` 查看某个节点的资源信息：
+使用 `kubectl describe no` 查看某个节点的资源信息：
 
 ```bash
-kubectl describe node <node-name>
+kubectl describe no <node-name>
 ```
 
 重点关注：
@@ -204,10 +204,10 @@ Allocated resources:
 
 ### 查看节点实时使用量
 
-集群部署 Metrics Server 后，可以使用 `kubectl top node` 查看节点实时资源使用情况：
+集群部署 Metrics Server 后，可以使用 `kubectl top no` 查看节点实时资源使用情况：
 
 ```bash
-kubectl top node
+kubectl top no
 ```
 
 如果命令提示 `Metrics API not available`，先回到集群初始化记录中检查 Metrics Server、`v1beta1.metrics.k8s.io` APIService 和 kubelet `10250` 端口连通性。
@@ -222,14 +222,14 @@ work02   180m         4%     1400Mi          19%
 
 :::
 
-`kubectl top node` 反映的是当前实际使用量，适合判断节点运行压力；`kubectl describe node` 中的 `Allocated resources` 反映的是 requests 和 limits 的声明占用，适合判断调度器为什么拒绝调度。
+`kubectl top no` 反映的是当前实际使用量，适合判断节点运行压力；`kubectl describe no` 中的 `Allocated resources` 反映的是 requests 和 limits 的声明占用，适合判断调度器为什么拒绝调度。
 
 两者关注的问题不同：
 
 | 命令                      | 关注点                                      | 典型用途           |
 |-------------------------|------------------------------------------|----------------|
-| `kubectl describe node` | Capacity、Allocatable、已分配 requests/limits | 排查 Pod 为什么无法调度 |
-| `kubectl top node`      | 节点实时 CPU、内存使用率                           | 判断节点当前运行压力     |
+| `kubectl describe no` | Capacity、Allocatable、已分配 requests/limits | 排查 Pod 为什么无法调度 |
+| `kubectl top no`      | 节点实时 CPU、内存使用率                           | 判断节点当前运行压力     |
 | `free -h`               | Linux 操作系统内存使用情况                         | 判断节点系统层面的内存状态  |
 
 ### 理解 free -h 与调度结果的差异
@@ -256,11 +256,11 @@ Swap:             0B          0B          0B
 
 ```text
 free -h 显示 available 还有 5Gi
-kubectl describe node 显示 memory requests 已经达到 96%
+kubectl describe no 显示 memory requests 已经达到 96%
 新 Pod 请求 1Gi 内存后调度失败
 ```
 
-原因是 Scheduler 按 requests 做预留式调度，避免把过多 Pod 调度到同一个节点；Linux 则只展示当前实际使用情况。调度失败时应以 `kubectl describe node` 的 Allocatable 和 Allocated resources 为准，而不是只看 `free -h`。
+原因是 Scheduler 按 requests 做预留式调度，避免把过多 Pod 调度到同一个节点；Linux 则只展示当前实际使用情况。调度失败时应以 `kubectl describe no` 的 Allocatable 和 Allocated resources 为准，而不是只看 `free -h`。
 
 ## 配置建议
 

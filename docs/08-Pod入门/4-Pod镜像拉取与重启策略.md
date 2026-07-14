@@ -85,8 +85,8 @@ crictl images
 排查顺序：
 
 ```bash
-kubectl describe pod <pod-name>
-kubectl get pod <pod-name> -o wide
+kubectl describe po <pod-name>
+kubectl get po <pod-name> -o wide
 crictl images
 ```
 
@@ -124,10 +124,10 @@ spec:
 查看重启次数和上一次日志：
 
 ```bash
-kubectl get pod restart-demo
+kubectl get po restart-demo
 kubectl logs restart-demo
 kubectl logs restart-demo --previous
-kubectl describe pod restart-demo
+kubectl describe po restart-demo
 ```
 
 ::: details 输出示例

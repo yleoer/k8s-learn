@@ -164,8 +164,8 @@ mkdir -p "$HOME/.kube"
 sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
 sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
 
-kubectl get nodes -o wide
-kubectl get pods -A
+kubectl get no -o wide
+kubectl get po -A
 ```
 
 ## control-plane 节点：安装 Calico 网络插件
@@ -219,7 +219,7 @@ kubectl -n kube-system rollout status deploy/metrics-server
 kubectl get apiservice v1beta1.metrics.k8s.io
 
 # kubeadm 实验环境出现 kubelet x509 证书错误时使用
-kubectl -n kube-system patch deployment metrics-server \
+kubectl -n kube-system patch deploy metrics-server \
   --type=json \
   -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
 kubectl -n kube-system rollout restart deployment metrics-server
@@ -230,19 +230,19 @@ kubectl -n kube-system rollout status deployment metrics-server
 
 ```bash
 # 确认所有节点 Ready
-kubectl get nodes -o wide
+kubectl get no -o wide
 
 # 确认所有系统 Pod 正常运行
-kubectl get pods -A -o wide
+kubectl get po -A -o wide
 
 # 确认资源指标 API 可用
 kubectl get apiservice v1beta1.metrics.k8s.io
-kubectl top nodes
-kubectl top pods -A
+kubectl top no
+kubectl top po -A
 
 # 部署测试应用并验证 NodePort 访问
-kubectl create deployment sample-nginx --image=nginx:1.31-alpine
-kubectl expose deployment sample-nginx --port=80 --type=NodePort
+kubectl create deploy sample-nginx --image=nginx:1.31-alpine
+kubectl expose deploy sample-nginx --port=80 --type=NodePort
 kubectl get deploy,pod,svc -l app=sample-nginx -o wide
 NODE_PORT=$(kubectl get svc sample-nginx -o jsonpath='{.spec.ports[0].nodePort}')
 curl "http://master:${NODE_PORT}"
@@ -251,5 +251,5 @@ kubectl run sample-curl --rm -i --restart=Never \
   -- curl -I --max-time 10 http://sample-nginx.default.svc.cluster.local
 
 kubectl delete svc sample-nginx
-kubectl delete deployment sample-nginx
+kubectl delete deploy sample-nginx
 ```

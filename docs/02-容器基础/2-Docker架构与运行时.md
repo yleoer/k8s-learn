@@ -116,7 +116,7 @@ Docker 构建出的镜像符合 OCI 镜像规范，推送到镜像仓库后，Ku
 对于使用 containerd 的 Kubernetes 节点，Pod 通常位于 containerd 的 `k8s.io` 命名空间。排查时应优先使用：
 
 ```bash
-kubectl get pods -A
+kubectl get po -A
 sudo crictl ps -a
 sudo crictl pods
 sudo ctr -n k8s.io containers ls

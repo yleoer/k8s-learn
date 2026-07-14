@@ -144,11 +144,11 @@ spec:
 
 ```bash
 kubectl create -f ingress-demo.yaml
-kubectl get deployment,service,ingress -n study-ingress
-kubectl describe ingress nginx -n study-ingress
+kubectl get deploy,service,ingress -n study-ingress
+kubectl describe ing nginx -n study-ingress
 ```
 
-此时 `kubectl get ingress` 的 `CLASS` 会显示清单中的 `traefik`，但它不表示控制器已经安装或正在处理该 Ingress。尚未安装控制器时，`ADDRESS` 为空且访问 `master` 的 80 端口失败都属于预期现象。
+此时 `kubectl get ing` 的 `CLASS` 会显示清单中的 `traefik`，但它不表示控制器已经安装或正在处理该 Ingress。尚未安装控制器时，`ADDRESS` 为空且访问 `master` 的 80 端口失败都属于预期现象。
 
 > [!NOTE]
 > 继续完成下一篇 [Traefik](./7-Traefik.md) 的安装，并确认 Traefik Pod 在 `master` 上为 `Running`、`master` 的 TCP 80 端口已由 Traefik 占用后，再执行下面的访问验证。控制器会处理已经创建的 Ingress，无需重新创建 `ingress-demo.yaml`。
@@ -281,19 +281,19 @@ Ingress 访问异常应从入口地址、IngressClass、路由规则、后端 Se
 常用命令：
 
 ```bash
-kubectl get ingress -A
-kubectl describe ingress <ingress-name> -n <namespace>
-kubectl get ingressclass
+kubectl get ing -A
+kubectl describe ing <ingress-name> -n <namespace>
+kubectl get ingclass
 kubectl get svc -n <namespace>
-kubectl get endpointslices -n <namespace> -l kubernetes.io/service-name=<service-name>
-kubectl get events -n <namespace> --sort-by=.lastTimestamp
+kubectl get eplices -n <namespace> -l kubernetes.io/service-name=<service-name>
+kubectl get ev -n <namespace> --sort-by=.lastTimestamp
 ```
 
 常见现象如下：
 
 | 现象            | 可能原因                              | 检查方向                                    |
 |---------------|-----------------------------------|-----------------------------------------|
-| Ingress 无访问效果 | 没有安装控制器，或 `ingressClassName` 不匹配  | `kubectl get ingressclass`、控制器启动参数      |
+| Ingress 无访问效果 | 没有安装控制器，或 `ingressClassName` 不匹配  | `kubectl get ingclass`、控制器启动参数      |
 | `ADDRESS` 为空  | 控制器未更新状态，或暴露方式不写回地址               | 控制器 Service、`status.loadBalancer`、控制器日志 |
 | 404           | Host 或 Path 不匹配，后端应用路径不存在          | `rules.host`、`pathType`、控制器日志           |
 | 502           | 后端协议不匹配，后端连接失败，TLS 后端配置错误         | 后端协议配置、Pod 端口、应用日志                    |

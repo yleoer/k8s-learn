@@ -97,14 +97,14 @@ spec:
 ```bash
 kubectl create -f nginx-rs.yaml
 kubectl get rs
-kubectl get pod -l app=nginx-rs -o wide
+kubectl get po -l app=nginx-rs -o wide
 ```
 
 删除一个被 RS 管理的 Pod：
 
 ```bash
-kubectl delete pod -l app=nginx-rs
-kubectl get pod -l app=nginx-rs -w
+kubectl delete po -l app=nginx-rs
+kubectl get po -l app=nginx-rs -w
 ```
 
 ReplicaSet 会重新创建新的 Pod，使副本数量回到 3。如果要真正删除这组 Pod，应删除控制器：

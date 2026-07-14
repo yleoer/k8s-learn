@@ -56,8 +56,8 @@ sudo ss -ltnp | grep -E ':(80|443)\b'
 无输出才表示端口可用。为 `master` 添加独立的入口标签；此操作不会删除或修改既有的 `node-role.kubernetes.io/control-plane` 标签：
 
 ```bash
-kubectl label node master ingress-role=public
-kubectl get node master -L ingress-role
+kubectl label no master ingress-role=public
+kubectl get no master -L ingress-role
 ```
 
 `master` 保留 kubeadm 默认的 `node-role.kubernetes.io/control-plane:NoSchedule` 污点。下面的 toleration 只允许 Traefik 穿过该污点，`nodeSelector` 仍使它只能调度到带 `ingress-role=public` 的节点；不移除控制平面标签或污点。`hostNetwork` 让 Pod 使用节点网络命名空间。当前运行时中，Traefik 以非 root 用户绑定 80、443 会被拒绝，因此示例用 UID/GID `0` 运行，并保留最小的 `NET_BIND_SERVICE` 能力、只读根文件系统和禁止权限提升。chart 要求启用 `hostNetwork` 时 `hostPort` 与对应的容器端口相同，因此示例显式保留相同取值：
@@ -119,9 +119,9 @@ chart 会一并安装 Traefik 的 CRD（Middleware、IngressRoute、TraefikServi
 确认控制器就绪和 IngressClass 存在：
 
 ```bash
-kubectl get pods -n traefik -o wide
+kubectl get po -n traefik -o wide
 kubectl get svc -n traefik
-kubectl get ingressclass
+kubectl get ingclass
 ```
 
 ::: details 输出类似如下
@@ -863,15 +863,15 @@ Ingress 访问异常应从入口地址、IngressClass、路由规则、后端 Se
 常用命令：
 
 ```bash
-kubectl get ingress -A
-kubectl describe ingress <ingress-name> -n <namespace>
-kubectl get ingressclass
+kubectl get ing -A
+kubectl describe ing <ingress-name> -n <namespace>
+kubectl get ingclass
 kubectl get middleware -n <namespace>
 kubectl get svc -n <namespace>
-kubectl get endpointslices -n <namespace> -l kubernetes.io/service-name=<service-name>
-kubectl get pods -n traefik
+kubectl get eplices -n <namespace> -l kubernetes.io/service-name=<service-name>
+kubectl get po -n traefik
 kubectl logs -n traefik deploy/traefik --tail=100
-kubectl get events -n <namespace> --sort-by=.lastTimestamp
+kubectl get ev -n <namespace> --sort-by=.lastTimestamp
 ```
 
 Traefik 自带 Dashboard，Helm 安装默认启用但未对外暴露，排查路由问题时可以端口转发临时访问：
@@ -886,7 +886,7 @@ kubectl port-forward -n traefik deploy/traefik 9000:9000
 
 | 现象            | 可能原因                                        | 检查方向                                        |
 |---------------|---------------------------------------------|---------------------------------------------|
-| Ingress 无访问效果 | 没有安装控制器，或 `ingressClassName` 不匹配            | `kubectl get ingressclass`、控制器启动参数          |
+| Ingress 无访问效果 | 没有安装控制器，或 `ingressClassName` 不匹配            | `kubectl get ingclass`、控制器启动参数          |
 | `ADDRESS` 为空  | 控制器未更新状态，或暴露方式不写回地址                         | 控制器 Service、`status.loadBalancer`、控制器日志     |
 | 404           | Host 或 Path 不匹配，后端应用路径不存在，注解引用的 Middleware 不存在 | `rules.host`、`pathType`、Middleware 引用拼写、控制器日志 |
 | 401           | Basic Auth、外部认证或应用认证拦截                      | 认证中间件、Secret 的 `users` 键、认证服务日志             |

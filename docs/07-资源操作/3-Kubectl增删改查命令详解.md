@@ -7,8 +7,8 @@ Kubernetes 中的资源对象通常通过 kubectl 完成增删改查。常见操
 第一次创建资源使用 `create`。命令式创建适合快速生成简单资源，基于完整清单创建的方式在下一小节记录。
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.31-alpine
-kubectl create namespace dev
+kubectl create deploy nginx --image=nginx:1.31-alpine
+kubectl create ns dev
 ```
 
 资源已存在时，`create` 会报错。`apply` 虽然也能创建不存在的资源，但本文只把它用于修改已经由清单创建的资源，使首次创建和后续更新的意图保持清晰。
@@ -18,8 +18,8 @@ kubectl create namespace dev
 很多资源可以先通过命令生成 YAML，再手动调整字段：
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.31-alpine --dry-run=client -o yaml
-kubectl create namespace dev --dry-run=client -o yaml
+kubectl create deploy nginx --image=nginx:1.31-alpine --dry-run=client -o yaml
+kubectl create ns dev --dry-run=client -o yaml
 kubectl create job hello --image=busybox:1.38 --dry-run=client -o yaml -- echo hello
 ```
 
@@ -58,11 +58,11 @@ kubectl create -f nginx-deploy.yaml
 查询资源使用 `get`：
 
 ```bash
-kubectl get deployment
-kubectl get deployment nginx
-kubectl get deployment nginx -o yaml
-kubectl get pod -o wide
-kubectl get pod -A
+kubectl get deploy
+kubectl get deploy nginx
+kubectl get deploy nginx -o yaml
+kubectl get po -o wide
+kubectl get po -A
 kubectl get job --sort-by=.metadata.name
 ```
 
@@ -70,10 +70,10 @@ kubectl get job --sort-by=.metadata.name
 
 | 命令                                | 作用                   |
 |-----------------------------------|----------------------|
-| `kubectl get pod`                 | 查看当前 Namespace 的 Pod |
-| `kubectl get pod -A`              | 查看所有 Namespace 的 Pod |
-| `kubectl get pod -o wide`         | 查看更多运行信息             |
-| `kubectl get pod nginx -o yaml`   | 查看完整资源定义             |
+| `kubectl get po`                 | 查看当前 Namespace 的 Pod |
+| `kubectl get po -A`              | 查看所有 Namespace 的 Pod |
+| `kubectl get po -o wide`         | 查看更多运行信息             |
+| `kubectl get po nginx -o yaml`   | 查看完整资源定义             |
 | `kubectl get deploy -l app=nginx` | 按标签查询 Deployment     |
 
 ## 查看详情
@@ -81,9 +81,9 @@ kubectl get job --sort-by=.metadata.name
 `describe` 用于查看资源详情、事件和部分状态解释：
 
 ```bash
-kubectl describe pod nginx
-kubectl describe deployment nginx
-kubectl describe node worker-01
+kubectl describe po nginx
+kubectl describe deploy nginx
+kubectl describe no worker-01
 ```
 
 `get -o yaml` 更适合查看完整的资源对象；`describe` 更适合排查问题，尤其是调度失败、镜像拉取失败、健康检查失败等场景。
@@ -94,11 +94,11 @@ kubectl describe node worker-01
 
 ```bash
 kubectl apply -f nginx-deploy.yaml
-kubectl edit deployment nginx
+kubectl edit deploy nginx
 kubectl replace -f nginx-deploy.yaml
-kubectl scale deployment nginx --replicas=3
-kubectl set image deployment/nginx nginx=nginx:1.31-alpine
-kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
+kubectl scale deploy nginx --replicas=3
+kubectl set image deploy/nginx nginx=nginx:1.31-alpine
+kubectl patch deploy nginx -p '{"spec":{"replicas":2}}'
 ```
 
 几种方式的区别如下：
@@ -121,17 +121,17 @@ kubectl patch deployment nginx -p '{"spec":{"replicas":2}}'
 删除资源使用 `delete`：
 
 ```bash
-kubectl delete deployment nginx
-kubectl delete pod nginx
+kubectl delete deploy nginx
+kubectl delete po nginx
 kubectl delete -f nginx-deploy.yaml
-kubectl delete namespace dev
+kubectl delete ns dev
 ```
 
 删除前建议先确认资源：
 
 ```bash
-kubectl get deployment nginx
-kubectl get pod -l app=nginx
+kubectl get deploy nginx
+kubectl get po -l app=nginx
 ```
 
 如果资源由 Deployment、StatefulSet 等控制器管理，不建议直接删除它创建的 Pod，因为控制器会根据期望副本数将其重新拉起。

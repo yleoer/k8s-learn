@@ -22,8 +22,8 @@ spec:
 
 ```bash
 kubectl create -f nginx.yaml
-kubectl get pod nginx-demo -o wide
-kubectl describe pod nginx-demo
+kubectl get po nginx-demo -o wide
+kubectl describe po nginx-demo
 ```
 
 ::: details 输出示例
@@ -64,8 +64,8 @@ kubectl run nginx-demo --image=nginx:1.31-alpine --dry-run=client -o yaml
 字段不确定时使用：
 
 ```bash
-kubectl explain pod.spec
-kubectl explain pod.spec.containers
+kubectl explain po.spec
+kubectl explain po.spec.containers
 ```
 
 ## 多容器 Pod
@@ -131,8 +131,8 @@ spec:
 
 ```bash
 kubectl create -f multi-container-demo.yaml
-kubectl get pod multi-container-demo -o wide
-kubectl describe pod multi-container-demo
+kubectl get po multi-container-demo -o wide
+kubectl describe po multi-container-demo
 ```
 
 查看指定容器日志：
@@ -151,7 +151,7 @@ kubectl exec -it multi-container-demo -c nginx -- cat /usr/share/nginx/html/inde
 临时访问 Nginx：
 
 ```bash
-kubectl port-forward pod/multi-container-demo 28080:80
+kubectl port-forward po/multi-container-demo 28080:80
 curl http://127.0.0.1:28080
 ```
 
@@ -221,7 +221,7 @@ spec:
 
 ```bash
 kubectl create -f command-args-demo.yaml
-kubectl get pod command-args-demo -o wide
+kubectl get po command-args-demo -o wide
 ```
 
 查看容器输出：

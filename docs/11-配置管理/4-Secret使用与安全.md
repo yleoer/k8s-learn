@@ -42,7 +42,7 @@ spec:
 
 ```bash
 kubectl create -f secret-consumer.yaml
-kubectl describe pod secret-consumer
+kubectl describe po secret-consumer
 ```
 
 环境变量适合只在进程启动时读取的配置，但可能被应用调试输出、错误报告或子进程继承。卷文件更便于限制路径和权限，也能接收 Secret 后续更新，通常更适合支持文件重载的应用。
@@ -123,8 +123,8 @@ Kubernetes 没有面向单个 ConfigMap 或 Secret 的内置版本历史。`kube
 ```bash
 kubectl get secret
 kubectl describe secret app-secret
-kubectl describe pod secret-consumer
-kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl describe po secret-consumer
+kubectl get ev --sort-by=.metadata.creationTimestamp
 ```
 
 常见状态及检查方向：

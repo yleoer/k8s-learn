@@ -24,7 +24,7 @@ spec:
 
 ```bash
 kubectl create -f env-demo.yaml
-kubectl get pod env-demo -o wide
+kubectl get po env-demo -o wide
 kubectl exec -it env-demo -- env
 ```
 
@@ -64,7 +64,7 @@ spec:
 
 ```bash
 kubectl create -f fieldref-demo.yaml
-kubectl get pod fieldref-demo -o wide
+kubectl get po fieldref-demo -o wide
 kubectl exec -it fieldref-demo -- env | grep POD
 ```
 
@@ -199,15 +199,15 @@ Pod 的常用信息分布在三个区域。
 查看完整 YAML：
 
 ```bash
-kubectl get pod <pod-name> -o yaml
+kubectl get po <pod-name> -o yaml
 ```
 
 使用 jsonpath 获取指定字段：
 
 ```bash
-kubectl get pod <pod-name> -o jsonpath='{.status.podIP}'
-kubectl get pod <pod-name> -o jsonpath='{.spec.nodeName}'
-kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[*].restartCount}'
+kubectl get po <pod-name> -o jsonpath='{.status.podIP}'
+kubectl get po <pod-name> -o jsonpath='{.spec.nodeName}'
+kubectl get po <pod-name> -o jsonpath='{.status.containerStatuses[*].restartCount}'
 ```
 
 常见 conditions 包括 `PodScheduled`、`Initialized`、`ContainersReady` 和 `Ready`。其中 `Ready` 直接影响 Pod 是否可以被 Service 接入流量。

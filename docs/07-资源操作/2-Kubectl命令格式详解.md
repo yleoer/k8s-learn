@@ -13,9 +13,9 @@ kubectl [command] [TYPE] [NAME] [flags]
 示例：
 
 ```bash
-kubectl get deployment nginx --show-labels
-kubectl get pod -n kube-system -o wide
-kubectl delete service nginx
+kubectl get deploy nginx --show-labels
+kubectl get po -n kube-system -o wide
+kubectl delete svc nginx
 ```
 
 各部分含义如下：
@@ -34,8 +34,8 @@ kubectl delete service nginx
 Kubernetes 资源类型可以使用单数名称、复数名称或简称：
 
 ```bash
-kubectl get pod
-kubectl get pods
+kubectl get po
+kubectl get po
 kubectl get po
 ```
 
@@ -66,9 +66,9 @@ kubectl api-resources --namespaced=false
 大多数工作负载资源都属于某个 Namespace。默认情况下，kubectl 操作当前上下文中的默认 Namespace，通常是 `default`。
 
 ```bash
-kubectl get pod
-kubectl get pod -n kube-system
-kubectl get pod --namespace kube-system
+kubectl get po
+kubectl get po -n kube-system
+kubectl get po --namespace kube-system
 ```
 
 `-n` 是 `--namespace` 的缩写。排查问题时，要先确认资源所在 Namespace，否则可能出现“资源不存在”的误判。
@@ -78,10 +78,10 @@ kubectl get pod --namespace kube-system
 kubectl 默认以表格形式输出。查看和排障时还常用以下格式：
 
 ```bash
-kubectl get pod -o wide
-kubectl get pod nginx -o yaml
-kubectl get pod nginx -o json
-kubectl get pod -o name
+kubectl get po -o wide
+kubectl get po nginx -o yaml
+kubectl get po nginx -o json
+kubectl get po -o name
 ```
 
 | 输出格式   | 适用场景                   |
@@ -109,10 +109,10 @@ kubectl get pod -o name
 示例：
 
 ```bash
-kubectl get pod -A
-kubectl get pod -l app=nginx
-kubectl get pod --field-selector status.phase=Running
-kubectl get deployment --show-labels
+kubectl get po -A
+kubectl get po -l app=nginx
+kubectl get po --field-selector status.phase=Running
+kubectl get deploy --show-labels
 ```
 
 ## 命令使用习惯

@@ -437,7 +437,7 @@ kubectl rollout status deploy nginx-deploy
 
 ```bash
 kubectl scale deploy nginx-deploy --replicas=5
-kubectl get pod -l app=nginx-deploy -o wide
+kubectl get po -l app=nginx-deploy -o wide
 ```
 
 缩容到 2 个副本：
@@ -460,9 +460,9 @@ kubectl apply -f nginx-deploy.yaml
 扩容前应关注节点资源：
 
 ```bash
-kubectl describe node <node-name>
-kubectl top node
-kubectl top pod
+kubectl describe no <node-name>
+kubectl top no
+kubectl top po
 ```
 
 重点确认：

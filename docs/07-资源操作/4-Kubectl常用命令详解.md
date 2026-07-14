@@ -9,7 +9,7 @@ kubectl 常用命令大致可以分为集群连接、资源查看、日志排查
 ```bash
 kubectl cluster-info
 kubectl version
-kubectl get nodes
+kubectl get no
 ```
 
 常见用途如下：
@@ -18,7 +18,7 @@ kubectl get nodes
 |------------------------|-------------|
 | `kubectl cluster-info` | 查看控制面访问地址   |
 | `kubectl version`      | 查看客户端和服务端版本 |
-| `kubectl get nodes`    | 查看工作节点状态    |
+| `kubectl get no`    | 查看工作节点状态    |
 
 如果 `kubectl version` 只能看到客户端版本，通常说明 kubectl 没有成功连接到 APIServer。
 
@@ -52,8 +52,8 @@ kubectl config view --minify
 设置后，下面两条命令含义一致：
 
 ```bash
-kubectl get pod
-kubectl get pod -n dev
+kubectl get po
+kubectl get po -n dev
 ```
 
 如果只是临时查询，建议直接用 `-n` 指定 Namespace；如果长期在某个环境工作，则可以为上下文设置默认 Namespace。
@@ -63,17 +63,17 @@ kubectl get pod -n dev
 最常用的查看命令是 `get`：
 
 ```bash
-kubectl get pod
-kubectl get deployment
-kubectl get service
-kubectl get namespace
-kubectl get pod -A
+kubectl get po
+kubectl get deploy
+kubectl get svc
+kubectl get ns
+kubectl get po -A
 ```
 
 常见组合如下：
 
 ```bash
-kubectl get pod,svc
+kubectl get po,svc
 kubectl get all
 kubectl get all -n dev
 ```
@@ -85,10 +85,10 @@ kubectl get all -n dev
 排查时经常需要更详细的输出：
 
 ```bash
-kubectl get pod -o wide
-kubectl get service -o wide
-kubectl get deployment nginx -o yaml
-kubectl get pod nginx -o json
+kubectl get po -o wide
+kubectl get svc -o wide
+kubectl get deploy nginx -o yaml
+kubectl get po nginx -o json
 ```
 
 `-o wide` 适合快速查看扩展列，如 Pod IP、所在 Node、镜像等；`-o yaml` 适合查看完整的资源字段和当前状态。
@@ -98,17 +98,17 @@ kubectl get pod nginx -o json
 Kubernetes 很多资源通过标签建立关联。可以使用 `-l` 按标签筛选：
 
 ```bash
-kubectl get pod -l app=nginx
-kubectl get pod -l app=nginx,tier=frontend
-kubectl get service -l app=nginx --show-labels
+kubectl get po -l app=nginx
+kubectl get po -l app=nginx,tier=frontend
+kubectl get svc -l app=nginx --show-labels
 ```
 
 常见标签筛选表达式：
 
 ```bash
-kubectl get pod -l 'app in (nginx,redis)'
-kubectl get pod -l 'env!=prod'
-kubectl get pod -l 'app'
+kubectl get po -l 'app in (nginx,redis)'
+kubectl get po -l 'env!=prod'
+kubectl get po -l 'app'
 ```
 
 标签是 Deployment、Service、Pod 关联关系中的关键线索。排查 Service 后端为空时，通常要先检查标签选择器是否匹配。
@@ -118,9 +118,9 @@ kubectl get pod -l 'app'
 字段筛选适合按资源自身字段查询：
 
 ```bash
-kubectl get pod --field-selector status.phase=Running
-kubectl get pod --field-selector status.phase=Pending
-kubectl get event --field-selector type=Warning
+kubectl get po --field-selector status.phase=Running
+kubectl get po --field-selector status.phase=Pending
+kubectl get ev --field-selector type=Warning
 ```
 
 字段筛选支持的字段因资源类型而异，常用于快速找出异常 Pod 或 Warning 事件。
@@ -130,8 +130,8 @@ kubectl get event --field-selector type=Warning
 可以通过 `--sort-by` 按指定字段排序：
 
 ```bash
-kubectl get pod --sort-by=.metadata.name
-kubectl get pod --sort-by=.metadata.creationTimestamp
+kubectl get po --sort-by=.metadata.name
+kubectl get po --sort-by=.metadata.creationTimestamp
 kubectl get job --sort-by=.metadata.name
 ```
 
@@ -191,7 +191,7 @@ kubectl debug -it <pod-name> --image=busybox:1.38 --target=<container-name>
 
 ```bash
 kubectl run debug-nginx --image=nginx:1.31-alpine
-kubectl wait pod/debug-nginx --for=condition=Ready --timeout=60s
+kubectl wait po/debug-nginx --for=condition=Ready --timeout=60s
 kubectl debug -it debug-nginx --image=busybox:1.38 --target=debug-nginx -- sh
 ```
 
@@ -206,7 +206,7 @@ exit
 调试结束后清理 Pod：
 
 ```bash
-kubectl delete pod debug-nginx
+kubectl delete po debug-nginx
 ```
 
 ## 文件拷贝
@@ -233,16 +233,16 @@ kubectl cp <namespace>/<pod>:<容器路径> <本地路径>
 事件是 Kubernetes 排障的重要线索：
 
 ```bash
-kubectl get events
-kubectl get events -n dev
-kubectl get events --sort-by=.metadata.creationTimestamp
-kubectl get events --field-selector type=Warning
+kubectl get ev
+kubectl get ev -n dev
+kubectl get ev --sort-by=.metadata.creationTimestamp
+kubectl get ev --field-selector type=Warning
 ```
 
 kubectl 还提供专用的 `events` 子命令，适合聚焦单个资源的事件：
 
 ```bash
-kubectl events --for pod/<pod-name>
+kubectl events --for po/<pod-name>
 kubectl events --types=Warning
 ```
 
@@ -265,10 +265,10 @@ kubectl api-versions
 Deployment 等工作负载资源可以使用 `rollout` 查看发布状态：
 
 ```bash
-kubectl rollout status deployment/nginx
-kubectl rollout history deployment/nginx
-kubectl rollout undo deployment/nginx
-kubectl rollout restart deployment/nginx
+kubectl rollout status deploy/nginx
+kubectl rollout history deploy/nginx
+kubectl rollout undo deploy/nginx
+kubectl rollout restart deploy/nginx
 ```
 
 资源操作阶段只需要知道它们的用途：
@@ -298,11 +298,11 @@ kubectl run nginx --image=nginx:1.31-alpine
 `kubectl explain` 用于查询资源字段说明，适合辅助编写 YAML：
 
 ```bash
-kubectl explain pod
-kubectl explain pod.spec
-kubectl explain pod.spec.containers
-kubectl explain deployment.spec.template
-kubectl explain pod.spec.containers --recursive
+kubectl explain po
+kubectl explain po.spec
+kubectl explain po.spec.containers
+kubectl explain deploy.spec.template
+kubectl explain po.spec.containers --recursive
 ```
 
 使用建议：
@@ -319,11 +319,11 @@ kubectl explain pod.spec.containers --recursive
 遇到 Pod 异常时，可以按以下顺序推进：
 
 ```bash
-kubectl get pod -o wide
-kubectl describe pod <pod-name>
+kubectl get po -o wide
+kubectl describe po <pod-name>
 kubectl logs <pod-name>
 kubectl logs <pod-name> --previous
-kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl get ev --sort-by=.metadata.creationTimestamp
 ```
 
 这套顺序能覆盖大部分常见问题，包括调度失败、镜像拉取失败、容器启动失败和健康检查失败。

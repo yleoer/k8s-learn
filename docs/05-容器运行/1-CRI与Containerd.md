@@ -111,8 +111,8 @@ containerd 不负责集群调度，也不负责 Pod 网络策略。调度由 kub
 从 Kubernetes 侧查看节点运行时版本：
 
 ```bash
-kubectl get nodes -o wide
-kubectl describe node <node-name> | grep -i "Container Runtime"
+kubectl get no -o wide
+kubectl describe no <node-name> | grep -i "Container Runtime"
 ```
 
 查看 containerd 自身状态：

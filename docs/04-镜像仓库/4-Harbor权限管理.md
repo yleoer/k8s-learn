@@ -143,7 +143,7 @@ spec:
 将 `imagePullSecrets` 绑定到命名空间默认 ServiceAccount 后，该命名空间中新创建的 Pod 会自动携带拉取凭据，避免在每个工作负载中重复声明：
 
 ```bash
-kubectl patch serviceaccount default \
+kubectl patch sa default \
   -n default \
   -p '{"imagePullSecrets": [{"name": "harbor-secret"}]}'
 ```

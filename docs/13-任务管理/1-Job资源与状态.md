@@ -24,7 +24,7 @@ spec:
 ```bash
 kubectl create -f hello-job.yaml
 kubectl get job hello
-kubectl get pod -l batch.kubernetes.io/job-name=hello
+kubectl get po -l batch.kubernetes.io/job-name=hello
 kubectl logs job/hello
 ```
 
@@ -71,10 +71,10 @@ Kubernetes v1.31 及以后，Job 控制器会在所有相关 Pod 终止后才添
 一个 Job 可能因重试产生多个 Pod，`kubectl logs job/<name>` 只适合快速查看单个匹配 Pod。排查失败历史时先列出全部 Pod，再逐个查看：
 
 ```bash
-kubectl get pod -l batch.kubernetes.io/job-name=hello \
+kubectl get po -l batch.kubernetes.io/job-name=hello \
   --sort-by=.metadata.creationTimestamp
 kubectl logs <job-pod-name>
-kubectl describe pod <job-pod-name>
+kubectl describe po <job-pod-name>
 ```
 
 使用 `restartPolicy: Never` 时，每次失败通常保留为独立 Pod，更便于查看前一次退出状态；使用 `OnFailure` 时，容器可能在同一 Pod 中重启，应通过 `kubectl logs --previous` 查看上一次容器日志。

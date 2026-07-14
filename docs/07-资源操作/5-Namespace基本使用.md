@@ -120,7 +120,7 @@ Namespace 不适合用于：
 查看默认 Namespace：
 
 ```bash
-kubectl get namespace
+kubectl get ns
 kubectl get ns
 ```
 
@@ -133,7 +133,7 @@ kubectl get ns
 使用命令创建：
 
 ```bash
-kubectl create namespace dev
+kubectl create ns dev
 kubectl create ns test
 ```
 
@@ -161,9 +161,9 @@ kubectl create -f namespace-dev.yaml
 查看指定 Namespace：
 
 ```bash
-kubectl get namespace dev
-kubectl get namespace dev --show-labels
-kubectl describe namespace dev
+kubectl get ns dev
+kubectl get ns dev --show-labels
+kubectl describe ns dev
 ```
 
 `describe` 可以看到 Namespace 状态、标签、注解和资源配额等信息。
@@ -173,9 +173,9 @@ kubectl describe namespace dev
 命令方式：
 
 ```bash
-kubectl create deployment nginx --image=nginx:1.31-alpine -n dev
-kubectl get deployment -n dev
-kubectl get pod -n dev
+kubectl create deploy nginx --image=nginx:1.31-alpine -n dev
+kubectl get deploy -n dev
+kubectl get po -n dev
 ```
 
 YAML 方式：
@@ -225,9 +225,9 @@ kubectl config view --minify
 使用 `-A` 或 `--all-namespaces`：
 
 ```bash
-kubectl get pod -A
-kubectl get service --all-namespaces
-kubectl get deployment -A
+kubectl get po -A
+kubectl get svc --all-namespaces
+kubectl get deploy -A
 ```
 
 排查集群级问题时，`-A` 很常用；处理具体业务问题时，则优先指定明确的 Namespace。
@@ -237,12 +237,12 @@ kubectl get deployment -A
 删除 Namespace：
 
 ```bash
-kubectl delete namespace dev
+kubectl delete ns dev
 ```
 
 删除 Namespace 会连带删除其下的所有命名空间级资源，包括 Pod、Deployment、Service、ConfigMap、Secret 等。删除是异步操作，删除过程中 Namespace 会先进入 `Terminating` 状态。这个操作影响较大，生产环境必须谨慎。
 
-有时删除 Namespace 会停留在 `Terminating` 状态，常见原因包括带 finalizer 的资源未完成清理、某些 APIService 不可用、控制器无法完成资源清理等。遇到该问题时，先用 `kubectl describe namespace <namespace>` 查看原因。
+有时删除 Namespace 会停留在 `Terminating` 状态，常见原因包括带 finalizer 的资源未完成清理、某些 APIService 不可用、控制器无法完成资源清理等。遇到该问题时，先用 `kubectl describe ns <namespace>` 查看原因。
 
 ## 命名规则
 

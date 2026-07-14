@@ -39,9 +39,9 @@ kubelet 会为每个静态 Pod 在 API server 上创建一个对应的镜像 Pod
 
 ```bash
 ls /etc/kubernetes/manifests
-kubectl get pods -n kube-system -o wide | grep "$(hostname)"
-kubectl delete pod -n kube-system kube-scheduler-<node-name>
-kubectl get pods -n kube-system | grep kube-scheduler
+kubectl get po -n kube-system -o wide | grep "$(hostname)"
+kubectl delete po -n kube-system kube-scheduler-<node-name>
+kubectl get po -n kube-system | grep kube-scheduler
 ```
 
 删除镜像 Pod 后，短暂间隔内会重新出现同名 Pod，而节点上的调度器进程并未重启——被删除又重建的只是 API server 中的投影对象。
@@ -51,7 +51,7 @@ kubectl get pods -n kube-system | grep kube-scheduler
 静态 Pod 的 spec 不能引用其他 API 对象，也缺少一部分常规 Pod 能力：
 
 - 不能引用 ServiceAccount、ConfigMap、Secret 等资源，配置只能通过镜像、hostPath 挂载或命令行参数注入。
-- 不支持临时容器，`kubectl debug` 的临时容器方式对静态 Pod 无效，排障需要回到节点上使用 `crictl` 或 `kubectl debug node/`。
+- 不支持临时容器，`kubectl debug` 的临时容器方式对静态 Pod 无效，排障需要回到节点上使用 `crictl` 或 `kubectl debug no/`。
 - 不受控制器管理，没有滚动更新语义；修改清单文件后，kubelet 会按新清单重建 Pod。
 
 ## 参考

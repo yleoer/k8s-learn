@@ -87,7 +87,7 @@ spec:
 kubectl create -f nfs-static-storage.yaml
 kubectl get pv nfs-static-pv
 kubectl get pvc nfs-static-pvc
-kubectl describe pod nfs-static-writer
+kubectl describe po nfs-static-writer
 ```
 
 清单中的 `10Gi` 是 Kubernetes 用于匹配和展示的容量。普通 NFS 导出并不会因为该数值自动产生 10 GiB 配额，实际限制需要由 NFS 后端的文件系统配额或存储系统实现。
@@ -133,7 +133,7 @@ PVC 可以通过 `spec.volumeName` 指定现有 PV，PV 也可以通过 `spec.cl
 本页示例使用 `Retain`，删除 PVC 后 NFS 数据不会自动清除：
 
 ```bash
-kubectl delete pod nfs-static-writer
+kubectl delete po nfs-static-writer
 kubectl delete pvc nfs-static-pvc
 kubectl get pv nfs-static-pv
 ```

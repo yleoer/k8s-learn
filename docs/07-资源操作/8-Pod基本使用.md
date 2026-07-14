@@ -15,9 +15,9 @@ kubectl create -f nginx-pod.yaml
 查看状态：
 
 ```bash
-kubectl get pod
-kubectl get pod nginx -o wide
-kubectl describe pod nginx
+kubectl get po
+kubectl get po nginx -o wide
+kubectl describe po nginx
 ```
 
 查看日志：
@@ -44,7 +44,7 @@ kubectl delete -f nginx-pod.yaml
 
 ```bash
 kubectl run nginx --image=nginx:1.31-alpine
-kubectl get pod nginx -o yaml
+kubectl get po nginx -o yaml
 ```
 
 生成 YAML 但不提交：
@@ -60,10 +60,10 @@ kubectl run nginx --image=nginx:1.31-alpine --dry-run=client -o yaml
 Pod 创建失败时，先按以下顺序检查：
 
 ```bash
-kubectl get pod -o wide
-kubectl describe pod <pod-name>
+kubectl get po -o wide
+kubectl describe po <pod-name>
 kubectl logs <pod-name>
-kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl get ev --sort-by=.metadata.creationTimestamp
 ```
 
 常见原因包括镜像地址错误、节点资源不足、命令启动失败、端口冲突、配置挂载失败等。这里只保留最小观察路径，具体字段和排查方法在第 08 章按 Pod 配置主题展开。

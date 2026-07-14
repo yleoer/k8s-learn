@@ -67,8 +67,8 @@ cd csi-driver-nfs
 检查控制器、节点插件和驱动注册：
 
 ```bash
-kubectl -n kube-system get pod -l app=csi-nfs-controller -o wide
-kubectl -n kube-system get pod -l app=csi-nfs-node -o wide
+kubectl -n kube-system get po -l app=csi-nfs-controller -o wide
+kubectl -n kube-system get po -l app=csi-nfs-node -o wide
 kubectl get csidriver nfs.csi.k8s.io
 ```
 
@@ -97,7 +97,7 @@ mountOptions:
 
 ```bash
 kubectl create -f nfs-csi-storageclass.yaml
-kubectl get storageclass nfs-csi
+kubectl get sc nfs-csi
 ```
 
 `subDir` 按命名空间和 PVC 名称组织目录。`Retain` 会在 PVC 删除后保留 PV 和 NFS 数据，适合学习和需要人工确认的数据；如果改为 `Delete`，还要结合驱动 `onDelete` 参数和后端备份策略明确目录的删除、保留或归档行为。
@@ -162,7 +162,7 @@ PVC 进入 `Bound` 后，NFS 导出下应出现对应子目录。PV 名称由系
 先删除 Pod，再删除 PVC：
 
 ```bash
-kubectl delete pod nfs-csi-writer
+kubectl delete po nfs-csi-writer
 kubectl delete pvc nfs-csi-data
 kubectl get pv
 ```

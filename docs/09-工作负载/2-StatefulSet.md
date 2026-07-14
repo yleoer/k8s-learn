@@ -94,7 +94,7 @@ spec:
 ```bash
 kubectl create -f web-statefulset.yaml
 kubectl get sts
-kubectl get pod -l app=nginx -o wide
+kubectl get po -l app=nginx -o wide
 kubectl get svc nginx
 ```
 
@@ -132,7 +132,7 @@ web-0 -> web-1 -> web-2
 观察创建过程：
 
 ```bash
-kubectl get pod -l app=nginx -w
+kubectl get po -l app=nginx -w
 ```
 
 示例状态变化：
@@ -255,7 +255,7 @@ kubectl get sts web -o yaml
 查看 Pod 与 PVC：
 
 ```bash
-kubectl get pod -l app=nginx -o wide
+kubectl get po -l app=nginx -o wide
 kubectl get pvc
 ```
 
@@ -263,7 +263,7 @@ kubectl get pvc
 
 ```bash
 kubectl describe sts web
-kubectl describe pod web-0
+kubectl describe po web-0
 ```
 
 StatefulSet 排查通常从序号最小且未就绪的 Pod 开始，再检查 Headless Service、PVC、存储类和节点资源。
@@ -393,8 +393,8 @@ CoreDNS -> 固定 DNS 名称: web-0.nginx
 
 ```bash
 kubectl get svc nginx -o yaml
-kubectl get endpointslices -l kubernetes.io/service-name=nginx
-kubectl get pod -l app=nginx --show-labels
+kubectl get eplices -l kubernetes.io/service-name=nginx
+kubectl get po -l app=nginx --show-labels
 ```
 
 如果 Service 的 selector 与 Pod 标签不匹配，EndpointSlice 中不会出现后端地址，DNS 解析也无法得到预期结果。
@@ -403,11 +403,11 @@ kubectl get pod -l app=nginx --show-labels
 
 | 现象                        | 可能原因                            | 排查命令                                                             |
 |---------------------------|---------------------------------|------------------------------------------------------------------|
-| 完整 Pod DNS 名称查询失败         | CoreDNS 异常、名称写错或记录尚未发布             | `kubectl get pod -n kube-system -l k8s-app=kube-dns`             |
-| Service 没有后端地址            | selector 与 Pod 标签不匹配            | `kubectl get endpointslices -l kubernetes.io/service-name=nginx` |
+| 完整 Pod DNS 名称查询失败         | CoreDNS 异常、名称写错或记录尚未发布             | `kubectl get po -n kube-system -l k8s-app=kube-dns`             |
+| Service 没有后端地址            | selector 与 Pod 标签不匹配            | `kubectl get eplices -l kubernetes.io/service-name=nginx` |
 | 只能解析 Service，不能解析单个 Pod   | StatefulSet 未配置正确 `serviceName` | `kubectl get sts web -o yaml`                                    |
-| 可以解析但访问失败                 | 容器端口、应用监听或网络策略问题                | `kubectl describe pod web-0`                                     |
-| 访问旧 IP                    | DNS 缓存或 Pod 尚未 Ready            | `kubectl get pod -o wide`                                        |
+| 可以解析但访问失败                 | 容器端口、应用监听或网络策略问题                | `kubectl describe po web-0`                                     |
+| 访问旧 IP                    | DNS 缓存或 Pod 尚未 Ready            | `kubectl get po -o wide`                                        |
 
 Headless Service 的关键是标签匹配和 DNS 记录。先确认 Pod Ready，再确认 Service selector，最后确认 DNS 查询结果，通常可以快速定位问题。
 
@@ -423,7 +423,7 @@ StatefulSet 的扩缩容和更新都围绕 Pod 序号进行。默认情况下，
 
 ```bash
 kubectl scale sts web --replicas=5
-kubectl get pod -l app=nginx -w
+kubectl get po -l app=nginx -w
 ```
 
 扩容时，StatefulSet 默认按序号正序创建新 Pod：
@@ -436,7 +436,7 @@ web-3 -> web-4
 
 ```bash
 kubectl scale sts web --replicas=2
-kubectl get pod -l app=nginx -w
+kubectl get po -l app=nginx -w
 ```
 
 缩容时，StatefulSet 默认按序号倒序删除 Pod：
@@ -604,7 +604,7 @@ partition-web-2
 ```bash
 kubectl set image sts partition-web nginx=nginx:1.27
 kubectl rollout status sts partition-web
-kubectl get pod -l app=partition-web -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+kubectl get po -l app=partition-web -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
 ```
 
 确认高序号 Pod 运行正常后，可以逐步降低 partition：
@@ -688,8 +688,8 @@ spec:
 
 ```bash
 kubectl set image sts ondelete-web nginx=nginx:1.28
-kubectl delete pod ondelete-web-2
-kubectl get pod ondelete-web-2 -w
+kubectl delete po ondelete-web-2
+kubectl get po ondelete-web-2 -w
 ```
 
 这种方式适合强依赖人工确认的组件，例如每更新一个节点都需要先确认集群状态、数据同步状态或业务指标。
@@ -722,7 +722,7 @@ kubectl get sts web -o yaml | grep -A 4 "updateStrategy"
 查看当前镜像：
 
 ```bash
-kubectl describe pod web-0 | grep Image:
+kubectl describe po web-0 | grep Image:
 ```
 
 ### 并发管理 Pod
