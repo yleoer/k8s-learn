@@ -194,22 +194,36 @@ function codeBlockTitlePlugin(md) {
     const token = tokens[idx]
     const title = token.info.match(/\[(.+?)\]/)?.[1]
     let codeGroupDepth = 0
+    let detailsDepth = 0
 
     for (let index = 0; index < idx; index += 1) {
       if (tokens[index].type === 'container_code-group_open') {
         codeGroupDepth += 1
       } else if (tokens[index].type === 'container_code-group_close') {
         codeGroupDepth = Math.max(0, codeGroupDepth - 1)
+      } else if (tokens[index].type === 'container_details_open') {
+        detailsDepth += 1
+      } else if (tokens[index].type === 'container_details_close') {
+        detailsDepth = Math.max(0, detailsDepth - 1)
       }
     }
 
     const inCodeGroup = codeGroupDepth > 0
+    const inDetails = detailsDepth > 0
+    const renderFence = () => (
+      fence?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
+    )
+    const removeCopyButton = (rendered) => (
+      inDetails
+        ? rendered.replace(/<button[^>]*class="copy"[^>]*><\/button>/, '')
+        : rendered
+    )
 
     if (!title || inCodeGroup) {
-      return fence?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
+      return removeCopyButton(renderFence())
     }
 
-    const rendered = fence?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
+    const rendered = removeCopyButton(renderFence())
 
     return `<div class="vp-code-title">${escapeHtml(title)}</div>${rendered}`
   }

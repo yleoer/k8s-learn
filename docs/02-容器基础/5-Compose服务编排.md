@@ -1,8 +1,8 @@
-# Docker Compose 基础
+# Compose 服务编排
 
-[上一篇](./6-Docker网络与容器间通信.md)已经验证了自定义 bridge 网络和容器名 DNS 解析，但网络创建、启动顺序、端口和挂载参数仍然分散在多条 `docker run` 命令中，服务数量增加后很快难以维护。Docker Compose 用一个 `compose.yaml` 文件描述一组相关容器、网络、卷、配置和敏感数据，再通过 `docker compose` 命令统一创建、更新、查看和销毁这些资源。
+[容器网络](./4-容器网络.md)已经验证了自定义 bridge 网络和容器名 DNS 解析，但网络创建、启动顺序、端口和挂载参数仍然分散在多条 `docker run` 命令中，服务数量增加后很快难以维护。Docker Compose 用一个 `compose.yaml` 文件描述一组相关容器、网络、卷、配置和敏感数据，再通过 `docker compose` 命令统一创建、更新、查看和销毁这些资源。
 
-Compose 文件本身不直接运行容器：Compose CLI 先把它解析成应用模型，再调用 Docker Engine 创建容器、网络和卷。本篇记录单机多容器应用的基础用法，后续理解 Kubernetes 工作负载、Service、配置注入和存储挂载时，可以把 Compose 作为一个更小范围的对照。
+Compose 文件本身不直接运行容器：Compose CLI 先把它解析成应用模型，再调用 Docker Engine 创建容器、网络和卷。本篇从最小服务组开始，再展开配置模型、生命周期、排障和可选进阶配置；它是理解 Kubernetes 工作负载、Service、配置注入和存储挂载的单机对照，而不是集群编排的替代品。
 
 ## Compose 解决的问题
 
@@ -16,9 +16,9 @@ Compose 文件本身不直接运行容器：Compose CLI 先把它解析成应用
 
 Compose 适合单机多容器应用、本地开发环境、集成验证环境和服务依赖验证。它不负责多节点调度、集群级服务发现、控制器自愈、滚动发布和入口流量管理，因此不是 Kubernetes 的替代品。
 
-## 版本形态
+## 版本基线与配置格式
 
-Compose 有两条容易混淆的版本线：一条是 Compose CLI 自身的版本，另一条是 Compose 文件格式的历史版本。
+Compose 有两条容易混淆的版本线：一条是 Compose CLI 自身的版本，另一条是 Compose 文件格式的历史版本。本篇按 Docker Compose v5.3.1；实际环境仍应先执行 `docker compose version` 确认。
 
 当前受官方支持的 Compose CLI 版本是 Compose v2 和 Compose v5，两者都按 Compose Specification 解释配置文件：
 
@@ -46,7 +46,7 @@ docker compose version
 ::: details 版本输出类似如下
 
 ```text
-Docker Compose version v5.2.0
+Docker Compose version v5.3.1
 ```
 
 :::
@@ -286,7 +286,7 @@ docker compose exec app wget -qO- http://proxy
 
 ## 数据卷与挂载
 
-服务级 `volumes` 的短语法为 `VOLUME:CONTAINER_PATH[:ACCESS_MODE]`：`VOLUME` 是宿主机路径（bind mount）或卷名，访问模式默认 `rw`，可写 `ro` 限制为只读。bind mount 的相对路径从 Compose 文件所在目录解析。三类挂载的差异在[持久化与服务部署](./5-持久化与服务部署.md)中已有展开，这里从 Compose 视角对比：
+服务级 `volumes` 的短语法为 `VOLUME:CONTAINER_PATH[:ACCESS_MODE]`：`VOLUME` 是宿主机路径（bind mount）或卷名，访问模式默认 `rw`，可写 `ro` 限制为只读。bind mount 的相对路径从 Compose 文件所在目录解析。三类挂载的单容器边界见[单容器运行与数据管理](./3-单容器运行与数据管理.md#数据与挂载)，这里从 Compose 视角对比：
 
 | 类型 | 示例 | 适用场景 | 边界 |
 | --- | --- | --- | --- |
@@ -601,9 +601,9 @@ docker compose -f compose.yaml -f compose.dev.yaml config
 | --- | --- |
 | `docker compose up -d` | 创建并后台启动服务。配置变化时会按需重建容器。 |
 | `docker compose down` | 停止并删除本项目容器和网络，默认保留卷。 |
-| `docker compose stop` | 停止服务，保留容器、网络和卷。 |
-| `docker compose start` | 启动已经存在但处于停止状态的服务容器。 |
-| `docker compose restart` | 重启服务。 |
+| `docker compose stop [<service>...]` | 停止全部服务，或只停止指定服务，保留容器、网络和卷。 |
+| `docker compose start [<service>...]` | 启动全部已存在且处于停止状态的服务容器，或只启动指定服务。 |
+| `docker compose restart [<service>...]` | 重启全部服务，或只重启指定服务。 |
 | `docker compose ps` | 查看服务容器状态和端口映射。 |
 | `docker compose logs -f <service>` | 跟随查看指定服务日志。 |
 | `docker compose exec <service> sh` | 在运行中的服务容器内执行命令。 |
@@ -612,6 +612,16 @@ docker compose -f compose.yaml -f compose.dev.yaml config
 | `docker compose port <service> <port>` | 查看容器端口对应的宿主机发布地址。 |
 | `docker compose pull` | 拉取服务镜像。 |
 | `docker compose build` | 构建包含 `build` 配置的服务镜像。 |
+
+`stop`、`start` 和 `restart` 后可以指定一个或多个 service 名。例如只操作数据库服务：
+
+```bash
+docker compose stop db
+docker compose start db
+docker compose restart db
+```
+
+省略 service 名时，命令作用于当前项目中的全部服务；指定多个服务时用空格分隔，例如 `docker compose restart web worker`。`start` 只能启动已创建且已停止的容器；服务尚未创建时使用 `docker compose up -d <service>`。
 
 日常停启有状态服务时，优先使用 `docker compose stop`、`docker compose start` 或 `docker compose up -d`。只有确认要删除容器和项目网络时，再使用 `docker compose down`；只有确认要删除数据卷时，再使用 `docker compose down -v`。
 
@@ -654,6 +664,7 @@ Kubernetes 面向集群环境，核心能力包括多节点调度、控制器持
 ## 参考
 
 - [Docker Compose](https://docs.docker.com/compose/)
+- [Docker Compose v5.3.1 release](https://github.com/docker/compose/releases/tag/v5.3.1)
 - [History and development of Docker Compose](https://docs.docker.com/compose/intro/history/)
 - [How Compose works](https://docs.docker.com/compose/intro/compose-application-model/)
 - [Overview of installing Docker Compose](https://docs.docker.com/compose/install/)

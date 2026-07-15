@@ -574,6 +574,11 @@ body {
   border-bottom: 0;
 }
 
+.vp-doc .command-nowrap {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .vp-doc .custom-block {
   margin: 24px 0;
   border-width: 1px 1px 1px 4px;
