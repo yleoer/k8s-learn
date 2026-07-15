@@ -25,7 +25,7 @@ features:
     link: /04-镜像仓库/
   - icon: 🔧
     title: 05 · 容器运行
-    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置、镜像缓存、多运行时、镜像懒加载和排障记录。
+    details: CRI、containerd、crictl、ctr、nerdctl、仓库访问配置和运行时排障记录。
     link: /05-容器运行/
   - icon: ⚙️
     title: 06 · 集群架构
@@ -71,8 +71,9 @@ features:
 
 以下内容先保留为后续补全清单：
 
-- 沙箱运行时实测：Kata Containers 与 gVisor 的节点安装、RuntimeClass 验证和沙箱内行为观察
-- 镜像懒加载实测：远程 snapshotter 部署、镜像格式转换和冷启动收益验证
+- 节点镜像缓存与垃圾回收：节点镜像缓存边界、kubelet 镜像垃圾回收策略与磁盘压力排查
+- RuntimeClass 与多运行时：containerd 运行时处理器配置、RuntimeClass 调度与开销，以及 Kata Containers 和 gVisor 验证
+- Snapshotter 与镜像懒加载：snapshotter 选型、远程 snapshotter 部署、镜像格式转换和冷启动收益验证
 - Harbor 漏洞扫描实测：Trivy 扫描结果、阻止拉取策略与 CVE 允许清单的联动验证
 - Harbor 生产部署：高可用拓扑、外部 PostgreSQL 与 Redis、对象存储、备份恢复和跨版本升级演练
 - Docker 运行治理：CPU、内存、PID 与 ulimit 约束，rootless 与 user namespace，capabilities、seccomp 和日志驱动
