@@ -128,6 +128,6 @@ kubectl v1.36 起，未指定 `--profile` 时的默认值已从 `legacy` 改为 
 
 ## 参考
 
-- [Ephemeral Containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/)
-- [Debug Running Pods](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/)
-- [kubectl debug](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_debug/)
+- [临时容器](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/)
+- [调试运行中的 Pod](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/)
+- [kubectl debug 命令](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_debug/)

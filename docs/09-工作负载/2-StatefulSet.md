@@ -812,7 +812,7 @@ kubectl get pvc
 
 ## 参考
 
-- [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
-- [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
-- [StatefulSet API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/stateful-set-v1/)
-- [Feature Gates](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)
+- [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+- [Service 与 Pod 的 DNS](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
+- [StatefulSet API 参考](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/stateful-set-v1/)
+- [特性门控](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)

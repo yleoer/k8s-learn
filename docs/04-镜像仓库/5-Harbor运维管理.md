@@ -140,3 +140,7 @@ tar czf harbor-data-$(date +%Y%m%d).tar.gz /data/harbor
 ```
 
 备份文件应存储在与 Harbor 不同的物理介质上，例如对象存储、NAS 或异地服务器。恢复方案需要定期演练，确保数据库、Registry 数据和配置文件能够在同一时间点匹配。
+
+## 参考
+
+- [Harbor 备份与恢复](https://goharbor.io/docs/latest/administration/backup-restore/)

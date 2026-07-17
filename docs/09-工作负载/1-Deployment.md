@@ -646,3 +646,8 @@ Recreate 可以用于以下场景：
 - 发布前确认节点资源能够承载 `maxSurge` 带来的额外 Pod
 
 滚动更新只是 Kubernetes 的执行机制，业务是否真正无损还依赖应用自身兼容性。例如接口字段、数据库结构、缓存协议和消息格式都应支持新旧版本短时间共存。
+
+## 参考
+
+- [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [滚动更新](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)

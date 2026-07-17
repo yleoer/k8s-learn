@@ -132,3 +132,8 @@ sudo crictl version
 ```
 
 如果 `crictl info` 无法连接运行时，需要检查 `/etc/crictl.yaml` 是否存在且 socket 路径正确。完整配置复用集群部署中的[安装并配置 crictl](../01-集群部署/2-运行时与组件安装.md#安装并配置-crictl)，此处不重复文件内容。
+
+## 参考
+
+- [容器运行时接口](https://kubernetes.io/docs/concepts/architecture/cri/)
+- [使用 crictl 调试 Kubernetes 节点](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)

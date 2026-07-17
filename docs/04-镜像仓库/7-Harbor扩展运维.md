@@ -112,9 +112,9 @@ docker run -it --rm \
 
 ## 参考
 
-- [Harbor Configure Proxy Cache](https://goharbor.io/docs/2.15.0/administration/configure-proxy-cache/)
-- [Harbor Configure Project Quotas](https://goharbor.io/docs/2.15.0/administration/configure-project-quotas/)
-- [Harbor Audit Log](https://goharbor.io/docs/2.15.0/administration/audit-log/)
-- [Harbor Log Rotation](https://goharbor.io/docs/2.15.0/administration/log-rotation/)
-- [Harbor Upgrade and Migrate Data](https://goharbor.io/docs/2.15.0/administration/upgrade/)
-- [Harbor Roll Back from an Upgrade](https://goharbor.io/docs/2.15.0/administration/upgrade/roll-back-upgrade/)
+- [配置 Harbor 代理缓存](https://goharbor.io/docs/2.15.0/administration/configure-proxy-cache/)
+- [配置 Harbor 项目配额](https://goharbor.io/docs/2.15.0/administration/configure-project-quotas/)
+- [Harbor 审计日志](https://goharbor.io/docs/2.15.0/administration/audit-log/)
+- [Harbor 日志轮转](https://goharbor.io/docs/2.15.0/administration/log-rotation/)
+- [Harbor 升级与数据迁移](https://goharbor.io/docs/2.15.0/administration/upgrade/)
+- [Harbor 升级回滚](https://goharbor.io/docs/2.15.0/administration/upgrade/roll-back-upgrade/)

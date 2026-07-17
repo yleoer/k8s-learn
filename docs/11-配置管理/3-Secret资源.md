@@ -123,3 +123,8 @@ kubectl create -f private-image-pod.yaml
 ```
 
 Secret 与 Pod 必须位于同一命名空间。出现 `ImagePullBackOff` 时，应检查 Secret 类型、仓库地址、凭据权限、镜像路径和 Pod 事件。
+
+## 参考
+
+- [Secret](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [从私有仓库拉取镜像](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)

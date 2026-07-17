@@ -218,3 +218,7 @@ initialDelaySeconds + periodSeconds * failureThreshold
 ```
 
 readinessProbe 可以将 `successThreshold` 设为大于 `1`，要求连续成功多次后才恢复 Ready 状态。livenessProbe 和 startupProbe 的 `successThreshold` 必须为 `1`。
+
+## 参考
+
+- [配置存活、就绪与启动探针](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)

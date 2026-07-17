@@ -33,7 +33,7 @@ features:
     link: /06-集群架构/
   - icon: 🧭
     title: 07 · 资源操作
-    details: kubectl、Namespace、Pod 基础操作、资源状态观察和问题记录。
+    details: kubectl、Namespace、Pod 基础操作、资源状态观察和命令速查。
     link: /07-资源操作/
   - icon: 🧩
     title: 08 · Pod 入门
@@ -59,13 +59,45 @@ features:
     title: 13 · 任务管理
     details: Job、Indexed Job、失败与成功策略、TTL、CronJob 调度、并发策略和 MySQL 定时备份。
     link: /13-任务管理/
+  - icon: 🧭
+    title: 14 · 调度策略
+    details: 节点选择、亲和性、拓扑分布、PriorityClass、PDB 和调度排障。
+    link: /14-调度策略/
+  - icon: 🚧
+    title: 15 · 污点容忍
+    details: 污点效果、容忍匹配、专用节点隔离、节点维护和排障。
+    link: /15-污点容忍/
+  - icon: 📊
+    title: 16 · 资源配额
+    details: ResourceQuota、计算与存储配额、范围和命名空间治理。
+    link: /16-资源配额/
+  - icon: 📏
+    title: 17 · 限制范围
+    details: LimitRange、容器默认资源、PVC 范围及其与配额的配合。
+    link: /17-限制范围/
+  - icon: ⚖️
+    title: 18 · 服务质量
+    details: QoS 类别、资源配置、节点驱逐、OOM 与资源压力排障。
+    link: /18-服务质量/
+  - icon: 🔐
+    title: 19 · RBAC
+    details: 身份认证边界、ServiceAccount、最小权限、授权验证与 kubeconfig。
+    link: /19-RBAC/
+  - icon: ⎈
+    title: 20 · Helm
+    details: Helm 4、Chart 模板、OCI 仓库、依赖、发布、回滚与安全边界。
+    link: /20-Helm/
+  - icon: 🧩
+    title: 21 · 扩展机制
+    details: CRD、模式验证、版本演进、控制器协调和 Operator 模式。
+    link: /21-扩展机制/
 ---
 
 ## 当前进度
 
-当前文档已完成基础环境、容器基础、镜像制作、镜像仓库、容器运行时，以及 Kubernetes 核心阶段的集群架构、资源操作、Pod、工作负载、服务发现、配置管理、存储管理和任务管理。
+当前文档已完成基础环境、容器基础、镜像制作、镜像仓库、容器运行时，以及 Kubernetes 核心阶段的集群架构、资源操作、Pod、工作负载、服务发现、配置管理、存储管理和任务管理；调度治理、资源约束、RBAC、Helm 与扩展 API 也已形成独立记录。
 
-后续记录将围绕网络入口、调度治理、安全、可观测性和工程化交付逐步补齐。
+后续记录从第 22 章 Operator 开始，随后依次补充可观测性、分布式存储、DevOps 和企业级落地相关主题。
 
 ## 后续补全清单
 
@@ -83,12 +115,12 @@ features:
 - 身份管理：ServiceAccount、短期令牌投射、工作负载身份和镜像拉取凭据复用
 - 存储实测补充：CSI VolumeSnapshot 控制器部署、快照恢复、卷克隆、应用一致性和故障恢复演练
 - 任务管理实测补充：大规模 Indexed Job、外部工作队列、失败策略观测和备份恢复演练
-- 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
 - Pod 新能力：Pod 级资源配置、运行中资源调整、容器级重启规则、`PodReadyToStartContainers`、用户命名空间和细粒度补充组策略
 - 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度
 - 工作负载状态与发布：Deployment `terminatingReplicas`、滚动发布容量峰值、StatefulSet 强制回滚边界，以及工作负载终止与 Service 终止端点的连接排空协同
 - Service 网络进阶：ServiceCIDR 与 IPAddress、多 CIDR 分配、拓扑感知路由、终止端点流量排空、NodeLocal DNSCache 和 CoreDNS 定制
-- 安全与权限：RBAC、SecurityContext、Pod Security Standards 和审计基础
+- 安全深化：SecurityContext、Pod Security Standards、审计基础和工作负载身份
 - 集群运维：kubeadm 配置文件、版本偏差、集群升级、证书续期、etcd 备份恢复和高可用控制平面
 - 可观测性：系统日志、系统指标、事件、Tracing 和常见可观测性组件
-- 交付与扩展：Helm、Operator、KEDA、GitOps、CI/CD、备份恢复和多集群管理
+- Operator：API 与状态设计、协调循环、Kubebuilder 与 controller-runtime、Webhook、RBAC、测试、发布升级，以及具体 Operator 的运行与排障
+- 交付与扩展深化：KEDA、GitOps、CI/CD、备份恢复和多集群管理

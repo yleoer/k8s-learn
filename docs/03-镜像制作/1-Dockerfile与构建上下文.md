@@ -102,3 +102,8 @@ docker build -f docker/Dockerfile -t nginx:demo .
 上面命令中，Dockerfile 文件来自 `docker/Dockerfile`，但构建上下文仍然是当前目录 `.`。因此 Dockerfile 中的 `COPY ./html /usr/share/nginx/html` 仍然从当前目录下的 `html/` 读取文件。
 
 上下文目录中的文件默认都会被打包发送。`.git`、`node_modules`、构建产物、日志等无关内容应通过 `.dockerignore` 排除，避免构建上下文过大；相关规则在 [文件复制与运行用户](./3-文件复制与运行用户.md) 中记录。
+
+## 参考
+
+- [构建上下文](https://docs.docker.com/build/building/context/)
+- [Dockerfile 参考](https://docs.docker.com/reference/dockerfile/)

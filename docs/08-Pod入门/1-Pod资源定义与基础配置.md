@@ -267,3 +267,8 @@ kubectl delete -f command-args-demo.yaml
 ```
 
 如果需要使用变量、循环或管道，应显式调用 `/bin/sh -c`。容器主进程退出后，容器随之退出，Pod 会根据 `restartPolicy` 决定后续处理方式。对于长期运行服务，启动命令应保持前台运行；如果命令执行结束，容器也会结束。
+
+## 参考
+
+- [Pod](https://kubernetes.io/docs/concepts/workloads/pods/)
+- [Pod API 参考](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/)

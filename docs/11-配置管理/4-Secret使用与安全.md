@@ -136,3 +136,8 @@ kubectl get ev --sort-by=.metadata.creationTimestamp
 | `ImagePullBackOff`           | `imagePullSecrets`、仓库地址、账号权限和镜像路径 |
 | 凭据更新后仍使用旧值                   | 环境变量、`subPath`、应用缓存和连接池           |
 | Secret 无法修改                  | `immutable` 是否为 `true`            |
+
+## 参考
+
+- [Secret](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [Kubernetes Secret 最佳实践](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)

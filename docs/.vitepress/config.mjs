@@ -109,14 +109,14 @@ function escapeRegExp(value) {
 const courseParts = [
   { text: '集群部署', label: '一 · 集群部署', from: 1, to: 1, flat: true },
   { text: '容器基石', label: '二 · 容器基石', from: 2, to: 5 },
-  { text: 'K8s 基础', label: '三 · K8s 基础', from: 6, to: 17 },
-  { text: '综合实战', label: '四 · 综合实战', from: 18, to: 19 },
-  { text: '调度治理', label: '五 · 调度与资源治理', from: 20, to: 25 },
-  { text: '工程弹性', label: '六 · 工程化与弹性', from: 26, to: 28 },
-  { text: '可观测性', label: '七 · 可观测性', from: 29, to: 33 },
-  { text: '分布式存储', label: '八 · 分布式存储', from: 34, to: 34 },
-  { text: 'DevOps', label: '九 · DevOps 落地', from: 35, to: 38 },
-  { text: '企业落地', label: '十 · 企业级落地', from: 39, to: 43 },
+  { text: 'K8s 基础', label: '三 · K8s 基础', from: 6, to: 13 },
+  { text: '调度治理', label: '四 · 调度与资源治理', from: 14, to: 19 },
+  { text: '交付扩展', label: '五 · 交付与扩展', from: 20, to: 21 },
+  //{ text: 'Operator', label: '六 · Operator', from: 22, to: 22 },
+  //{ text: '可观测性', label: '七 · 可观测性', from: 23, to: 27 },
+  //{ text: '分布式存储', label: '八 · 分布式存储', from: 28, to: 28 },
+  //{ text: 'DevOps', label: '九 · DevOps 落地', from: 29, to: 32 },
+  //{ text: '企业落地', label: '十 · 企业级落地', from: 33, to: 37 },
 ]
 
 const courseChapters = course.map((chapter, index) => {

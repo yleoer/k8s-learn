@@ -168,3 +168,8 @@ kubectl get pv
 ```
 
 由于 StorageClass 使用 `Retain`，PV 会进入 `Released`，NFS 子目录和数据仍然存在。确认数据已经备份或不再需要后，管理员再处理 PV 对象和服务端目录；仅删除 PV 对象不会清理 `Retain` 策略下的 NFS 数据。
+
+## 参考
+
+- [CSI 卷](https://kubernetes.io/docs/concepts/storage/volumes/#csi)
+- [持久卷回收](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming)

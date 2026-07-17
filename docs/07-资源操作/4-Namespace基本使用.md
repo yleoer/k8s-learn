@@ -152,3 +152,7 @@ dev
 team-a
 order-prod
 ```
+
+## 参考
+
+- [命名空间](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)

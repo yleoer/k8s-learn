@@ -146,3 +146,8 @@ start
 容器反复退出时，kubelet 会以指数退避延迟后续重启：延迟从 10 秒起逐次翻倍，上限 5 分钟，期间 Pod 状态显示为 `CrashLoopBackOff`；容器成功运行满 10 分钟后，退避计时器重置。
 
 普通 Pod 被删除后不会自动重建；由 Deployment、Job 等控制器创建的 Pod 才会被控制器继续管理。
+
+## 参考
+
+- [容器镜像](https://kubernetes.io/docs/concepts/containers/images/)
+- [Pod 生命周期](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)

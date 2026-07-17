@@ -172,3 +172,8 @@ kubectl get ev --sort-by=.metadata.creationTimestamp
 ```
 
 重点核对 `LAST SCHEDULE`、`SUSPEND`、活动 Job、时区、启动截止时间、并发策略、错过次数，以及 Job 内部的退出码、退避、截止时间和存储或 Secret 依赖。
+
+## 参考
+
+- [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)
+- [运行副本化有状态应用](https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/)

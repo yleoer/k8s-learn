@@ -32,11 +32,11 @@ flowchart LR
 
 ## 参考
 
-- [ConfigMaps](https://kubernetes.io/docs/concepts/configuration/configmap/)
-- [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-- [Configure a Pod to use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)
-- [Projected Volumes](https://kubernetes.io/docs/concepts/storage/projected-volumes/)
-- [Good practices for Kubernetes Secrets](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)
-- [Encrypting Confidential Data at Rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
-- [ConfigMap API Reference](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/)
-- [Secret API Reference](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/secret-v1/)
+- [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/)
+- [Secret](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [配置 Pod 使用 ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)
+- [投射卷](https://kubernetes.io/docs/concepts/storage/projected-volumes/)
+- [Kubernetes Secret 最佳实践](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)
+- [静态加密机密数据](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+- [ConfigMap API 参考](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/)
+- [Secret API 参考](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/secret-v1/)

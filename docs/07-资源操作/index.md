@@ -6,12 +6,12 @@
 
 ## 参考
 
-- [Command line tool (kubectl)](https://kubernetes.io/docs/reference/kubectl/)
-- [Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
-- [Share a Cluster with Namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
-- [Pods](https://kubernetes.io/docs/concepts/workloads/pods/)
-- [Pod Lifecycle](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)
-- [Debug Running Pods](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/)
-- [Managing Kubernetes Objects Using Configuration Files](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/)
-- [Kubeconfig and Cluster Access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
-- [Labels and Selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+- [kubectl 命令行工具](https://kubernetes.io/docs/reference/kubectl/)
+- [命名空间](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
+- [使用命名空间共享集群](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
+- [Pod](https://kubernetes.io/docs/concepts/workloads/pods/)
+- [Pod 生命周期](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)
+- [调试运行中的 Pod](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/)
+- [使用配置文件管理 Kubernetes 对象](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/)
+- [使用 kubeconfig 文件组织集群访问](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
+- [标签与选择器](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)

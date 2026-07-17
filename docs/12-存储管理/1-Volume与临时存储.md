@@ -183,3 +183,8 @@ kubectl create -f nfs-direct-pod.yaml
 NFS 服务器和导出目录必须提前存在，所有可能运行 Pod 的节点还要安装 NFS 客户端工具。Pod 的 `nfs` 数据源不能声明挂载参数；需要 `nfsvers` 等选项时，可通过 PV 的 `mountOptions` 或 StorageClass 配置。
 
 直接卷把后端地址写入工作负载，不利于复用和迁移。长期数据更适合由 PV/PVC 表达，批量按需创建目录则使用 CSI 与 StorageClass。
+
+## 参考
+
+- [卷](https://kubernetes.io/docs/concepts/storage/volumes/)
+- [本地临时存储](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#local-ephemeral-storage)

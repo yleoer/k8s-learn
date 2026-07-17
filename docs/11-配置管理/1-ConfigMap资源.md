@@ -148,3 +148,7 @@ kubectl edit cm app-config
 ```
 
 直接编辑不利于追踪配置来源。长期配置更适合在版本库中维护清单，并通过评审后的发布流程更新。
+
+## 参考
+
+- [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/)

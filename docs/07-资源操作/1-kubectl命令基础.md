@@ -334,3 +334,8 @@ kubectl get po -o name
 - 查询状态时依次查看摘要、详情、事件和日志，避免只根据单个表格列作结论。
 - 不确定 API 字段时使用 `kubectl explain`，不确定资源类型或作用域时使用 `kubectl api-resources`。
 - 对清单变更先使用 `kubectl diff -f` 或 dry-run 检查，再执行实际更新。
+
+## 参考
+
+- [kubectl 概览](https://kubernetes.io/docs/reference/kubectl/overview/)
+- [kubectl explain 命令参考](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_explain/)

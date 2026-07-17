@@ -315,7 +315,7 @@ kubectl get ev -n <namespace> --sort-by=.lastTimestamp
 ## 参考
 
 - [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-- [Ingress Controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
-- [Ingress API reference](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingress-v1/)
-- [IngressClass API reference](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingressclass-v1/)
+- [Ingress 控制器](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
+- [Ingress API 参考](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingress-v1/)
+- [IngressClass API 参考](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingressclass-v1/)
 - [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/)

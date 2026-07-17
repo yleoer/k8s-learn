@@ -215,5 +215,5 @@ kubectl get po <pod-name> -o jsonpath='{.status.containerStatuses[*].restartCoun
 ## 参考
 
 - [Downward API](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/)
-- [Expose Pod Information to Containers Through Environment Variables](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
-- [Expose Pod Information to Containers Through Files](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/)
+- [通过环境变量向容器暴露 Pod 信息](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
+- [通过文件向容器暴露 Pod 信息](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/)

@@ -6,12 +6,12 @@
 
 ## 参考
 
-- [Overview](https://kubernetes.io/docs/concepts/overview/)
-- [Kubernetes Components](https://kubernetes.io/docs/concepts/overview/components/)
-- [Cluster Architecture](https://kubernetes.io/docs/concepts/architecture/)
-- [Leases](https://kubernetes.io/docs/concepts/architecture/leases/)
-- [Objects In Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/)
-- [Cluster Networking](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
-- [Service Proxy](https://kubernetes.io/docs/reference/networking/virtual-ips/)
-- [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
-- [Resource Metrics Pipeline](https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/)
+- [概览](https://kubernetes.io/docs/concepts/overview/)
+- [Kubernetes 组件](https://kubernetes.io/docs/concepts/overview/components/)
+- [集群架构](https://kubernetes.io/docs/concepts/architecture/)
+- [Lease](https://kubernetes.io/docs/concepts/architecture/leases/)
+- [Kubernetes 中的对象](https://kubernetes.io/docs/concepts/overview/working-with-objects/)
+- [集群网络](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
+- [虚拟 IP 与 Service 代理](https://kubernetes.io/docs/reference/networking/virtual-ips/)
+- [Service 与 Pod 的 DNS](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
+- [资源指标管道](https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/)

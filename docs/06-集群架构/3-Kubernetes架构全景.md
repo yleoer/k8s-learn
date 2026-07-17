@@ -113,3 +113,8 @@ Metrics Server 从 kubelet 采集短期 CPU、内存资源指标，并通过 `me
 3. 节点是否接收任务，即 kubelet 是否通过 CRI 调用容器运行时。
 4. Pod sandbox、镜像和业务容器是否创建成功；运行时会在 sandbox 生命周期中调用 CNI 配置网络。
 5. Service 转发、DNS、网络和存储是否正常接入，重点检查 kube-proxy 或替代实现、CoreDNS、CNI 和 CSI。
+
+## 参考
+
+- [Kubernetes 组件](https://kubernetes.io/docs/concepts/overview/components/)
+- [控制器模式](https://kubernetes.io/docs/concepts/architecture/controller/)

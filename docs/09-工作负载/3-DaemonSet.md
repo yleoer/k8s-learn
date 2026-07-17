@@ -522,5 +522,5 @@ kubectl delete ds no-nginx
 ## 参考
 
 - [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-- [Perform a Rolling Update on a DaemonSet](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/)
-- [DaemonSet API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/daemon-set-v1/)
+- [对 DaemonSet 执行滚动更新](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/)
+- [DaemonSet API 参考](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/daemon-set-v1/)

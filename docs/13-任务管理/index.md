@@ -29,9 +29,9 @@ flowchart LR
 
 ## 参考
 
-- [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
+- [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
 - [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)
-- [Automatic Cleanup for Finished Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/)
-- [Handling retriable and non-retriable pod failures with Pod failure policy](https://kubernetes.io/docs/tasks/job/pod-failure-policy/)
-- [Job API Reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/job-v1/)
-- [CronJob API Reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/cron-job-v1/)
+- [已完成 Job 的自动清理](https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/)
+- [使用 Pod 失败策略处理可重试与不可重试失败](https://kubernetes.io/docs/tasks/job/pod-failure-policy/)
+- [Job API 参考](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/job-v1/)
+- [CronJob API 参考](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/cron-job-v1/)

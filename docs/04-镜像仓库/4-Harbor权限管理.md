@@ -152,3 +152,8 @@ kubectl patch sa default \
 
 > [!WARNING]
 > `imagePullSecrets` 引用的 Secret 中存储的是经过 base64 编码的认证信息，并不是加密密文。相关 YAML 不应提交到公开仓库，生产环境可结合 External Secrets、Vault 或 Sealed Secrets 管理凭据。
+
+## 参考
+
+- [Harbor 用户权限](https://goharbor.io/docs/latest/administration/managing-users/user-permissions-by-role/)
+- [从私有仓库拉取镜像](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)

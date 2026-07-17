@@ -197,10 +197,10 @@ ingress2gateway print --providers=ingress-nginx --all-namespaces > gateway-migra
 ## 参考
 
 - [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/)
-- [Gateway API Getting Started](https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/)
+- [Gateway API 快速开始](https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/)
 - [HTTPRoute](https://gateway-api.sigs.k8s.io/api-types/httproute/)
-- [Migrating from Ingress](https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress/)
-- [A Welcome Guide for Ingress-NGINX Users](https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress-nginx/)
-- [Gateway API implementations](https://gateway-api.sigs.k8s.io/docs/implementations/list/)
-- [Announcing Ingress2Gateway 1.0](https://kubernetes.io/blog/2026/03/20/ingress2gateway-1-0-release/)
+- [从 Ingress 迁移](https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress/)
+- [Ingress-NGINX 用户指南](https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress-nginx/)
+- [Gateway API 实现](https://gateway-api.sigs.k8s.io/docs/implementations/list/)
+- [Ingress2Gateway 1.0 发布公告](https://kubernetes.io/blog/2026/03/20/ingress2gateway-1-0-release/)
 - [ingress2gateway](https://github.com/kubernetes-sigs/ingress2gateway)

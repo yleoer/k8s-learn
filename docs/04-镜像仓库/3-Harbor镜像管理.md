@@ -173,7 +173,7 @@ sudo crictl images | grep harbor
 
 ## 参考
 
-- [Pulling and Pushing Images](https://goharbor.io/docs/2.15.0/working-with-projects/working-with-images/pulling-pushing-images/)
-- [Create Tag Immutability Rules](https://goharbor.io/docs/2.15.0/working-with-projects/working-with-images/create-tag-immutability-rules/)
-- [Configure Docker daemon.json](https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file)
-- [containerd Registry Configuration](https://github.com/containerd/containerd/blob/main/docs/hosts.md)
+- [拉取与推送镜像](https://goharbor.io/docs/2.15.0/working-with-projects/working-with-images/pulling-pushing-images/)
+- [创建标签不可变规则](https://goharbor.io/docs/2.15.0/working-with-projects/working-with-images/create-tag-immutability-rules/)
+- [配置 Docker daemon.json](https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file)
+- [containerd 镜像仓库配置](https://github.com/containerd/containerd/blob/main/docs/hosts.md)

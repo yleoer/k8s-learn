@@ -56,6 +56,6 @@ kubectl get po -n kube-system | grep kube-scheduler
 
 ## 参考
 
-- [Static Pods](https://kubernetes.io/docs/concepts/workloads/pods/static-pods/)
-- [Create static Pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/)
-- [Kubelet Configuration v1beta1](https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/)
+- [静态 Pod](https://kubernetes.io/docs/concepts/workloads/pods/static-pods/)
+- [创建静态 Pod](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/)
+- [KubeletConfiguration v1beta1](https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/)

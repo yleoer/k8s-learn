@@ -239,3 +239,8 @@ time kubectl delete po graceful-period-demo
 - terminationGracePeriodSeconds 覆盖最长请求的处理时间
 - 应用正确处理 SIGTERM
 - 发布前通过压测或演练验证
+
+## 参考
+
+- [Pod 生命周期](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)
+- [Pod 终止流程](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-flow)

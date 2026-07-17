@@ -128,3 +128,8 @@ kubectl describe po dynamic-volume-writer
 ```
 
 StatefulSet 可以在 `volumeClaimTemplates` 中复用同一 StorageClass，为每个 Pod 生成独立 PVC。资源结构和保留策略见 [StatefulSet 独立存储](/09-工作负载/2-StatefulSet#独立存储)，这里不重复清单。
+
+## 参考
+
+- [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/)
+- [动态卷供给](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/)

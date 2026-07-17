@@ -235,9 +235,9 @@ EOF
 
 ## 参考
 
-- [Dockerfile reference: RUN --mount](https://docs.docker.com/reference/dockerfile/#run---mount)
-- [Dockerfile reference: Here-documents](https://docs.docker.com/reference/dockerfile/#here-documents)
-- [Build secrets](https://docs.docker.com/build/building/secrets/)
-- [Optimize cache usage in builds](https://docs.docker.com/build/cache/optimize/)
+- [Dockerfile RUN --mount 参考](https://docs.docker.com/reference/dockerfile/#run---mount)
+- [Dockerfile heredoc 参考](https://docs.docker.com/reference/dockerfile/#here-documents)
+- [构建机密](https://docs.docker.com/build/building/secrets/)
+- [优化构建缓存使用](https://docs.docker.com/build/cache/optimize/)
 - [BuildKit](https://docs.docker.com/build/buildkit/)
-- [Introduction to heredocs in Dockerfiles](https://www.docker.com/blog/introduction-to-heredocs-in-dockerfiles/)
+- [Dockerfile heredoc 介绍](https://www.docker.com/blog/introduction-to-heredocs-in-dockerfiles/)

@@ -94,3 +94,7 @@ kubectl delete job hello
 ```
 
 删除 Job 默认会级联删除它管理的 Pod。正在执行的业务写入可能因此中断，删除前应先确认外部系统是否支持重试和幂等恢复。
+
+## 参考
+
+- [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/)

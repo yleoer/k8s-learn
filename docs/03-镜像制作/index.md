@@ -6,9 +6,9 @@
 
 ## 参考
 
-- [Dockerfile reference](https://docs.docker.com/reference/dockerfile/)
-- [Docker build cache](https://docs.docker.com/build/cache/)
-- [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
-- [Multi-platform builds](https://docs.docker.com/build/building/multi-platform/)
-- [Build context 与 .dockerignore](https://docs.docker.com/build/concepts/context/)
-- [Build secrets](https://docs.docker.com/build/building/secrets/)
+- [Dockerfile 参考](https://docs.docker.com/reference/dockerfile/)
+- [Docker 构建缓存](https://docs.docker.com/build/cache/)
+- [多阶段构建](https://docs.docker.com/build/building/multi-stage/)
+- [多平台构建](https://docs.docker.com/build/building/multi-platform/)
+- [构建上下文与 .dockerignore](https://docs.docker.com/build/concepts/context/)
+- [构建机密](https://docs.docker.com/build/building/secrets/)

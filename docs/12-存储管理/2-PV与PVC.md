@@ -145,3 +145,7 @@ kubectl delete pv nfs-static-pv
 ```
 
 删除 `Retain` PV 对象不会删除 NFS 目录中的数据。
+
+## 参考
+
+- [持久卷](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)

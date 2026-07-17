@@ -62,3 +62,8 @@ flowchart TB
 - 应用视角：代码、镜像、Pod、调度资源与服务发布。
 - 平台视角：资源声明、APIServer 持久化、控制器协调与节点执行。
 - 节点视角：kubelet 接收 Pod、CRI 调用运行时与容器进程运行。
+
+## 参考
+
+- [Kubernetes 组件](https://kubernetes.io/docs/concepts/overview/components/)
+- [Kubernetes 中的对象](https://kubernetes.io/docs/concepts/overview/working-with-objects/)

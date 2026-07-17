@@ -311,13 +311,13 @@ docker system prune --all --volumes --filter 'until=168h'
 
 ## 参考
 
-- [Docker CLI reference](https://docs.docker.com/reference/cli/docker/)
-- [docker container CLI](https://docs.docker.com/reference/cli/docker/container/)
-- [docker container run](https://docs.docker.com/reference/cli/docker/container/run/)
-- [docker image CLI](https://docs.docker.com/reference/cli/docker/image/)
-- [docker volume CLI](https://docs.docker.com/reference/cli/docker/volume/)
-- [docker network CLI](https://docs.docker.com/reference/cli/docker/network/)
-- [docker system prune](https://docs.docker.com/reference/cli/docker/system/prune/)
-- [docker compose CLI](https://docs.docker.com/reference/cli/docker/compose/)
-- [Docker Engine 29.6.1 release notes](https://docs.docker.com/engine/release-notes/29/#2961)
-- [Docker Compose v5.3.1 release](https://github.com/docker/compose/releases/tag/v5.3.1)
+- [Docker CLI 参考](https://docs.docker.com/reference/cli/docker/)
+- [docker container CLI 参考](https://docs.docker.com/reference/cli/docker/container/)
+- [docker container run 命令](https://docs.docker.com/reference/cli/docker/container/run/)
+- [docker image CLI 参考](https://docs.docker.com/reference/cli/docker/image/)
+- [docker volume CLI 参考](https://docs.docker.com/reference/cli/docker/volume/)
+- [docker network CLI 参考](https://docs.docker.com/reference/cli/docker/network/)
+- [docker system prune 命令](https://docs.docker.com/reference/cli/docker/system/prune/)
+- [docker compose CLI 参考](https://docs.docker.com/reference/cli/docker/compose/)
+- [Docker Engine 29.6.1 发布说明](https://docs.docker.com/engine/release-notes/29/#2961)
+- [Docker Compose v5.3.1 发布说明](https://github.com/docker/compose/releases/tag/v5.3.1)

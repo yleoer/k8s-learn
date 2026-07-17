@@ -132,10 +132,10 @@ spec:
 本章背景内容参考以下 Kubernetes 英文文档、kubectl 参考和示例文件：
 
 - [Service](https://kubernetes.io/docs/concepts/services-networking/service/)
-- [Connecting Applications with Services](https://kubernetes.io/docs/tutorials/services/connect-applications-service/)
+- [通过 Service 连接应用](https://kubernetes.io/docs/tutorials/services/connect-applications-service/)
 - [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-- [Ingress API reference](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingress-v1/)
-- [IngressClass API reference](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingressclass-v1/)
-- [kubectl label](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_label/)
-- [run-my-nginx.yaml](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/service/networking/run-my-nginx.yaml)
-- [nginx-svc.yaml](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/service/networking/nginx-svc.yaml)
+- [Ingress API 参考](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingress-v1/)
+- [IngressClass API 参考](https://kubernetes.io/docs/reference/kubernetes-api/networking/ingressclass-v1/)
+- [kubectl label 命令](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_label/)
+- [运行 nginx 示例清单](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/service/networking/run-my-nginx.yaml)
+- [nginx Service 示例清单](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/service/networking/nginx-svc.yaml)

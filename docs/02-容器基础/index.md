@@ -13,9 +13,9 @@
 
 - [Docker Engine 文档](https://docs.docker.com/engine/)
 - [Docker CLI 参考](https://docs.docker.com/reference/cli/docker/)
-- [Docker 存储：volume 与 bind mount](https://docs.docker.com/engine/storage/)
+- [Docker 存储：数据卷与绑定挂载](https://docs.docker.com/engine/storage/)
 - [Docker 网络](https://docs.docker.com/engine/network/)
 - [Docker Compose](https://docs.docker.com/compose/)
-- [Docker Engine 29.6.1 release notes](https://docs.docker.com/engine/release-notes/29/#2961)
-- [containerd image store with Docker Engine](https://docs.docker.com/engine/storage/containerd/)
-- [Migrating from dockershim](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/)
+- [Docker Engine 29.6.1 发布说明](https://docs.docker.com/engine/release-notes/29/#2961)
+- [Docker Engine 的 containerd 镜像存储](https://docs.docker.com/engine/storage/containerd/)
+- [从 dockershim 迁移](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/)

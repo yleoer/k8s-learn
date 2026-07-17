@@ -265,3 +265,8 @@ kubectl describe no 显示 memory requests 已经达到 96%
 ## 配置建议
 
 生产环境应尽量为每个容器配置 requests 和 limits。requests 按服务稳定运行所需资源设置，limits 按服务可接受的峰值资源设置。CPU limit 过小会导致应用被限速，内存 limit 过小则可能触发 OOM Kill。
+
+## 参考
+
+- [Pod 与容器资源管理](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+- [Pod 调度就绪状态](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-scheduling-readiness/)

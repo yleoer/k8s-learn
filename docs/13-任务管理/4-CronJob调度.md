@@ -101,3 +101,7 @@ kubectl get job <job-name> \
 在控制器故障、网络异常或状态同步竞争下，同一计划时刻可能创建两个 Job，也可能没有创建。`startingDeadlineSeconds` 较大或未设置且并发策略为 `Allow` 时，控制器会尽力保证至少执行一次，但仍不提供恰好一次语义。
 
 任务应使用业务主键、计划时间、事务或条件写入实现幂等，并能识别重复备份、重复通知和重复扣减等副作用。CronJob 的调度历史不能替代业务侧执行记录。
+
+## 参考
+
+- [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)

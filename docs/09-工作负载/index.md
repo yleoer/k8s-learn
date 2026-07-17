@@ -117,7 +117,7 @@ kubectl delete rs nginx-rs
 
 本章背景内容参考以下 Kubernetes 英文文档：
 
-- [Workloads](https://kubernetes.io/docs/concepts/workloads/)
-- [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [工作负载](https://kubernetes.io/docs/concepts/workloads/)
+- [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 - [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/)
 - [ReplicationController](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/)

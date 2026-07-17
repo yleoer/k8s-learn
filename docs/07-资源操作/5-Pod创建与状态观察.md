@@ -84,3 +84,8 @@ kubectl logs <pod-name> --previous
 裸 Pod 是用户直接创建、没有上层工作负载控制器管理的 Pod。它适合验证镜像、命令或网络，但不会自行补齐副本、执行滚动更新或在节点故障后由控制器创建替代实例。
 
 Deployment、StatefulSet 和 DaemonSet 是管理 Pod 的控制器：它们分别面向可替换副本、有稳定身份的实例和节点覆盖场景。删除控制器管理的 Pod 不会缩容；控制器发现实际数量低于期望后会创建替代 Pod。工作负载选择和控制器行为在第 09 章展开。
+
+## 参考
+
+- [Pod](https://kubernetes.io/docs/concepts/workloads/pods/)
+- [工作负载](https://kubernetes.io/docs/concepts/workloads/)

@@ -23,13 +23,21 @@ npm run docs:preview # 预览构建产物
 | 镜像仓库 | 04 | 镜像仓库概念、Harbor 安装、镜像推拉、权限管理、运维管理、镜像供应链安全和漏洞扫描 |
 | 容器运行 | 05 | CRI、containerd、crictl、ctr、nerdctl、仓库访问配置和运行时排障记录 |
 | 集群架构 | 06 | Kubernetes 定位、声明式模型、集群架构、控制面组件、节点组件和核心资源抽象 |
-| 资源操作 | 07 | kubectl、Namespace、Pod 基础操作、状态观察和问题记录 |
+| 资源操作 | 07 | kubectl、Namespace、Pod 基础操作、状态观察和命令速查 |
 | Pod 入门 | 08 | Pod 资源定义、资源分配、环境变量、镜像拉取、生命周期、健康检查、Sidecar 容器、静态 Pod 和 Pod 调试 |
 | 工作负载 | 09 | Deployment、StatefulSet、DaemonSet 和典型控制器行为 |
 | 服务发现 | 10 | Service、EndpointSlice、DNS、Service 类型、流量策略、Headless Service、代理模式、Ingress、Gateway API、Traefik 和 ingress-nginx 附录 |
 | 配置管理 | 11 | ConfigMap、Secret、环境变量与卷投射、更新传播、不可变配置、镜像仓库凭据和 Secret 安全边界 |
 | 存储管理 | 12 | Volume、PV、PVC、StorageClass、CSI、NFS 动态供给、扩容、VolumeSnapshot 边界和存储排障 |
 | 任务管理 | 13 | Job、Indexed Job、失败与成功策略、TTL、CronJob 调度、并发策略和 MySQL 定时备份 |
+| 调度策略 | 14 | 节点选择、亲和性、拓扑分布、PriorityClass、PDB 和调度排障 |
+| 污点容忍 | 15 | 污点效果、容忍匹配、专用节点隔离、节点维护和排障 |
+| 资源配额 | 16 | ResourceQuota、计算与存储配额、范围和命名空间治理 |
+| 限制范围 | 17 | LimitRange、容器默认资源、PVC 范围及其与配额的配合 |
+| 服务质量 | 18 | QoS 类别、资源配置、节点驱逐、OOM 与资源压力排障 |
+| RBAC | 19 | 身份认证边界、ServiceAccount、最小权限、授权验证与 kubeconfig |
+| Helm | 20 | Helm 4、Chart 模板、OCI 仓库、依赖、发布、回滚与安全边界 |
+| 扩展机制 | 21 | CRD、模式验证、版本演进、控制器协调和 Operator 模式 |
 
 ## 后续补全清单
 
@@ -47,15 +55,15 @@ npm run docs:preview # 预览构建产物
 - 身份管理：ServiceAccount、短期令牌投射、工作负载身份和镜像拉取凭据复用
 - 存储实测补充：CSI VolumeSnapshot 控制器部署、快照恢复、卷克隆、应用一致性和故障恢复演练
 - 任务管理实测补充：大规模 Indexed Job、外部工作队列、失败策略观测和备份恢复演练
-- 调度与资源治理：nodeSelector、亲和性、污点容忍、拓扑分布、PriorityClass、抢占、驱逐、ResourceQuota、LimitRange 和 QoS
 - Pod 新能力：Pod 级资源配置、运行中资源调整、容器级重启规则、`PodReadyToStartContainers`、用户命名空间和细粒度补充组策略
 - 工作负载扩展：HPA、PDB、Workload API、PodGroupTemplates 与成组调度
 - 工作负载状态与发布：Deployment `terminatingReplicas`、滚动发布容量峰值、StatefulSet 强制回滚边界，以及工作负载终止与 Service 终止端点的连接排空协同
 - Service 网络进阶：ServiceCIDR 与 IPAddress、多 CIDR 分配、拓扑感知路由、终止端点流量排空、NodeLocal DNSCache 和 CoreDNS 定制
-- 安全与权限：RBAC、SecurityContext、Pod Security Standards 和审计基础
+- 安全深化：SecurityContext、Pod Security Standards、审计基础和工作负载身份
 - 集群运维：kubeadm 配置文件、版本偏差、集群升级、证书续期、etcd 备份恢复和高可用控制平面
 - 可观测性：系统日志、系统指标、事件、Tracing 和常见可观测性组件
-- 交付与扩展：Helm、Operator、KEDA、GitOps、CI/CD、备份恢复和多集群管理
+- Operator：API 与状态设计、协调循环、Kubebuilder 与 controller-runtime、Webhook、RBAC、测试、发布升级，以及具体 Operator 的运行与排障
+- 交付与扩展深化：KEDA、GitOps、CI/CD、备份恢复和多集群管理
 
 ## 目录结构
 
@@ -83,7 +91,15 @@ docs/
 ├── 10-服务发现/
 ├── 11-配置管理/
 ├── 12-存储管理/
-└── 13-任务管理/
+├── 13-任务管理/
+├── 14-调度策略/
+├── 15-污点容忍/
+├── 16-资源配额/
+├── 17-限制范围/
+├── 18-服务质量/
+├── 19-RBAC/
+├── 20-Helm/
+└── 21-扩展机制/
 ```
 
 ### 文件命名约定
